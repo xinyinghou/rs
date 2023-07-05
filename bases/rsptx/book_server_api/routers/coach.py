@@ -77,38 +77,25 @@ async def parsons_scaffolding(request: Request):
     code_bytes = await request.body()
     code = code_bytes.decode("utf-8")
     lines = code.split('\n')
+    data_order = " ".join(str(x) for x in range(len(lines)))
+    
+    # html = '\n        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-order="' + data_order + '"      style="visibility: hidden;">\n        '
+    # html = html + "\n---\n   ".join(lines) + "\n        </pre>"
 
-    print(lines)
-
-    # generate personalized Parsons problems as .rst and store in rst string:
-    rst = """.. parsonsprob:: test_preview_question
-   :order: 0 1 2 3 4
-
-   need some text ?
-   -----
-   def fib(num):
-   =====
-      if num == 0:
-          return 0:
-   =====
-      if num == 1:
-          return 1:
-   =====
-      return fib(num - 1) + fib(num - 2)
-   =====
-      return fib(num - 1) * fib(num - 2) #paired
+    html = """
+        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"   data-order="0 1 2 3 4"      style="visibility: hidden;">
+        def fib(num):
+---
+   if num == 0:
+       return 0:
+---
+   if num == 1:
+       return 1:
+---
+   return fib(num - 1) + fib(num - 2)
+---
+   return fib(num - 1) * fib(num - 2) #paired
+        </pre>
 """
 
-    # call API to generate html from the rst
-    # kwargs = dict(code=json.dumps(src))
-    # test_client.post("ajax/preview_question", data=kwargs)
-    # print(test_client.text)
-    # res = json.loads(test_client.text)
-
-    # assert "id=preview_test1" in res
-    # assert 'print("Hello World")' in res
-    # assert "textarea>" in res
-    # assert 'div data-component="activecode"' in res
-
-
-    return rst
+    return html
