@@ -21,11 +21,16 @@ from rich.live import Live
 from rich.table import Table
 from rsptx.cl_utils.core import pushd, stream_command, subprocess_streamer
 
+console = Console()
+
 # Check environment variables
 # ---------------------------
 print("Checking your environment")
 if not os.path.exists(".env"):
-    print("No .env file found.  Please copy sample.env to .env and edit it.")
+    console.print(
+        "No .env file found.  Please copy sample.env to .env and edit it.",
+        style="bold red",
+    )
     exit(1)
 
 if "--verbose" in sys.argv:
@@ -33,15 +38,29 @@ if "--verbose" in sys.argv:
 else:
     VERBOSE = False
 
+if "--help" in sys.argv:
+    console.print(
+        """Usage: build.py [--verbose] [--help] [--all] [--push]
+        --all build all containers, including author and worker
+        --push push all containers to docker hub
+        """
+    )
+    exit(0)
+
 res = subprocess.run("docker info", shell=True, capture_output=True)
 if res.returncode != 0:
-    print("Docker is not running.  Please start it and try again.")
+    console.print(
+        "Docker is not running.  Please start it and try again.", style="bold red"
+    )
     exit(1)
+
+# make a fresh build.log for this build
+with open("build.log", "w") as f:
+    f.write("")
 
 # Per the [docs](https://pypi.org/project/python-dotenv/), load `.env` into
 # environment variables.
 load_dotenv()
-console = Console()
 table = Table(title="Environment Variables")
 table.add_column("Variable", justify="right", style="cyan", no_wrap=True)
 table.add_column("Set", style="magenta")
@@ -64,34 +83,38 @@ for var in [
 console.print(table)
 
 if "DC_DBURL" not in os.environ:
-    print("DC_DBURL not set.  It will default to DBURL, but you should set it in .env")
+    console.print(
+        "DC_DBURL not set.  It will default to DBURL, but you should set it in .env"
+    )
     if "DBURL" not in os.environ:
-        print("DBURL not set.  Please set it in .env")
+        console.print("DBURL not set.  Please set it in .env", style="bold red")
         finish = True
 else:
-    print("DC_DBURL set.  Using it instead of DBURL")
+    console.print("DC_DBURL set.  Using it instead of DBURL")
 
 
 if "DC_DEV_DBURL" not in os.environ:
-    print(
-        "DC_DEV_DBURL not set.  It will default to DEV_DBURL, but you should set it in .env"
+    console.print(
+        "DC_DEV_DBURL not set.  It will default to DEV_DBURL, but you should set it in .env",
+        style="bold red",
     )
     if "DEV_DBURL" not in os.environ:
-        print("DEV_DBURL not set.  Please set it in .env")
+        console.print("DEV_DBURL not set.  Please set it in .env")
         finish = True
 else:
-    print("DC_DEV_DBURL set.  Using it instead of DEV_DBURL")
+    console.print("DC_DEV_DBURL set.  Using it instead of DEV_DBURL")
 
 if not os.path.isfile("bases/rsptx/web2py_server/applications/runestone/models/1.py"):
-    print("Copying 1.py.prototype to 1.py")
+    console.print("Copying 1.py.prototype to 1.py")
     copyfile(
         "bases/rsptx/web2py_server/applications/runestone/models/1.py.prototype",
         "bases/rsptx/web2py_server/applications/runestone/models/1.py",
     )
 
 if finish:
-    print(
-        "Your environment is not set up correctly.  Please define the environment variables listed above."
+    console.print(
+        "Your environment is not set up correctly.  Please define the environment variables listed above.",
+        style="bold red",
     )
     exit(1)
 
@@ -135,47 +158,59 @@ with Live(table, refresh_per_second=4):
                     else:
                         table.add_row(proj, "[red]No[/red]")
                         if VERBOSE:
-                            print(res.stderr.decode(stdout_err_encoding))
+                            console.print(res.stderr.decode(stdout_err_encoding))
                         else:
                             with open("build.log", "a") as f:
                                 f.write(res.stderr.decode(stdout_err_encoding))
 
+ym = yaml.safe_load(open("docker-compose.yml"))
+# remove the redis service from the list since we don't customize it
+del ym["services"]["redis"]
+
+
+# Generate a table for the Live object
+# see https://rich.readthedocs.io/en/stable/live.html?highlight=update#basic-usage
+def generate_table(status: dict) -> Table:
+    table = Table(title="Build Docker Images")
+    table.add_column("Service", justify="right", style="cyan", no_wrap=True)
+    table.add_column("Built", style="magenta")
+    for service in status:
+        table.add_row(service, status[service])
+    return table
+
 
 # Build Docker containers
 # -----------------------
-print("Building docker images (see build.log for detailed progress)...")
-with open("build.log", "ab") as f:
-    ret = stream_command(
-        "docker",
-        "compose",
-        "build",
-        # For stdout, stream only high points of the build to stdout; save
-        # *everything* to the log file.
-        stdout_streamer=subprocess_streamer(
-            sys.stdout.buffer,
-            f,
-            filter=lambda line: (
-                # Only show lines to stdout like `#18 naming to
-                # docker.io/library/rs-jobe 0.2s done`; just report the
-                # container name for brevity.
-                b"Finished "
-                + line[line.rindex(b"/") + 1 :].replace(b" done", b"").strip()
-                + b"\n"
-                if b"naming to docker.io" in line and b"done" in line
-                else b"",
-                # Save everything to the file.
-                line,
-            ),
-        ),
-        stderr_streamer=subprocess_streamer(sys.stderr.buffer, f),
-    )
-if ret == 0:
-    print("Docker images built successfully")
-else:
-    print(
-        "Docker images failed to build, see build.log for details (or run with --verbose)"
-    )
-    exit(1)
+console.print(
+    "Building docker images (see build.log for detailed progress)...", style="bold"
+)
+with Live(table, refresh_per_second=4) as lt:
+    status = {}
+    for service in ym["services"]:
+        if service in ["author", "worker"] and "--all" not in sys.argv:
+            status[service] = "skipped"
+            continue
+        else:
+            status[service] = "building"
+        lt.update(generate_table(status))
+        with open("build.log", "ab") as f:
+            ret = subprocess.run(
+                ["docker", "compose", "build", service, "--progress", "plain"],
+                capture_output=True,
+            )
+            f.write(ret.stdout)
+            f.write(ret.stderr)
+        if ret.returncode == 0:
+            status[service] = "built"
+            lt.update(generate_table(status))
+        else:
+            status[service] = "failed"
+            lt.update(generate_table(status))
+            console.print(
+                f"There was an error building {service} see build.log for details",
+                style="bold red",
+            )
+            exit(1)
 
 # read the version from pyproject.toml
 with open("pyproject.toml") as f:
@@ -187,14 +222,11 @@ with open("pyproject.toml") as f:
 # runestone private registry on digital ocean.  The docker-compose.yml file has the
 # image names set up to push to the runestone registry on digital ocean.
 if "--push" in sys.argv:
-    print("Pushing docker images to Docker Hub...")
-    ym = yaml.safe_load(open("docker-compose.yml"))
-    # remove the redis service from the list since we don't customize it
-    del ym["services"]["redis"]
+    console.print("Pushing docker images to Docker Hub...", style="bold")
     for service in ym["services"]:
         if "image" in ym["services"][service]:
             image = ym["services"][service]["image"]
-            print(f"Pushing {image}")
+            console.print(f"Pushing {image}")
             ret1 = subprocess.run(
                 ["docker", "tag", image, f"{image}:v{version}"], check=True
             )
@@ -206,14 +238,10 @@ if "--push" in sys.argv:
             ret3 = subprocess.run(["docker", "push", f"{image}:v{version}"], check=True)
 
             if ret1.returncode + ret2.returncode + ret3.returncode == 0:
-                print(f"{image} pushed successfully")
+                console.print(f"{image} pushed successfully")
                 ret = 0
             else:
-                print(f"{image} failed to push")
+                console.print(f"{image} failed to push", style="bold red")
                 exit(1)
 
-    if ret.returncode == 0:
-        print("Docker images pushed successfully")
-    else:
-        print("Docker images failed to push")
-        exit(1)
+    console.print("Docker images pushed successfully", style="green")

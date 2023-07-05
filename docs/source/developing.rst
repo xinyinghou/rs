@@ -218,10 +218,31 @@ These two sets of variables can be identical, but they are separate because it i
 * ``RUNESTONE_HOST`` *d* - this is the canonical host name of the server.  It is used to generate links to the server.  It should be something like ``runestone.academy`` or ``runestone.academy:8000`` if you are running on a non-standard port.
 * ``LOAD_BALANCER_HOST`` *d* - this is the canonical host name of the server when you are running in production with several workers.  It is used to generate links to the server.  It should be something like ``runestone.academy`` or ``runestone.academy:8000`` if you are running on a non-standard port.  You would typically only need to set this or RUNESTONE_HOST.
 
-Variables that are important for the host side are probably best set in your login shell environment (such as a .bashrc file) But you can also set them in the .env file and as long as you have a RUNESTONE_PATH set commands like ``rsmanage`` and ``runestone`` will try to read and use those variables.  Variables that are important for the docker side are best set in the ``.env`` file.  The docker-compose file pulls
-When you are doing development you may want to set these in your login shell, But they can all be set in the ``.env`` file in the top level directory.  This file is read by docker-compose and the values are passed to the containers.  You can also set them in the ``docker-compose.yml`` file but that is not recommended.  The ``.env`` file is also used by the ``build.py`` script to set the environment variables for the docker-compose build.  As of this writing (June 2023) rsmanage does not know about the ``.env`` file so you will have to set them in your login shell if you want to use rsmanage.
+Variables that are important for the host side are probably best set in your
+login shell environment (such as a .bashrc file) But you can also set them in
+the ``.env`` file and as long as you have a RUNESTONE_PATH set commands like
+``rsmanage`` and ``runestone`` will try to read and use those variables.
 
+When you are doing development you may want to set these in your login shell,
+But they can all be set in the ``.env`` file in the top level directory. This
+file is read by docker-compose and the values are passed to the containers. You
+can also set them in the ``docker-compose.yml`` file but that is not
+recommended. The ``.env`` file is also used by the ``build.py`` script to set
+the environment variables for the docker-compose build. As of this writing
+(June 2023) rsmanage does not know about the ``.env`` file so you will have to
+set them in your login shell if you want to use rsmanage.
 
+An alternative to setting ``RUNESTONE_PATH`` is add the ``poetry-dotenv-plugin``
+to your ``poetry`` installation. It will cause commands like ``poetry shell`` to
+also import variables from the ``.env`` file which means that you will have them
+when you run ``runestone`` and ``rsmanage`` from withen the shell you launched
+with ``poetry shell``. To install the plugin run:
+
+``poetry self add poetry-dotenv-plugin``
+
+Note, however, that plugins in ``poetry`` are global, not per-project, so if you
+have other ``poetry`` projects with ``.env`` files that you `don`t` want slurped
+into your ``poetry shell`` environment you may not want to install this plugin.
 
 
 Getting a Server Started 
@@ -269,16 +290,17 @@ container registry
 To build all of the docker containers and bring them up together.  You can run the ``build.py`` script in the top level directory. The dependencies for the build.py script are included in the top level ``pyproject.toml`` file.  ``poetry install --with=dev`` will install everything you need and then you may will want to start up a poetry shell. The ``build.py`` script will build all of the Python wheels and Docker images, when that completes run ``docker-compose up``.  You can also run ``docker-compose up`` directly if you have already built the images.  
 
 When developing and you need multiple servers running
--
+
 
 Install nginx and configure projects/nginx/runestone.dev for your
 system. You can run nginx in "non daemon mode" using
 ``nginx -g 'daemon off;'``
 
-Set RUNESTONE_PATH -- not sure what for?? set SERVER_CONFIG development
-set WEB2PY_CONFIG development set DEV_DBURL
-postgresql://bmiller:@localhost/runestone_dev set BOOK_PATH
-/path/to/books set WEB2PY_PRIVATE_KEY ??
+* Set ``RUNESTONE_PATH`` -- to be the root of the rs repo - this is used for some utilities to read the ``.env`` file.
+* set ``WEB2PY_CONFIG`` development 
+* set ``DEV_DBURL`` postgresql://bmiller:@localhost/runestone_dev 
+* set ``BOOK_PATH`` /path/to/books 
+* set ``WEB2PY_PRIVATE_KEY`` for logging in
 
 .. code:: bash
 
@@ -304,7 +326,7 @@ once.
 Adding a New Feature
 --------------------
 
-Most new features to Runestone take the form of a new API endpoint with or wthout a UX.  The UX is usually a new page in the web2py server.  The API endpoint is usually in the book_server_api or author_server_api.  A lot of the code for a new feature typically revolves around working with the database.  All servers in the monorepo share the same database.  The database is a postgresql database, and the model for the database resides in the ``rsptx.db.models`` module.  The elements of the module are defined using the ``sqlalchemy`` library.  In addition, most models have a corresponding validator provided by the Pydantic library.  In your code you should use these pydantic validators.  They ensure that your code is using the correct types.  They also provide a convenient way to convert the data from the database into a python dictionary.  The pydantic validators are defined in the ``rsptx.common.schemas`` module.
+Most new features to Runestone take the form of a new API endpoint with or without a UX.  The UX is usually a new page in the web2py server.  The API endpoint is usually in the book_server_api or author_server_api.  A lot of the code for a new feature typically revolves around working with the database.  All servers in the monorepo share the same database.  The database is a postgresql database, and the model for the database resides in the ``rsptx.db.models`` module.  The elements of the module are defined using the ``sqlalchemy`` library.  In addition, most models have a corresponding validator provided by the Pydantic library.  In your code you should use these pydantic validators.  They ensure that your code is using the correct types.  They also provide a convenient way to convert the data from the database into a python dictionary.  The pydantic validators are defined in the ``rsptx.common.schemas`` module.
 
 Finally, to create, retrieve, update or delete (crud) elements from the database you should use the ``rsptx.db.crud`` module.  This module provides a convenient way to interact with the database.  Most database actions are already there, so you just need to call the appropriate function.  If you need a new function, or expand the model to add a new table, we encourage you to write functions for the most common operations.    the ``crud`` module also provides a way to validate the data that you are trying to store in the database.  The ``crud`` module is used by the API endpoints and UX controllers to interact with the database.  You should NOT write database queries directly in your API endpoints.  Instead you should use the ``rsptx.db.crud`` module.
 
