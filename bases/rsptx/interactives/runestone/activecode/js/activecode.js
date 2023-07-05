@@ -7,6 +7,9 @@
 
 "use strict";
 
+import {
+    renderRunestoneComponent
+} from "../../common/js/renderComponent.js";
 import RunestoneBase from "../../common/js/runestonebase.js";
 import AudioTour from "./audiotour.js";
 import "./activecode-i18n.en.js";
@@ -33,6 +36,7 @@ import "./skulpt-stdlib.js";
 import PyflakesCoach from "./coach-python-pyflakes.js";
 // Used by Skulpt.
 import embed from "vega-embed";
+import { render } from "less";
 // Adapt for use outside webpack -- see https://github.com/vega/vega-embed.
 window.vegaEmbed = embed;
 
@@ -291,7 +295,67 @@ export class ActiveCode extends RunestoneBase {
         this.toggleAlert();
     }
 
+    async getParsonsRst() {
+        let code = this.editor.getValue();
+        let promise = new Promise(function (resolve, reject) {
+            fetch('/ns/coach/parsons_scaffolding', {
+                method: 'POST',
+                body: code
+            })
+            .then((response) => {
+                return response.json();
+            })
+            .then((rst) => {
+                resolve(rst);
+            })
+            .catch(err => {
+                reject("Error in Parsons Scaffolding: " + err);
+            })
+        });
+        return promise;
+    }
+
+    async parsonsBtnHandler() {
+        // send code to backend to get the rst for parsons problem
+        let rst = await this.getParsonsRst();
+        console.log('rst', rst);
+
+        var data = {
+            code: JSON.stringify(rst),
+        };
+        $.post("/runestone/ajax/preview_question", data, async function (result, status) {
+            let code = JSON.parse(result);
+            console.log('code', code);
+            // await renderRunestoneComponent(code, preview_div);
+        });
+
+
+        // if (!document.getElementById("parsons-scaffolding")) {
+        //     let parsonsDiv = document.createElement('div');
+        //     parsonsDiv.id = "parsons-scaffolding"
+        //     parsonsDiv.classList.add('parsons-scaffolding');
+        //     this.outerDiv.appendChild(parsonsDiv);
+        // }
+//         var code = `
+//         <div id="component-preview" class="col-md-6">
+//         <div class="runestone parsons-container ">
+//         <div data-component="parsons" id="unqiue_problem_id_here" class="parsons runestone-component-ready">
+        
+//         <div class="parsons" id="parsons-3"><div class="parsons_question parsons-text">
+//     <p>Solve my really cool parsons problem…if you can.</p>
+//         </div><div role="tooltip" id="parsons-3-tip" style="display: none;">Arrow keys to navigate. Space to select / deselect block to move.</div><div class="sortable-code-container" aria-describedby="parsons-3-tip"><div id="parsons-3-sourceRegion" class="sortable-code"><div role="tooltip" id="parsons-3-sourceTip">Drag from here</div><div id="parsons-3-source" class="source" aria-describedby="parsons-3-sourceTip" style="width: 302px; height: 298px;"><div id="parsons-3-block-1" class="block" tabindex="0" style="width: 278px; left: 0px; top: 0px; z-index: 2; touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><div class="lines"><code class="prettyprint lang-py" id="parsons-3-line-1"><span class="kwd">if</span><span class="pln"> len</span><span class="pun">(</span><span class="pln">alist</span><span class="pun">)</span><span class="pln"> </span><span class="pun">==</span><span class="pln"> </span><span class="lit">0</span><span class="pun">:</span></code><code class="prettyprint lang-py indent1" id="parsons-3-line-2"><span class="kwd">return</span><span class="pln"> </span><span class="kwd">None</span></code></div></div><div id="parsons-3-block-5" class="block" tabindex="-1" style="width: 278px; left: 0px; top: 61px; z-index: 2; touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><div class="lines"><code class="prettyprint lang-py" id="parsons-3-line-7"><span class="kwd">return</span><span class="pln"> curmax</span></code></div></div><div id="parsons-3-block-3" class="block" tabindex="-1" style="width: 278px; left: 0px; top: 100px; z-index: 2; touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><div class="lines"><code class="prettyprint lang-py" id="parsons-3-line-5"><span class="kwd">if</span><span class="pln"> item </span><span class="pun">&gt;</span><span class="pln"> curmax</span><span class="pun">:</span></code></div></div><div id="parsons-3-block-4" class="block" tabindex="-1" style="width: 278px; left: 0px; top: 139px; z-index: 2; touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><div class="lines"><code class="prettyprint lang-py" id="parsons-3-line-6"><span class="pln">curmax </span><span class="pun">=</span><span class="pln"> item</span></code></div></div><div id="parsons-3-block-0" class="block" tabindex="-1" style="width: 278px; left: 0px; top: 178px; z-index: 2; touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><div class="lines"><code class="prettyprint lang-py" id="parsons-3-line-0"><span class="kwd">def</span><span class="pln"> findmax</span><span class="pun">(</span><span class="pln">alist</span><span class="pun">):</span></code></div></div><div id="parsons-3-block-2" class="block" tabindex="-1" style="width: 278px; left: 0px; top: 217px; z-index: 2; touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><div class="lines"><code class="prettyprint lang-py" id="parsons-3-line-3"><span class="pln">curmax </span><span class="pun">=</span><span class="pln"> alist</span><span class="pun">[</span><span class="lit">0</span><span class="pun">]</span></code><code class="prettyprint lang-py" id="parsons-3-line-4"><span class="kwd">for</span><span class="pln"> item </span><span class="kwd">in</span><span class="pln"> alist</span><span class="pun">:</span></code></div></div></div></div><div id="parsons-3-answerRegion" class="sortable-code"><div role="tooltip" id="parsons-3-answerTip">Drop blocks here</div><div id="parsons-3-answer" aria-describedby="parsons-3-answerTip" class="answer3" style="width: 392px; height: 298px;"></div></div></div><div class="parsons-controls"><button class="btn btn-success" id="parsons-3-check" type="button">Check</button><button class="btn btn-default" id="parsons-3-reset" type="button">Reset</button><div id="parsons-3-message" style="display: none;"></div></div></div>
+//         <p class="runestone_caption runestone_caption_text">Parsons (unqiue_problem_id_here)</p></div>
+//         </div>
+// ` 
+//         await renderRunestoneComponent(code, "parsons-scaffolding");
+//             // get the text as above
+//             // send the text to an ajax endpoint that will insert it into
+//             // a sphinx project, run sphinx, and send back the generated index file
+//             // this generated index can then be displayed...
+    }
+
     createControls() {
+        console.log('create controls');
         var ctrlDiv = document.createElement("div");
         var butt;
         $(ctrlDiv).addClass("ac_actions");
@@ -304,6 +368,13 @@ export class ActiveCode extends RunestoneBase {
         // console.log("adding click function for run");
         this.runButton.onclick = this.runButtonHandler.bind(this);
         $(butt).attr("type", "button");
+
+        // move this to a separate function "createParsonsScaffolding"
+        let parsonsScaffoldingBtn = document.createElement("button");
+        parsonsScaffoldingBtn.innerText = "Parsons Scaffolding";
+        parsonsScaffoldingBtn.classList.add(["btn", "btn-success"]);
+        parsonsScaffoldingBtn.onclick = this.parsonsBtnHandler.bind(this);
+        ctrlDiv.appendChild(parsonsScaffoldingBtn);
 
         if (this.enabledownload || eBookConfig.downloadsEnabled) {
             this.addDownloadButton(ctrlDiv);
