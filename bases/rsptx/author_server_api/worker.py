@@ -59,7 +59,7 @@ class MyClick:
 # Mock the click config object. It is only used for dburl information in this context
 class Config:
     def __init__(self):
-        conf = os.environ.get("WEB2PY_CONFIG", "production")
+        conf = os.environ.get("SERVER_CONFIG", "production")
         if conf == "production":
             self.dburl = os.environ.get("DBURL")
         elif conf == "development":
@@ -68,6 +68,7 @@ class Config:
             self.dburl = os.environ.get("TEST_DBURL")
         else:
             print("Incorrect WEB2PY_CONFIG")
+        print(f"DBURL is {self.dburl}")
 
 
 config = Config()
@@ -249,7 +250,7 @@ def deploy_book(self, book):
     numServers = int(os.environ["NUM_SERVERS"].strip())
 
     for i in range(1, numServers + 1):
-        command = f"rsync -e 'ssh -oStrictHostKeyChecking=no -i /usr/src/app/.ssh/id_rsa'  --exclude '__pycache__' -P -rzc /books/{book} {user}@server{i}:~/Runestone/books --copy-links --delete"
+        command = f"rsync -e 'ssh -oStrictHostKeyChecking=no'  --exclude '__pycache__' -P -rzc /books/{book} {user}@server{i}:~/books --copy-links --delete"
         logger.debug(command)
         self.update_state(state="DEPLOYING", meta={"current": f"server{i}"})
         res = subprocess.run(
@@ -315,6 +316,7 @@ def anonymize_data_dump(self, **kwargs):
     username = kwargs["user"]
     del kwargs["user"]
     a = Anonymizer(basecourse, config.dburl, **kwargs)
+    # if kwargs has a specific course then skip the course selection
     print("Choosing Courses")
     self.update_state(state="WORKING", meta={"current": "Choosing courses"})
     a.choose_courses()

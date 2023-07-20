@@ -79,7 +79,9 @@
 </div>
 
 <div class="row">
-    <div class="oneq col-md-6">{{=XML(current_question['htmlsrc'])}}</div>
+    <div class="oneq col-md-6 runestone-sphinx">
+    {{=XML(current_question['htmlsrc'])}}
+    </div>
     <div class="col-md-6">
         <div id="counter1"></div>
         <div id="counter2"></div>
@@ -102,7 +104,7 @@
             answer_num: 1,
             start_time: startTime,
             start_time2: startTime2,
-            num_answers: window.mcList[currentQuestion].answerList.length,
+            num_answers: window.componentMap[currentQuestion].answerList.length,
         };
         let jsheaders = new Headers({
             "Content-type": "application/json; charset=utf-8",
@@ -179,5 +181,9 @@
     var startTime = new Date().toUTCString();
     var startTime2 = null;
     var mess_count = 0;
+    var done = {{=is_last }}
+    if (done) {
+        document.getElementById("nextq").disabled = true;
+    }
 </script>
 {{ end }}

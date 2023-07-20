@@ -45,6 +45,7 @@ from rsptx.author_server_api.worker import (
 )
 from rsptx.auth.session import is_instructor
 from rsptx.db.crud import (
+    create_book_author,
     create_library_book,
     fetch_instructor_courses,
     fetch_books_by_author,
@@ -99,8 +100,16 @@ async def create_book_entry(author: str, document_id: str, github: str):
     )
     await create_course(course)
 
-    vals = {"authors": author, "basecourse": document_id, "github_url": github}
+    vals = {
+        "authors": author,
+        "title": document_id,
+        "github_url": github,
+        "shelf_section": "Misc",
+        "is_visible": False,
+        "for_classes": False,
+    }
     await create_library_book(document_id, vals)
+    await create_book_author(author, document_id)
     return True
 
 
@@ -109,7 +118,7 @@ async def create_book_entry(author: str, document_id: str, github: str):
 auth_manager.useRequest(app)
 
 
-@app.get("/")
+@app.get("/author/")
 async def home(request: Request, user=Depends(auth_manager)):
     print(f"{request.state.user} OR user = {user}")
 
@@ -131,7 +140,7 @@ async def home(request: Request, user=Depends(auth_manager)):
     )
 
 
-@app.get("/logfiles")
+@app.get("/author/logfiles")
 async def logfiles(request: Request, user=Depends(auth_manager)):
     if await is_instructor(request):
 
@@ -162,13 +171,13 @@ async def logfiles(request: Request, user=Depends(auth_manager)):
         return RedirectResponse(url="/notauthorized")
 
 
-@app.get("/getfile/{fname}")
+@app.get("/author/getfile/{fname}")
 async def getfile(request: Request, fname: str, user=Depends(auth_manager)):
     file_path = pathlib.Path("logfiles", user.username, fname)
     return FileResponse(file_path)
 
 
-@app.get("/getdatashop/{fname}")
+@app.get("/author/getdatashop/{fname}")
 async def _getdshop(request: Request, fname: str, user=Depends(auth_manager)):
     file_path = pathlib.Path("datashop", user.username, fname)
     return FileResponse(file_path)
@@ -179,9 +188,9 @@ async def verify_author(user):
         auth_row = await sess.execute(
             """select * from auth_group where role = 'author'"""
         )
-        logger.debug("HELLO" + str(auth_row))
+        logger.debug(f"HELLO{str(auth_row)}")
         auth_group_id = auth_row.scalars().first()
-        logger.debug("FOO " + str(auth_group_id))
+        logger.debug(f"FOO {str(auth_group_id)}")
         is_author = (
             (
                 await sess.execute(
@@ -198,7 +207,7 @@ async def verify_author(user):
     return is_author
 
 
-@app.get("/dump/assignments/{course}")
+@app.get("/author/dump/assignments/{course}")
 async def dump_assignments(request: Request, course: str, user=Depends(auth_manager)):
 
     if not (await is_instructor(request) and user.course_name == course):
@@ -226,7 +235,7 @@ async def dump_assignments(request: Request, course: str, user=Depends(auth_mana
     return JSONResponse({"detail": "success"})
 
 
-@app.get("/impact/{book}")
+@app.get("/author/impact/{book}")
 async def impact(request: Request, book: str, user=Depends(auth_manager)):
     # check for author status
     if user:
@@ -247,12 +256,12 @@ async def impact(request: Request, book: str, user=Depends(auth_manager)):
             "enrollData": resGraph,
             "chapterData": chapterHM,
             "courseData": courseGraph,
-            "title": info[1],
+            "title": info.title,
         },
     )
 
 
-@app.get("/subchapmap/{chapter}/{book}")
+@app.get("/author/subchapmap/{chapter}/{book}")
 async def subchapmap(
     request: Request, chapter: str, book: str, user=Depends(auth_manager)
 ):
@@ -267,12 +276,12 @@ async def subchapmap(
     chapterHM = get_subchap_heatmap(chapter, book)
     return templates.TemplateResponse(
         "author/subchapmap.html",
-        context={"request": request, "subchapData": chapterHM, "title": info[1]},
+        context={"request": request, "subchapData": chapterHM, "title": info.title},
     )
 
 
 # Called to download the log
-@app.get("/getlog/{book}")
+@app.get("/author/getlog/{book}")
 async def getlog(request: Request, book):
     logpath = pathlib.Path("/books", book, "cli.log")
 
@@ -291,8 +300,8 @@ def get_model_dict(model):
     )
 
 
-@app.get("/editlibrary/{book}")
-@app.post("/editlibrary/{book}")
+@app.get("/author/editlibrary/{book}")
+@app.post("/author/editlibrary/{book}")
 async def editlib(request: Request, book: str):
     # Get the book and populate the form with current data
     book_data = await fetch_library_book(book)
@@ -306,14 +315,14 @@ async def editlib(request: Request, book: str):
         print(f"Got {form.authors.data}")
         print(f"FORM data = {form.data}")
         await update_library_book(book_data.id, form.data)
-        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url="/author/", status_code=status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(
         "author/editlibrary.html", context=dict(request=request, form=form, book=book)
     )
 
 
-@app.get("/anonymize_data/{book}")
-@app.post("/anonymize_data/{book}")
+@app.get("/author/anonymize_data/{book}")
+@app.post("/author/anonymize_data/{book}")
 async def anondata(request: Request, book: str, user=Depends(auth_manager)):
     # Get the book and populate the form with current data
     if not await verify_author(user):
@@ -323,6 +332,7 @@ async def anondata(request: Request, book: str, user=Depends(auth_manager)):
     # can dump directly.
     courses = await fetch_instructor_courses(user.id)
     class_list = [c.id for c in courses]
+    class_list = [str(x) for x in class_list]
 
     lf_path = pathlib.Path("datashop", user.username)
     logger.debug(f"WORKING DIR = {lf_path}")
@@ -354,14 +364,14 @@ async def anondata(request: Request, book: str, user=Depends(auth_manager)):
     )
 
 
-@app.get("/notauthorized")
+@app.get("/author/notauthorized")
 def not_authorized(request: Request):
     return templates.TemplateResponse(
         "author/notauthorized.html", context={"request": request}
     )
 
 
-@app.post("/book_in_db")
+@app.post("/author/book_in_db")
 async def check_db(payload=Body(...)):
     base_course = payload["bcname"]
     # connect to db and check if book is there and if base_course == course_name
@@ -369,14 +379,16 @@ async def check_db(payload=Body(...)):
         return JSONResponse({"detail": "DBURL is not set"})
     else:
         res = await fetch_course(base_course)
-        detail = res["id"] if res else False
+        detail = res.id if res else False
         return JSONResponse({"detail": detail})
 
 
-@app.post("/add_course")
+@app.post("/author/add_course")
 async def new_course(payload=Body(...), user=Depends(auth_manager)):
     base_course = payload["bcname"]
     github_url = payload["github"]
+    logger.debug(f"Got {base_course} and {github_url}")
+
     if "DEV_DBURL" not in os.environ:
         return JSONResponse({"detail": "DBURL is not set"})
     else:
@@ -387,7 +399,7 @@ async def new_course(payload=Body(...), user=Depends(auth_manager)):
             return JSONResponse({"detail": "fail"})
 
 
-@app.post("/clone", status_code=201)
+@app.post("/author/clone", status_code=201)
 async def do_clone(payload=Body(...)):
     repourl = payload["url"]
     bcname = payload["bcname"]
@@ -395,7 +407,7 @@ async def do_clone(payload=Body(...)):
     return JSONResponse({"task_id": task.id})
 
 
-@app.post("/isCloned", status_code=201)
+@app.post("/author/isCloned", status_code=201)
 async def check_repo(payload=Body(...)):
     bcname = payload["bcname"]
     repo_path = pathlib.Path("/books", bcname)
@@ -405,7 +417,7 @@ async def check_repo(payload=Body(...)):
         return JSONResponse({"detail": False})
 
 
-@app.post("/buildBook", status_code=201)
+@app.post("/author/buildBook", status_code=201)
 async def do_build(payload=Body(...)):
     bcname = payload["bcname"]
     generate = payload["generate"]
@@ -422,28 +434,28 @@ async def do_build(payload=Body(...)):
     return JSONResponse({"task_id": task.id})
 
 
-@app.post("/deployBook", status_code=201)
+@app.post("/author/deployBook", status_code=201)
 async def do_deploy(payload=Body(...)):
     bcname = payload["bcname"]
     task = deploy_book.delay(bcname)
     return JSONResponse({"task_id": task.id})
 
 
-@app.post("/dumpUseinfo", status_code=201)
+@app.post("/author/dumpUseinfo", status_code=201)
 async def dump_useinfo(payload=Body(...), user=Depends(auth_manager)):
     classname = payload["classname"]
     task = useinfo_to_csv.delay(classname, user.username)
     return JSONResponse({"task_id": task.id})
 
 
-@app.post("/dumpCode", status_code=201)
+@app.post("/author/dumpCode", status_code=201)
 async def dump_code(payload=Body(...), user=Depends(auth_manager)):
     classname = payload["classname"]
     task = code_to_csv.delay(classname, user.username)
     return JSONResponse({"task_id": task.id})
 
 
-@app.get("/dlsAvailable/{kind}", status_code=201)
+@app.get("/author/dlsAvailable/{kind}", status_code=201)
 async def check_downloads(request: Request, kind: str, user=Depends(auth_manager)):
     # kind will be either logfiles or datashop
     lf_path = pathlib.Path("logfiles", user.username)
@@ -456,7 +468,7 @@ async def check_downloads(request: Request, kind: str, user=Depends(auth_manager
     return JSONResponse({"ready_files": ready_files})
 
 
-@app.post("/start_extract", status_code=201)
+@app.post("/author/start_extract", status_code=201)
 async def do_anonymize(payload=Body(...), user=Depends(auth_manager)):
     payload["user"] = user.username
     task = anonymize_data_dump.delay(**payload)
@@ -465,7 +477,7 @@ async def do_anonymize(payload=Body(...), user=Depends(auth_manager)):
 
 # Called from javascript to get the current status of a task
 #
-@app.get("/tasks/{task_id}")
+@app.get("/author/tasks/{task_id}")
 async def get_status(task_id):
     try:
         task_result = AsyncResult(task_id)

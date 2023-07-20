@@ -588,8 +588,11 @@ def admin():
         & (db.courses.course_name != course.course_name)
     ).select(db.courses.course_name, db.courses.id)
     base_course_id = (
-        db(db.courses.course_name == course.base_course).select(db.courses.id).first()
+        db(db.courses.course_name == course.base_course)
+        .select(db.courses.course_name, db.courses.id)
+        .first()
     )
+    instructor_course_list.append(base_course_id)
     base_course_id = base_course_id.id
     curr_start_date = course.term_start_date.strftime("%m/%d/%Y")
     downloads_enabled = "true" if sidQuery.downloads_enabled else "false"
@@ -998,9 +1001,10 @@ def removeassign():
     ct = db(db.assignments.id == assignment_id).delete()
 
     if ct == 1:
-        return "Success"
+        re = json.dumps("Success")
     else:
-        return "Error"
+        re = json.dumps("Error")
+    return re
 
 
 #
@@ -2484,7 +2488,19 @@ def copy_assignment():
     """
 
     res = None
-    if not verifyInstructorStatus(request.vars["course"], auth.user):
+    if (
+        db(
+            (db.courses.course_name == request.vars["course"])
+            & (db.courses.base_course == request.vars["course"])
+        ).count()
+        == 1
+    ):
+        copy_base_course = True
+
+    if (
+        not verifyInstructorStatus(request.vars["course"], auth.user)
+        and not copy_base_course
+    ):
         return "Error: Not Authorized"
     else:
         if request.vars.oldassignment == "-1":
@@ -2511,8 +2527,13 @@ def _copy_one_assignment(course, oldid):
     old_course = db(db.courses.course_name == course).select().first()
     this_course = db(db.courses.course_name == auth.user.course_name).select().first()
     old_assignment = db(db.assignments.id == int(oldid)).select().first()
-    due_delta = old_assignment.duedate.date() - old_course.term_start_date
-    due_date = this_course.term_start_date + due_delta
+    due_delta = old_assignment.duedate - datetime.datetime.combine(
+        old_course.term_start_date, datetime.time()
+    )
+    due_date = (
+        datetime.datetime.combine(this_course.term_start_date, datetime.time())
+        + due_delta
+    )
     try:
         newassign_id = db.assignments.insert(
             course=auth.user.course_id,

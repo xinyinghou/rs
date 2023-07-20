@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 from rich.console import Console
 from rich.live import Live
 from rich.table import Table
+import rich
 from rsptx.cl_utils.core import pushd, stream_command, subprocess_streamer
 
 console = Console()
@@ -43,6 +44,8 @@ if "--help" in sys.argv:
         """Usage: build.py [--verbose] [--help] [--all] [--push]
         --all build all containers, including author and worker
         --push push all containers to docker hub
+        --one <container> build just one container, e.g. --one author
+        --restart restart the container(s) after building
         """
     )
     exit(0)
@@ -62,7 +65,7 @@ with open("build.log", "w") as f:
 # environment variables.
 load_dotenv()
 table = Table(title="Environment Variables")
-table.add_column("Variable", justify="right", style="cyan", no_wrap=True)
+table.add_column("Variable", justify="right", style="grey62", no_wrap=True)
 table.add_column("Set", style="magenta")
 finish = False
 for var in [
@@ -118,6 +121,21 @@ if finish:
     )
     exit(1)
 
+ym = yaml.safe_load(open("docker-compose.yml"))
+if "--all" in sys.argv or "--one" in sys.argv:
+    am = yaml.safe_load(open("author.compose.yml"))
+    ym["services"].update(am["services"])
+
+# remove the redis service from the list since we don't customize it
+del ym["services"]["redis"]
+
+if "--one" in sys.argv:
+    svc_to_build = sys.argv[sys.argv.index("--one") + 1]
+    # remove all services except the one we want to build
+    for svc in list(ym["services"].keys()):
+        if svc != svc_to_build:
+            del ym["services"][svc]
+
 # Attempt to determine the encoding of data returned from stdout/stderr of
 # subprocesses. This is non-trivial. See the discussion at [Python's
 # sys.stdout](https://docs.python.org/3/library/sys.html#sys.stdout). First, try
@@ -140,42 +158,68 @@ except AttributeError:
     stdout_err_encoding = locale.getpreferredencoding()
 
 
+def progress_wheel():
+
+    chars = "x+"
+    progress_wheel.counter += 1
+    return chars[progress_wheel.counter % 2]
+
+
+progress_wheel.counter = 0
+
+
+def generate_wheel_table(status: dict) -> Table:
+    table = Table(title="Build Python Wheels")
+    table.add_column("Service", justify="right", style="grey62", no_wrap=True)
+    table.add_column("Built", style="magenta")
+    for service in status:
+        table.add_row(f"[black]{service}[/black]", status[service])
+    return table
+
+
 # Build wheels
 # ------------
-table = Table(title="Build Wheels")
-table.add_column("Project", justify="right", style="cyan", no_wrap=True)
-table.add_column("Built", style="magenta")
-with Live(table, refresh_per_second=4):
-    for proj in os.listdir("projects"):
-        if os.path.isdir(f"projects/{proj}"):
-            with pushd(f"projects/{proj}"):
+status = {}
+with Live(generate_wheel_table(status), refresh_per_second=4) as lt:
+    status = {}
+    for proj in ym["services"].keys():
+        if "build" not in ym["services"][proj]:
+            status[proj] = "[blue]Skipped[/blue]"
+            lt.update(generate_wheel_table(status))
+            continue
+        projdir = ym["services"][proj]["build"]["context"]
+        if os.path.isdir(projdir):
+            with pushd(projdir):
+                status[proj] = "[grey62]building...[/grey62]"
+                lt.update(generate_wheel_table(status))
                 if os.path.isfile("pyproject.toml"):
                     res = subprocess.run(
                         ["poetry", "build-project"], capture_output=True
                     )
                     if res.returncode == 0:
-                        table.add_row(proj, "[green]Yes[/green]")
+                        status[proj] = "[green]Yes[/green]"
+                        lt.update(generate_wheel_table(status))
                     else:
-                        table.add_row(proj, "[red]No[/red]")
+                        status[proj] = "[red]No[/red]"
+                        lt.update(generate_wheel_table(status))
                         if VERBOSE:
                             console.print(res.stderr.decode(stdout_err_encoding))
                         else:
                             with open("build.log", "a") as f:
                                 f.write(res.stderr.decode(stdout_err_encoding))
-
-ym = yaml.safe_load(open("docker-compose.yml"))
-# remove the redis service from the list since we don't customize it
-del ym["services"]["redis"]
+                else:
+                    status[proj] = "[blue]Skipped[/blue]"
+                    lt.update(generate_wheel_table(status))
 
 
 # Generate a table for the Live object
 # see https://rich.readthedocs.io/en/stable/live.html?highlight=update#basic-usage
 def generate_table(status: dict) -> Table:
     table = Table(title="Build Docker Images")
-    table.add_column("Service", justify="right", style="cyan", no_wrap=True)
+    table.add_column("Service", justify="right", style="grey62", no_wrap=True)
     table.add_column("Built", style="magenta")
     for service in status:
-        table.add_row(service, status[service])
+        table.add_row(f"[black]{service}[/black]", status[service])
     return table
 
 
@@ -184,24 +228,34 @@ def generate_table(status: dict) -> Table:
 console.print(
     "Building docker images (see build.log for detailed progress)...", style="bold"
 )
-with Live(table, refresh_per_second=4) as lt:
+status = {}
+with Live(generate_table(status), refresh_per_second=4) as lt:
     status = {}
     for service in ym["services"]:
-        if service in ["author", "worker"] and "--all" not in sys.argv:
-            status[service] = "skipped"
-            continue
-        else:
-            status[service] = "building"
+        status[service] = "[grey62]building...[/grey62]"
         lt.update(generate_table(status))
+        command_list = [
+            "docker",
+            "compose",
+            "-f",
+            "docker-compose.yml",
+            "-f",
+            "author.compose.yml",
+            "--progress",
+            "plain",
+            "build",
+            service,
+        ]
+
         with open("build.log", "ab") as f:
             ret = subprocess.run(
-                ["docker", "compose", "build", service, "--progress", "plain"],
+                command_list,
                 capture_output=True,
             )
             f.write(ret.stdout)
             f.write(ret.stderr)
         if ret.returncode == 0:
-            status[service] = "built"
+            status[service] = "[green]Yes[/green]"
             lt.update(generate_table(status))
         else:
             status[service] = "failed"
@@ -245,3 +299,65 @@ if "--push" in sys.argv:
                 exit(1)
 
     console.print("Docker images pushed successfully", style="green")
+
+
+if "--restart" in sys.argv:
+    if "--all" in sys.argv:
+        command_list = [
+            "docker",
+            "compose",
+            "-f",
+            "docker-compose.yml",
+            "-f" "author.compose.yml",
+            "stop",
+        ]
+        console.print("Restarting all services...", style="bold")
+    elif "--one" in sys.argv:
+        command_list = [
+            "docker",
+            "compose",
+            "-f",
+            "docker-compose.yml",
+            "-f" "author.compose.yml",
+            "stop",
+            svc_to_build,
+        ]
+        console.print(f"Restarting the {svc_to_build} service...", style="bold")
+    else:
+        command_list = ["docker", "compose", "stop"]
+        console.print("Restarting non-author services...", style="bold")
+    ret1 = subprocess.run(
+        command_list,
+        capture_output=True,
+    )
+    if "--all" in sys.argv:
+        command_list = [
+            "docker",
+            "compose",
+            "-f",
+            "docker-compose.yml",
+            "-f" "author.compose.yml",
+            "up",
+            "-d",
+        ]
+    elif "--one" in sys.argv:
+        command_list = [
+            "docker",
+            "compose",
+            "-f",
+            "docker-compose.yml",
+            "-f" "author.compose.yml",
+            "up",
+            "-d",
+            svc_to_build,
+        ]
+    else:
+        command_list = ["docker", "compose", "up", "-d"]
+    ret2 = subprocess.run(
+        command_list,
+        capture_output=True,
+    )
+    if ret1.returncode + ret2.returncode == 0:
+        console.print("Runestone service(s) restarted successfully", style="green")
+    else:
+        console.print("Runestone services failed to restart", style="bold red")

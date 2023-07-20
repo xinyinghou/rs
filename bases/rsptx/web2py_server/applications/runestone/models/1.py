@@ -11,7 +11,7 @@ import os
 
 # for LTI to work properly in a modern multi server configuration we need to set the `lti_uri`
 settings.lti_interface = True
-if "LOAD_BALANCER_HOST" not in os.environ:
+if "LOAD_BALANCER_HOST" not in os.environ or os.environ["LOAD_BALANCER_HOST"] == "":
     settings.lti_uri = f"https://{os.environ.get('RUNESTONE_HOST')}/runestone/lti"
 else:
     settings.lti_uri = f"https://{os.environ['LOAD_BALANCER_HOST']}/runestone/lti"
@@ -65,10 +65,16 @@ settings.python_interpreter = "python3"
 # for https servers
 # settings.websocket_url = "wss://dev.runestoneinteractive.org/ns"
 
-if "LOAD_BALANCER_HOST" not in os.environ:
-    settings.websocket_url = f"ws{'s' if os.environ['CERTBOT_EMAIL'] else ''}://{os.environ['RUNESTONE_HOST']}/ns"
-else:
+if (
+    "LOAD_BALANCER_HOST" in os.environ and os.environ["LOAD_BALANCER_HOST"] == ""
+):  # dev or single server
+    settings.websocket_url = f"ws{'s' if os.environ.get('CERTBOT_EMAIL', False) else ''}://{os.environ['RUNESTONE_HOST']}/ns"
+elif (
+    "LOAD_BALANCER_HOST" in os.environ and os.environ["LOAD_BALANCER_HOST"] != ""
+):  # production with load balancer
     settings.websocket_url = f"wss://{os.environ['LOAD_BALANCER_HOST']}/ns"
+else:  # single or no load balancer with adjusted docker-compose file
+    settings.websocket_url = f"ws{'s' if os.environ.get('CERTBOT_EMAIL', False) else ''}://{os.environ['RUNESTONE_HOST']}/ns"
 
 
 # Define the path used to route to the BookServer.

@@ -50,6 +50,8 @@ from rsptx.db.crud import (
     fetch_page_activity_counts,
     fetch_all_course_attributes,
     fetch_subchapters,
+    get_courses_per_basecourse,
+    get_students_per_basecourse,
 )
 from rsptx.db.models import UseinfoValidation
 from rsptx.auth.session import is_instructor
@@ -308,9 +310,12 @@ async def serve_page(
 
     reading_list = []
     if RS_info:
-        values = json.loads(RS_info)
-        if "readings" in values:
-            reading_list = values["readings"]
+        try:
+            values = json.loads(RS_info)
+            if "readings" in values:
+                reading_list = values["readings"]
+        except Exception as e:
+            rslogger.error(f"Error parsing RS_info: {e} Cookie: {RS_info}")
 
     #   TODO: provide the template google_ga as well as ad servings stuff
     #   settings.google_ga
@@ -434,7 +439,9 @@ async def library(request: Request, response_class=HTMLResponse):
     :rtype: HTMLResponse
     """
     books = await fetch_library_books()
-
+    students = await get_students_per_basecourse()
+    courses = await get_courses_per_basecourse()
+    books = sorted(books, key=lambda x: students.get(x.basecourse, 0), reverse=True)
     sections = set()
     for book in books:
         if book.shelf_section not in sections:
@@ -457,10 +464,12 @@ async def library(request: Request, response_class=HTMLResponse):
         {
             "request": request,
             "book_list": books,
-            "sections": sections,
+            "sections": sorted_sections,
             "course": course,
             "user": username,
             "is_instructor": instructor_status,
+            "students": students,
+            "courses": courses,
         },
     )
 
@@ -508,7 +517,7 @@ async def fetch_subchaptoc(course: str, chap: str):
     toclist = []
     for row in res:
         rslogger.debug(f"row = {row}")
-        sc_url = "{}.html".format(row[0])
+        sc_url = f"{row[0]}.html"
         title = row[1]
         toclist.append(dict(subchap_uri=sc_url, title=title))
 

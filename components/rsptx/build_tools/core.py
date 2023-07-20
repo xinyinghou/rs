@@ -36,6 +36,7 @@ from sqlalchemy.sql import text
 
 # todo: use our logger
 from rsptx.logging import rslogger
+from runestone.server import get_dburl
 
 rslogger.setLevel("WARNING")
 
@@ -65,9 +66,7 @@ def _build_runestone_book(config, course, click=click):
             exec(open("pavement.py").read(), paver_vars)
         else:
             click.echo(
-                "I can't find a pavement.py file in {} you need that to build".format(
-                    os.getcwd()
-                )
+                f"I can't find a pavement.py file in {os.getcwd()} you need that to build"
             )
             return False
     except ImportError as e:
@@ -84,9 +83,7 @@ def _build_runestone_book(config, course, click=click):
         return False
     if paver_vars["project_name"] != course:
         click.echo(
-            "Error: {} and {} do not match.  Your course name needs to match the project_name in pavement.py".format(
-                course, paver_vars["project_name"]
-            )
+            f"Error: {course} and {paver_vars['project_name']} do not match.  Your course name needs to match the project_name in pavement.py"
         )
         return False
     click.echo("Running runestone build --all")
@@ -422,18 +419,10 @@ def manifest_data_to_db(course_name, manifest_path):
     """
 
     try:
-        if os.environ["WEB2PY_CONFIG"] == "development":
-            DBURL = os.environ["DEV_DBURL"]
-        elif os.environ["WEB2PY_CONFIG"] == "production":
-            DBURL = os.environ["DBURL"]
-        elif os.environ["WEB2PY_CONFIG"] == "test":
-            DBURL = os.environ["TEST_DBURL"]
-        else:
-            rslogger.error("No WEB2PY_CONFIG found! Do not know which DB to use!")
-            exit(-1)
+        DBURL = get_dburl()
     except KeyError:
         rslogger.error("PreTeXt integration requires a valid WEB2PY Environment")
-        rslogger.error("make sure WEB2PY_CONFIG and DBURLs are set up")
+        rslogger.error("make sure SERVER_CONFIG and DBURLs are set up")
         exit(-1)
 
     engine = create_engine(DBURL)
@@ -450,10 +439,19 @@ def manifest_data_to_db(course_name, manifest_path):
         "course_attributes", meta, autoload=True, autoload_with=engine
     )
 
-    rslogger.info("Cleaning up old chapters info for {}".format(course_name))
+    rslogger.info(f"Cleaning up old chapters info for {course_name}")
     # Delete the chapter rows before repopulating. Subchapter rows are taken
     # care of by postgres with the ON DELETE CASCADE clause
+
     sess.execute(chapters.delete().where(chapters.c.course_id == course_name))
+
+    # Mark existing questions as from_source = 'F' all questions in the manifest will be updated
+    # and marked as from_source = 'T' if they are in the manifest.
+    sess.execute(
+        questions.update()
+        .where(questions.c.base_course == course_name)
+        .values(from_source="F")
+    )
 
     rslogger.info("Populating the database with Chapter information")
 
@@ -464,11 +462,7 @@ def manifest_data_to_db(course_name, manifest_path):
         rslogger.info(chapter)
         chap += 1
         rslogger.debug(
-            chapter.tag
-            + " "
-            + chapter.find("./id").text
-            + " "
-            + chapter.find("./title").text
+            f"{chapter.tag} {chapter.find('./id').text} {chapter.find('./title').text}"
         )
         ins = chapters.insert().values(
             chapter_name=chapter.find("./title").text,
@@ -486,11 +480,15 @@ def manifest_data_to_db(course_name, manifest_path):
         #  sub_chapter_num    | integer
         for subchapter in chapter.findall("./subchapter"):
             subchap += 1
-            rslogger.debug(
-                subchapter.find("./id").text + " " + subchapter.find("./title").text
-            )
+
+            chap_xmlid = subchapter.find("./id").text
+            rslogger.debug(f"subchapter {chap_xmlid}")
+            if not chap_xmlid:
+                rslogger.error(f"Missing id tag in subchapter {subchapter}")
+
             titletext = subchapter.find("./title").text
             if not titletext:
+                rslogger.debug(f"constructing title for subchapter {chap_xmlid}")
                 # ET.tostring  converts the tag and everything to text
                 # el.text gets the text inside the element
                 titletext = " ".join(
@@ -509,9 +507,7 @@ def manifest_data_to_db(course_name, manifest_path):
             sess.execute(ins)
 
             # Now add this chapter / subchapter to the questions table as a page entry
-            name = "{}/{}".format(
-                chapter.find("./title").text, subchapter.find("./title").text
-            )
+            name = f"{chapter.find('./title').text}/{subchapter.find('./title').text}"
             res = sess.execute(
                 text(
                     """select * from questions where name = :name and base_course = :course_name"""
@@ -554,6 +550,11 @@ def manifest_data_to_db(course_name, manifest_path):
                 rslogger.debug(f"found label= {qlabel}")
                 rslogger.debug("looking for data-component")
                 # pdb.set_trace()
+                if "optional" in question.attrib:
+                    optional = "T"
+                else:
+                    optional = "F"
+
                 el = question.find(".//*[@data-component]")
                 old_ww_id = None
                 # Unbelievably if find finds something it evals to False!!
@@ -569,8 +570,7 @@ def manifest_data_to_db(course_name, manifest_path):
                     if el is None:
                         idchild = "fix_me"
                         rslogger.error(
-                            "no id found for question: \n"
-                            + ET.tostring(question).decode("utf8")
+                            f"no id found for question: \n{ET.tostring(question).decode('utf8')}"
                         )
                     elif "id" in el.attrib:
                         idchild = el.attrib["id"]
@@ -588,7 +588,11 @@ def manifest_data_to_db(course_name, manifest_path):
                     if el is not None:
                         qtype = "webwork"
                         dbtext = ET.tostring(el).decode("utf8")
-
+                practice = "F"
+                if qtype == "webwork":
+                    practice = "T"
+                if el and "practice" in el.attrib:
+                    practice = "T"
                 valudict = dict(
                     base_course=course_name,
                     name=idchild,
@@ -600,6 +604,8 @@ def manifest_data_to_db(course_name, manifest_path):
                     subchapter=subchapter.find("./id").text,
                     chapter=chapter.find("./id").text,
                     qnumber=qlabel,
+                    optional=optional,
+                    practice=practice,
                 )
                 if old_ww_id:
                     namekey = old_ww_id

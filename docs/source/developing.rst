@@ -8,10 +8,12 @@ newcomer to contribute to the project.
 
 To get started it will be very helpful to `install
 poetry <https://python-poetry.org/docs/>`__. with poetry installed you
-will need to add two very important plugins.
+will need to add two very important plugins, and a highly convenient 3rd.
 
 1. ``poetry self add poetry-polylith-plugin``
 2. ``poetry self add poetry-multiproject-plugin``
+3. ``poetry self add poetry-dotenv-plugin``
+
 
 With those installed go ahead and run ``poetry poly info``
 
@@ -125,12 +127,11 @@ Project File Structure
         ├── 📁development
         │  └──  core.py
         ├──  docker-compose.yml
+        ├──  author.compose.yml
         ├── 📁docs
         │  ├── 📁build
         │  │  ├── 📁doctrees
         │  │  └── 📁html
-        │  ├── 📁graffle
-        │  │  └──  Phased Approach to Polylith.graffle
         │  ├── 📁images
         │  │  └──  RunestoneArch.svg
         │  ├──  Makefile
@@ -197,16 +198,17 @@ If you install postgresql locally you will need to do  a few things to get it re
 Environment variables
 ---------------------
 
-Environment variables are very important in a system like Runestone, The services need to know several values that need to be private.  They can also give you a certain level of control over how you customize your own deployment or development environment.  The following environment variables are used by the various services.  Some environment variables are important on the host side (h), some are important on the docker side (d), and some are important on both sides (b).  
+Environment variables are very important in a system like Runestone, The services need to know several values that need to be private.  They can also give you a certain level of control over how you customize your own deployment or development environment.  The following environment variables are used by the various services.  Some environment variables are important on the host side (h), some are important on the docker side (d), and some are important on both sides (b).  It is a good idea to define the host only environment variables in your login profile (.bashrc, config.fish, .zshrc, etc).  The docker only variables need only be defined in the ``.env`` file.  The both variables need to be defined in both places.  The ``.env`` file is read by docker-compose and used to set environment variables in the docker containers.  The host side environment variables are used by utilities like ``rsmanage`` to find the ``.env`` file and to set up the ssh agent socket as well as the database connection variables as described below.
+
 
 * ``RUNESTONE_PATH`` *h* - This is the path to the ``rs`` repository folder, it is used to find the ``.env`` file by utilities like ``rsmanage``.  You must set this on the host side.  Setting this in the ``.env`` file is too late, as it is used to help programs find the ``.env`` file.
 * ``BOOK_PATH`` - *h* This is the path to the folder that contains all of the books you want to serve.  This value is the path on the HOST side of the docker container.  So if you are running docker on a mac and your books are in ``/Users/bob/Runestone/books`` then you would set this to ``/Users/bob/Runestone/books``.  
-
+* ``SSH_AUTH_SOCK`` *h* - This is the path to the ssh agent socket.  This is used to allow the docker container to use your ssh keys to use rsync to deploy books to the workers.  You must set this on the host side, typically by running ``eval $(ssh-agent)`` from  bash.  You will also want to run ``ssh-add`` to add a key to the agent.  Both of these can be done in your .bashrc file.  If you are using a different shell you will need to figure out how to do the equivalent.  This is only important if you are running in production mode behind a load balancer.
 
 * ``DBURL`` *b* - This is the URL that is used to connect to the database in production.
 * ``DEV_DBURL`` *b* - This is the URL that is used to connect to the database in development.
 * ``DC_DBURL`` *d* - This is the URL that is used to connect to the database in docker-compose.  If this is not set it will default to ``$DBURL``.  This is useful if you want to use a different database for docker-compose than you do for development.
-* ``DC_DEV_DBURL`` *d* - This is the URL that is used to connect to the database in docker-compose development.  If this is not set it will default to ``$DEV_DBURL``.  This is useful if you want to use a different database for docker-compose development than you do for development.
+* ``DC_DEV_DBURL`` *d* - This is the URL that is used to connect to the database in docker-compose development.  If this is not set it will default to ``$DEV_DBURL``.  This is useful if you want to use a different database for docker-compose development than you do for development.  
 
 These two sets of variables can be identical, but they are separate because it is often the case that you want to refer to a database running on the host using the host name ``localhost`` from the host but from docker you need to use the host name ``host.docker.internal``.  So you can set ``DBURL`` to ``postgresql://runestone:runestone@localhost/runestone_dev`` and ``DC_DBURL`` to ``postgresql://runestone:runestone@host.docker.internal/runestone_dev``
 
@@ -217,6 +219,7 @@ These two sets of variables can be identical, but they are separate because it i
 * ``WEB2PY_CONFIG`` *d* - should be the same value as ``SERVER_CONFIG``.  It is used to determine which database URL to use.  This will go away when we have eliminated the web2py framework from the code base.
 * ``RUNESTONE_HOST`` *d* - this is the canonical host name of the server.  It is used to generate links to the server.  It should be something like ``runestone.academy`` or ``runestone.academy:8000`` if you are running on a non-standard port.
 * ``LOAD_BALANCER_HOST`` *d* - this is the canonical host name of the server when you are running in production with several workers.  It is used to generate links to the server.  It should be something like ``runestone.academy`` or ``runestone.academy:8000`` if you are running on a non-standard port.  You would typically only need to set this or RUNESTONE_HOST.
+* ``NUM_SERVERS`` *d* - this is the number of workers you are running. It will default to 1 if not set.  This is only important if you are running in production mode, behind a load balancer.
 
 Variables that are important for the host side are probably best set in your
 login shell environment (such as a .bashrc file) But you can also set them in
@@ -255,7 +258,7 @@ This assumes that you have already followed the instructions for installing post
 4.  From the ``bases/rsptx/interactives`` folder run ``npm install``.  This will install all of the javascript dependencies for the interactives.  Next run ``npm run build`` this will build the Runestone Interactive javascript files.  You will need to do this every time you make a change to the javascript files.  If you are NOT going to build a book, then you can skip this step.
 5.  Run the ``build.py`` script from the ``rs`` folder. The first step of this script will verify that you have all of your environment variables defined.
 6.  Make sure you are not already running a webserver on your computer.  You can check this by running ``lsof -i :80``.  If you see a line that says ``nginx`` then you are already running a webserver.  You can stop it by running ``sudo nginx -s stop``.  Alternatively you can edit the ``docker-compose.yml`` file and change the port that nginx is listening on to something other than 80.
-7.  Run ``docker-compose up`` from the ``rs`` folder.  This will start up all of the servers.  You can also run ``docker-compose up <server name>`` to start up just one server.  The server names are ``web2py``, ``book``, ``author``, ``admin``, ``analytics``, ``build``, ``nginx``.  You can also run ``docker-compose up -d`` to run the servers in the background.
+7.  Run ``docker-compose up`` from the ``rs`` folder.  This will start up all of the except the author and worker. Those are only needed in a production environment where you want to give authors the ability to build and deploy their own books. If you want to start up **everything** you run ``docker compose -f docker-compose.yml -f author.compose.yml`` You can also run ``docker-compose up <server name>`` to start up just one server.  The server names are ``runestone``, ``book``, ``author``, ``dash``, ``assignment``, ``worker``, and ``nginx``.  You can also run ``docker-compose up -d`` to run the servers in the background.
 8.  Now you should be able to connect to ``http://localhost/`` from your computer and see the homepage.
 
 
@@ -321,6 +324,11 @@ You will see a more detailed error message about what is missing.
 
 At a minimum you will need to start web2py long enough for you to login
 once.
+
+logging
+~~~~~~~
+
+By default we have logging set to DEBUG for all of the servers.  This is probably not what you want in production.   You can change the logging level for the runestone server by modifying the ``GUNICORN_CMD_ARGS` environment variable and adding ``--log-level 'warning'`` to the end of the string. the other servers can be configured by setting the ``LOG_LEVEL`` environment variable to ``warning``.
 
 
 Adding a New Feature
@@ -734,3 +742,11 @@ You can now run the library server along with everything else by running the fol
    * The ``volumes`` section is needed to mount the books folder on the host machine into the docker container.  This is needed because the library server needs to access the books folder on the host machine.
 
 To integrate the library server with everything else we would want to give it a prefix url of ``/library`` Then we would update the configuration for our nginx front end to proxy requests to the library server.  
+
+
+Other References
+----------------
+
+* Docker Compose `documentation <https://docs.docker.com/compose/compose-file/compose-file-v3/>`_
+* Nginx `documentation <https://nginx.org/en/docs/>`_
+  

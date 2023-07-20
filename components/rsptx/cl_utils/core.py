@@ -118,13 +118,13 @@ class pushd:
 
     def __enter__(self) -> None:
         if self.verbose:
-            flush_print("pushd {}".format(self.path))
+            flush_print(f"pushd {self.path}")
         self.cwd = os.getcwd()
         os.chdir(str(self.path))
 
     def __exit__(self, type_, value, traceback) -> Literal[False]:
         if self.verbose:
-            flush_print("popd - returning to {}.".format(self.cwd))
+            flush_print(f"popd - returning to {self.cwd}.")
         os.chdir(str(self.cwd))
         return False
 
@@ -143,8 +143,12 @@ def mkdir(path: str | Path, *args, **kwargs) -> None:
 
 # ### load .env file
 def load_project_dotenv(dotenv_path=None):
-    if Path(".env").exists():
-        load_dotenv()
+    if dotenv_path is None:
+        dotenv_path = Path(".env")
+    else:
+        dotenv_path = Path(dotenv_path)
+    if dotenv_path.exists():
+        load_dotenv(dotenv_path)
         print("Loaded .env file")
     elif "RUNESTONE_PATH" in os.environ:
         env_path = Path(os.environ["RUNESTONE_PATH"]) / ".env"

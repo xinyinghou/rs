@@ -18,7 +18,7 @@
             {% for book in book_list %}
             <tr>
                 <td>
-                    <a href="/editlibrary/{{book.basecourse}}"
+                    <a href="/author/editlibrary/{{book.basecourse}}"
                         >{{book.basecourse}}</a
                     >
                 </td>
@@ -32,10 +32,19 @@
                     </button>
                 </td>
                 <td>
+                    <a
+                        href="/ns/books/published/{{book.basecourse}}/{{book.main_page}}?mode=browsing"
+                        role="button"
+                        class="btn btn-success"
+                    >
+                        View
+                    </a>
+                </td>
+                <td>
                     <button
                         onclick="deployTask('{{book.basecourse}}')"
                         type="button"
-                        class="btn btn-success"
+                        class="btn btn-warning"
                     >
                         Deploy
                     </button>
@@ -53,7 +62,7 @@
                     <a
                         role="button"
                         class="btn btn-info"
-                        href="/impact/{{book.basecourse}}"
+                        href="/author/impact/{{book.basecourse}}"
                         >Student Impact</a
                     >
                 </td>
@@ -61,7 +70,7 @@
                     <a
                         role="button"
                         class="btn btn-info"
-                        href="/anonymize_data/{{book.basecourse}}"
+                        href="anonymize_data/{{book.basecourse}}"
                         >Datashop Dump</a
                     >
                 </td>

@@ -2,48 +2,6 @@ version: '3.8'
 
 services:
 
-  author:
-    build:
-      context: ./projects/author_server
-    image: registry.digitalocean.com/runestone-registry/rs-author
-    extra_hosts:
-      - host.docker.internal:host-gateway
-    ports:
-      - 8114:8114
-    command: uvicorn rsptx.author_server_api.main:app --host 0.0.0.0 --port 8114 --reload
-    volumes:
-      - ${BOOK_PATH}:/books
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DEV_DBURL=${DC_DEV_DBURL:-$DEV_DBURL}
-      - DBURL=${DC_DBURL:-$DBURL}
-      - RUNESTONE_PATH=/usr/src/app
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      - redis
-
-  worker:
-    build: 
-      context: ./projects/author_server
-    image: registry.digitalocean.com/runestone-registry/rs-worker
-    extra_hosts:
-      - host.docker.internal:host-gateway
-    command: celery -A rsptx.author_server_api.worker.celery worker
-    volumes:
-      - ${BOOK_PATH}:/books
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - RUNESTONE_PATH=/usr/src/app
-      - DEV_DBURL=${DC_DEV_DBURL:-$DEV_DBURL}
-      - DBURL=${DC_DBURL:-$DBURL}
-      - WEB2PY_CONFIG=${SERVER_CONFIG}
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      - author
-      - redis
-
   redis:
     image: redis:6-alpine
 
@@ -99,9 +57,9 @@ services:
         - host.docker.internal:host-gateway
       ports:
         - 8112:8112
-      command: gunicorn --bind 0.0.0.0:8112 rsptx.web2py_server.wsgihandler:application
+      #command: gunicorn --bind 0.0.0.0:8112 rsptx.web2py_server.wsgihandler:application
+      # see projects/w2p_login_assign_grade/entrypoint.sh and the Dockerfile
 
-      #command: tail -f /var/log/lastlog
       restart: always
       volumes:
         - ${BOOK_PATH}:/usr/books
@@ -167,14 +125,19 @@ services:
       context: ./
       dockerfile: projects/nginx/Dockerfile
     image: registry.digitalocean.com/runestone-registry/rs-nginx
-    
+    restart: always
     ports:
+      # ports are specified host:container
       - 80:80
       #- 443:443
     volumes:
       - ${BOOK_PATH}:/usr/books
+    depends_on:
+      - runestone
+      - book
+      - assignment
     links:
       - runestone
       - book
       - assignment
-      - author
+
