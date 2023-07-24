@@ -11,13 +11,16 @@
 # Standard library
 # ----------------
 import ast
-import json
+# import json
+import pandas as pd
 
 # Third-party imports
 # -------------------
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pyflakes import checker as pyflakes_checker
+from .personalized_parsons.end_to_end import get_personalized_parsons_help
+# from .personalized_parsons.test import test_import_personalized
 
 # Local application imports
 # -------------------------
@@ -68,7 +71,7 @@ async def parsons_scaffolding(request: Request):
     #code_bytes = await request.body()
     #code = code_bytes.decode("utf-8")
     #lines = code.split('\n=====\n')
-    
+    # test_import_personalized()
     code = """        class Cat: #settled
 ---
         def __init__(self, name, age): #settled
@@ -115,10 +118,23 @@ async def parsons_scaffolding(request: Request):
 #         """ + "\n---\n   ".join(lines) + """
 #         </pre>
 # """
+    df_question_bank = pd.read_excel("./example_code_question_bank.xlsx").fillna('')
+    print("start_to: get_personalized_parsons_help")
+
+    def personalized_help(student_code, problem_name):
+        input_dict = {"Problem Name": problem_name, "CF (Code)":student_code, "id": 0, "_comment": ""}
+        return get_personalized_parsons_help(input_dict, df_question_bank)
+
+    student_code = "Class cat:\n    def __init__(self, name, age):\n        name = name\n        self.age = age\n    def __str__()\n        return \"name: \" + self.name + \", age: \" + str(self.age)\n        ret 'Meow'\n c = Cat(\"Fluffy\", 3)\nprint(c)\nprint(c.make_sound())\n\n"
+    problem_name = "Classes_Basic_Cat_ac"
+
+    personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
+
     html2 = """
         <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"     data-noindent="true"  data-numbered="left"    style="visibility: hidden;">
-        """ + code + """
+        """ + personalized_Parsons_block + """
         </pre>
 """
 
-    return html1+"|||"+html2
+
+    return personalized_code_solution+"|||"+html2
