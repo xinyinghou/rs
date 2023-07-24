@@ -48,6 +48,9 @@ export default class ParsonsBlock {
                     $(line.view).addClass("indent" + lineIndent);
                 }
             }
+            console.log('linediv', lineDiv)
+            console.log('line', line)
+            console.log('line.view', line.view)
             lineDiv.appendChild(line.view);
         }
         var labelDiv = document.createElement("div");
@@ -69,6 +72,8 @@ export default class ParsonsBlock {
             $(view).append(labelDiv);
         }
         this.view = view;
+        // is not placeholder by default
+        this.isPlaceholder = false;
     }
     // Add a line (from another block) to this block
     addLine(line) {

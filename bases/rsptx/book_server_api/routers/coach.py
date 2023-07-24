@@ -65,16 +65,35 @@ async def parsons_scaffolding(request: Request):
     Takes in student code, generate a personalized Parsons problems with openAI,
     then converts the generated problem to .rst, and returns the .rst string.
     """
-    code_bytes = await request.body()
-    code = code_bytes.decode("utf-8")
-    lines = code.split('\n')
-    data_order = " ".join(str(x) for x in range(len(lines)))
+    #code_bytes = await request.body()
+    #code = code_bytes.decode("utf-8")
+    #lines = code.split('\n=====\n')
+    
+    code = """        class Cat: #settled
+---
+        def __init__(self, name, age): #settled
+---
+            self.name = name 
+            self.age = age #settled
+---
+            self.name = self.name #paired
+            self.age = age #settled
+---
+        def __str__(self): #settled
+---
+            return "name: " + self.name + ", age: " + str(self.age) 
+---
+        def make_sound(self): #settled
+---
+            return "Meow" 
+---
+            return "Woof" #paired"""
     
     # html = '\n        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-order="' + data_order + '"      style="visibility: hidden;">\n        '
     # html = html + "\n---\n   ".join(lines) + "\n        </pre>"
 
-    html = """
-        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"   data-order="0 1 2 3 4"      style="visibility: hidden;">
+    html1 = """
+        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-noindent="true"  data-numbered="left"   style="visibility: hidden;">
         def fib(num):
 ---
    if num == 0:
@@ -89,4 +108,17 @@ async def parsons_scaffolding(request: Request):
         </pre>
 """
 
-    return html
+
+
+#     html2 = """
+#         <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"     data-noindent="true"  data-numbered="left"    style="visibility: hidden;">
+#         """ + "\n---\n   ".join(lines) + """
+#         </pre>
+# """
+    html2 = """
+        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"     data-noindent="true"  data-numbered="left"    style="visibility: hidden;">
+        """ + code + """
+        </pre>
+"""
+
+    return html1+"|||"+html2

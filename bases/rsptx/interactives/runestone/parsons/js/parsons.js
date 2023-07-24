@@ -31,6 +31,8 @@ import LineBasedGrader from "./lineGrader";
 import DAGGrader from "./dagGrader";
 import ParsonsLine from "./parsonsLine";
 import ParsonsBlock from "./parsonsBlock";
+import PlaceholderBlock from "./placeholderBlock.js";
+import PlaceholderLine from "./placeholderLine.js";
 
 /* =====================================================================
 ==== Parsons Object ====================================================
@@ -388,6 +390,20 @@ export default class Parsons extends RunestoneBase {
                 lines[lines.length - 1].groupWithNext = false;
             }
         }
+        // create placeholder lines, create as a distractor
+        console.log('before creating placeholder line')
+        var placeholderLine = new PlaceholderLine(this);
+        console.log('after creating placeholder line')
+        lines.push(placeholderLine);
+        placeholderLine.distractor = true;
+        placeholderLine.paired = false;
+        placeholderLine.distractHelptext = "";
+        placeholderLine.groupWithNext = false;
+        //todo: not sure if need to add to indents
+        indents.push(placeholderLine.indent);
+        // todo: change this to a list of placehodler lines.
+        this.placeholderLines = placeholderLine;
+
         // Normalize the indents
         indents = indents.sort(function (a, b) {
             return a - b;
@@ -409,11 +425,13 @@ export default class Parsons extends RunestoneBase {
             this.sourceArea.appendChild(block.view);
         }
         for (i = 0; i < answerBlocks.length; i++) {
+            console.log('answerblock:', answerBlocks[i])
             block = answerBlocks[i];
             blocks.push(block);
             this.answerArea.appendChild(block.view);
         }
         this.blocks = blocks;
+        console.log(blocks);
         // If present, disable some blocks
         var disabled = options.disabled;
         if (disabled !== undefined) {
@@ -656,7 +674,9 @@ export default class Parsons extends RunestoneBase {
             answerHash == undefined ||
             answerHash.length == 1
         ) {
-            await this.initializeAreas(this.blocksFromSource(), [], options);
+            console.log('initializing area with settled blocks')
+            await this.initializeAreas(this.blocksFromSource(), this.settledBlocksFromSource(), options);
+            // await this.initializeAreas(this.blocksFromSource(), [], options);
         } else {
             this.initializeAreas(
                 this.blocksFromHash(sourceHash),
@@ -1012,6 +1032,10 @@ export default class Parsons extends RunestoneBase {
         var block, line, i;
         for (i = 0; i < this.lines.length; i++) {
             line = this.lines[i];
+            // do not include place holder in source blocks
+            if (line.isPlaceholderLine) {
+                continue;
+            }
             lines.push(line);
             if (!line.groupWithNext) {
                 unorderedBlocks.push(new ParsonsBlock(this, lines));
@@ -1134,6 +1158,15 @@ export default class Parsons extends RunestoneBase {
         }
         return blocks;
     }
+
+    // Return a list of blocks with placeholders that should be provided in the answer area.
+    settledBlocksFromSource() {
+        // testing: just return one placeholder
+        console.log('settledBlocksFromSource')
+        var placeholderTest = new PlaceholderBlock(this, this.placeholderLines, 3);
+        return [placeholderTest];
+    }
+
     // Return a codeblock that corresponds to the hash
     blockFromHash(hash) {
         var split = hash.split("_");
@@ -2446,6 +2479,8 @@ export default class Parsons extends RunestoneBase {
         var binCount = 0;
         var binChildren = 0;
         var blocksNotInBins = 0;
+        console.log('addblocklabels, blocks')
+        console.log(blocks)
         for (let i = 0; i < blocks.length; i++) {
             if (blocks[i].pairedBin() == -1) {
                 blocksNotInBins++;
@@ -2526,7 +2561,9 @@ export default class Parsons extends RunestoneBase {
             );
             localStorage.setItem(this.adaptiveId + "Solved", false);
         }
-        this.initializeAreas(this.blocksFromSource(), [], {});
+        console.log('reset view, initializeareas with settled')
+        this.initializeAreas(this.blocksFromSource(), this.settledBlocksFromSource(), {});
+        // this.initializeAreas(this.blocksFromSource(), [], {});
         this.initializeInteractivity();
         document.body.scrollTop = scrollTop;
     }

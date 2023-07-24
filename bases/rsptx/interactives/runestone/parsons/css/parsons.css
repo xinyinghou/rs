@@ -198,6 +198,20 @@
     /*background-color: transparent;*/
 }
 
+.parsons .placeholder-block {
+    font-style: italic;
+    background-color: white;
+    border-style: dashed;
+}
+
+.placeholder-block .lines {
+    display: none;
+}
+
+.placeholder-block .labels {
+    display: none;
+}
+
 .parsons code {
     display: inline-block;
     clear: both;

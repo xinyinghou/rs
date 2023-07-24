@@ -106,6 +106,7 @@ def process_one_block(block, choice=False, correct=False, natural=False):
         if line:
             line = line.replace("#paired", "")
             line = line.replace("#distractor", "")
+            line = line.replace("#settled", "")
             if natural:
                 res += wrap_with_tag(line, "p")
             else:
