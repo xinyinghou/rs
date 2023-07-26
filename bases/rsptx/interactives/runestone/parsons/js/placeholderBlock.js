@@ -12,12 +12,17 @@ export default class PlaceholderBlock extends ParsonsBlock {
 
         // create a normal parsons block, but use css to control visibility of normal content
         $(this.view).addClass("placeholder-block");
+        $(this.view).addClass("disabled");
         
         // create a new div displaying how many blocks are missing
         this.placeholderSize = placeholderSize;
         var content = document.createElement('div');
         $(content).addClass("placeholder-text");
-        content.innerText = `${placeholderSize} blocks are missing here`;
+        if (placeholderSize > 1) {
+            content.innerText = `${placeholderSize} blocks are missing here`;
+        } else {
+            content.innerText = `${placeholderSize} block is missing here`;
+        }
         $(this.view).append(content);
 
         this.isPlaceholder = true;

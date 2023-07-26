@@ -1371,8 +1371,11 @@ export default class Parsons extends RunestoneBase {
         var blocks = this.answerBlocks();
         for (var i = 0; i < blocks.length; i++) {
             var block = blocks[i];
-            for (var j = 0; j < block.lines.length; j++) {
-                answerLines.push(block.lines[j]);
+            if (!block.isPlaceholder) {
+                console.log("adding non placeholder block")
+                for (var j = 0; j < block.lines.length; j++) {
+                    answerLines.push(block.lines[j]);
+                }
             }
         }
         return answerLines;

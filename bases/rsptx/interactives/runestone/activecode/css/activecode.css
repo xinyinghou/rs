@@ -183,3 +183,13 @@
     padding-top: 10px;
     box-shadow: 10px 5px 5px gray;
 }
+
+#scaffolding-loading-prompt.loading{
+    display: block;
+}
+
+#scaffolding-loading-prompt{
+    display: none;
+    background-color: aquamarine;
+    font-weight: 400;
+}
