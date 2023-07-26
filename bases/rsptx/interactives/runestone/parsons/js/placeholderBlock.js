@@ -2,13 +2,13 @@ import ParsonsBlock from "./parsonsBlock";
 import ParsonsLine from "./parsonsLine";
 
 export default class PlaceholderBlock extends ParsonsBlock {
-    constructor(problem, placeholderLine, placeholderSize) {
+    constructor(problem, placeholderLines, placeholderSize) {
         // problem: Parsons instance
         // size: how many blocks it is holding
 
         // have to have at least one parsonslines, otherwise will be error in ParsonsBlock.
-        super(problem, [placeholderLine]);
-        this.placeholderLine = placeholderLine;
+        super(problem, placeholderLines);
+        this.placeholderLines = placeholderLines;
 
         // create a normal parsons block, but use css to control visibility of normal content
         $(this.view).addClass("placeholder-block");

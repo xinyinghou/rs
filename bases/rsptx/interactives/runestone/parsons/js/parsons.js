@@ -33,6 +33,7 @@ import ParsonsLine from "./parsonsLine";
 import ParsonsBlock from "./parsonsBlock";
 import PlaceholderBlock from "./placeholderBlock.js";
 import PlaceholderLine from "./placeholderLine.js";
+import SettledBlock from "./settledBlock.js";
 
 /* =====================================================================
 ==== Parsons Object ====================================================
@@ -289,6 +290,8 @@ export default class Parsons extends RunestoneBase {
         }
         var solution = [];
         var indents = [];
+        // if there is a placeholder needed to be created at the end
+        var placeholderNeeded = false;
         for (var i = 0; i < textBlocks.length; i++) {
             var textBlock = textBlocks[i];
             // Figure out options based on the #option
@@ -313,6 +316,13 @@ export default class Parsons extends RunestoneBase {
                     .substring(distractIndex + 12, textBlock.length)
                     .trim();
                 textBlock = textBlock.substring(0, distractIndex + 11);
+            } else if (textBlock.includes("#settled:")) {
+                // #settled: fixed blocks that are included in the solution
+                var settledIndex = textBlock.indexOf("#settled:");
+                distractHelptext = textBlock
+                    .substring(settledIndex + 9, textBlock.length)
+                    .trim();
+                textBlock = textBlock.substring(0, settledIndex + 8);
             } else if (textBlock.includes("#tag:")) {
                 textBlock = textBlock.replace(/#tag:.*;.*;/, (s) =>
                     s.replace(/\s+/g, "")
@@ -337,12 +347,30 @@ export default class Parsons extends RunestoneBase {
                 options["displaymath"] = false;
             }
             textBlock = textBlock.replace(
-                /#(paired|distractor|tag:.*;.*;)/,
+                /#(paired|distractor|settled|tag:.*;.*;)/,
                 function (mystring, arg1) {
                     options[arg1] = true;
                     return "";
                 }
             );
+
+            // if block is #settled: create a placeholder line (PH) before the lines,
+            //          if it is not the first block, and the previous block is not settled
+            // If lines are: settled, line 1, line 2, line 3, settled, line 4:
+            // Create settled, line 1, line 2, line 3, PH1, settled, line 4, PH2
+            // If lines are: line 1, settled, settled, line 2, line 3, line 4, settled:
+            // Create line 1, PH1, settled, settled, line 2, line 3, line 4, PH2, settled
+            if (options["settled"] && i > 0 && lines.length > 0 && !lines[lines.length - 1].isSettled) {
+                var placeholderLine = new PlaceholderLine(this);
+                lines.push(placeholderLine);
+                placeholderLine.distractor = true;
+                placeholderLine.paired = false;
+                placeholderLine.distractHelptext = "";
+                placeholderLine.groupWithNext = false;
+                placeholderLine.indent = 0;
+                placeholderNeeded = true;
+            }
+
             // Create lines
             var lines = [];
             if (!options["displaymath"]) {
@@ -368,6 +396,12 @@ export default class Parsons extends RunestoneBase {
                         line.distractor = true;
                         line.paired = false;
                         line.distractHelptext = distractHelptext;
+                    } else if (options["settled"]) {
+                        // settled lines: fixed solution lines
+                        line.distractor = false;
+                        line.paired = false;
+                        line.isSettled = true;
+                        solution.push(line);
                     } else {
                         line.distractor = false;
                         line.paired = false;
@@ -390,19 +424,16 @@ export default class Parsons extends RunestoneBase {
                 lines[lines.length - 1].groupWithNext = false;
             }
         }
-        // create placeholder lines, create as a distractor
-        console.log('before creating placeholder line')
-        var placeholderLine = new PlaceholderLine(this);
-        console.log('after creating placeholder line')
-        lines.push(placeholderLine);
-        placeholderLine.distractor = true;
-        placeholderLine.paired = false;
-        placeholderLine.distractHelptext = "";
-        placeholderLine.groupWithNext = false;
-        //todo: not sure if need to add to indents
-        indents.push(placeholderLine.indent);
-        // todo: change this to a list of placehodler lines.
-        this.placeholderLines = placeholderLine;
+
+        if (placeholderNeeded && !lines[lines.length - 1].isSettled) {
+            // if there is a settled line before the ending lines
+            var placeholderLine = new PlaceholderLine(this);
+            lines.push(placeholderLine);
+            placeholderLine.distractor = true;
+            placeholderLine.paired = false;
+            placeholderLine.distractHelptext = "";
+            placeholderLine.groupWithNext = false;
+        }
 
         // Normalize the indents
         indents = indents.sort(function (a, b) {
@@ -412,6 +443,7 @@ export default class Parsons extends RunestoneBase {
             line = this.lines[i];
             line.indent = indents.indexOf(line.indent);
         }
+        console.log(this.lines)
         this.solution = solution;
     }
     // Based on the blocks, create the source and answer areas
@@ -425,13 +457,12 @@ export default class Parsons extends RunestoneBase {
             this.sourceArea.appendChild(block.view);
         }
         for (i = 0; i < answerBlocks.length; i++) {
-            console.log('answerblock:', answerBlocks[i])
             block = answerBlocks[i];
             blocks.push(block);
             this.answerArea.appendChild(block.view);
         }
         this.blocks = blocks;
-        console.log(blocks);
+        // console.log('initializearea, blocks', blocks);
         // If present, disable some blocks
         var disabled = options.disabled;
         if (disabled !== undefined) {
@@ -669,23 +700,22 @@ export default class Parsons extends RunestoneBase {
         if (options.hasSolved !== undefined) {
             this.hasSolved = options.hasSolved;
         }
-        if (
-            sourceHash == undefined ||
-            answerHash == undefined ||
-            answerHash.length == 1
-        ) {
-            console.log('initializing area with settled blocks')
-            await this.initializeAreas(this.blocksFromSource(), this.settledBlocksFromSource(), options);
+        // if (
+        //     sourceHash == undefined ||
+        //     answerHash == undefined ||
+        //     answerHash.length == 1
+        // ) {
+        await this.initializeAreas(this.blocksFromSource(), this.settledBlocksFromSource(), options);
             // await this.initializeAreas(this.blocksFromSource(), [], options);
-        } else {
-            this.initializeAreas(
-                this.blocksFromHash(sourceHash),
-                this.blocksFromHash(answerHash),
-                options
-            );
-            this.grade = this.grader.grade();
-            this.correct = this.grade;
-        }
+        // } else {
+        //     this.initializeAreas(
+        //         this.blocksFromHash(sourceHash),
+        //         this.blocksFromHash(answerHash),
+        //         options
+        //     );
+        //     this.grade = this.grader.grade();
+        //     this.correct = this.grade;
+        // }
         // Start the interface
         if (this.needsReinitialization !== true) {
             this.initializeInteractivity();
@@ -734,6 +764,36 @@ export default class Parsons extends RunestoneBase {
         }
         localStorage.setItem(this.storageId, JSON.stringify(toStore));
     }
+
+    updatePlaceholders() {
+        var answerBlocks = this.answerBlocks();
+        var i, hasNormalBlock;
+        for (i = 0; i < answerBlocks.length; ++i) {
+            // checking on placeholders
+            if (answerBlocks[i].isPlaceholder) {
+                hasNormalBlock = false;
+                if (i > 0 && !answerBlocks[i - 1].isSettled) {
+                    hasNormalBlock = true;
+                }
+                if (i < answerBlocks.length - 1 && !answerBlocks[i + 1].isSettled) {
+                    hasNormalBlock = true;
+                }
+            
+                if (hasNormalBlock) {
+                    // if a placeholder has a normal block before or after, hide it;
+                    if (!$(answerBlocks[i].view).hasClass('hide')) {
+                        $(answerBlocks[i].view).addClass("hide");
+                    }
+                } else {
+                    // otherwise, show it
+                    if ($(answerBlocks[i].view).hasClass('hide')) {
+                        $(answerBlocks[i].view).removeClass("hide");
+                    }
+                }
+            }
+        }
+    }
+
     /* =====================================================================
     ==== LOGGING ===========================================================
     ===================================================================== */
@@ -1032,8 +1092,8 @@ export default class Parsons extends RunestoneBase {
         var block, line, i;
         for (i = 0; i < this.lines.length; i++) {
             line = this.lines[i];
-            // do not include place holder in source blocks
-            if (line.isPlaceholderLine) {
+            // do not include place holder or settled solution lines in source blocks
+            if (line.isPlaceholderLine || line.isSettled) {
                 continue;
             }
             lines.push(line);
@@ -1156,15 +1216,42 @@ export default class Parsons extends RunestoneBase {
                 }
             }
         }
+        console.log("blocksfromsource", blocks);
         return blocks;
     }
 
     // Return a list of blocks with placeholders that should be provided in the answer area.
     settledBlocksFromSource() {
-        // testing: just return one placeholder
-        console.log('settledBlocksFromSource')
-        var placeholderTest = new PlaceholderBlock(this, this.placeholderLines, 3);
-        return [placeholderTest];
+        var blocks = [];
+        var lines = [];
+        var answerBlocksCount = 0;
+        var line, i;
+
+        for (i = 0; i < this.lines.length; i++) {
+            line = this.lines[i];
+            lines.push(line);
+            if (!line.groupWithNext) {
+                if (line.isPlaceholderLine) {
+                    // found a placeholder line. a placeholder line has at least one normal block before it.
+                    // also a placeholder line always has "groupWithNext" false.
+                    blocks.push(new PlaceholderBlock(this, lines, answerBlocksCount));
+                    // reset answer block count
+                    answerBlocksCount = 0;
+                    lines = [];
+                } else if (line.isSettled) {
+                    blocks.push(new SettledBlock(this, lines));
+                    answerBlocksCount = 0;
+                    lines = [];
+                } else {
+                    if (!lines[0].distractor) {
+                        answerBlocksCount++;
+                    }
+                    lines = [];
+                }
+            }
+        }
+        console.log('settledblocksfromsource', blocks)
+        return blocks;
     }
 
     // Return a codeblock that corresponds to the hash
@@ -2479,8 +2566,6 @@ export default class Parsons extends RunestoneBase {
         var binCount = 0;
         var binChildren = 0;
         var blocksNotInBins = 0;
-        console.log('addblocklabels, blocks')
-        console.log(blocks)
         for (let i = 0; i < blocks.length; i++) {
             if (blocks[i].pairedBin() == -1) {
                 blocksNotInBins++;
@@ -2561,7 +2646,6 @@ export default class Parsons extends RunestoneBase {
             );
             localStorage.setItem(this.adaptiveId + "Solved", false);
         }
-        console.log('reset view, initializeareas with settled')
         this.initializeAreas(this.blocksFromSource(), this.settledBlocksFromSource(), {});
         // this.initializeAreas(this.blocksFromSource(), [], {});
         this.initializeInteractivity();
