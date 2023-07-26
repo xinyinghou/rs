@@ -48,9 +48,6 @@ export default class ParsonsBlock {
                     $(line.view).addClass("indent" + lineIndent);
                 }
             }
-            console.log('linediv', lineDiv)
-            console.log('line', line)
-            console.log('line.view', line.view)
             lineDiv.appendChild(line.view);
         }
         var labelDiv = document.createElement("div");
@@ -372,6 +369,7 @@ export default class ParsonsBlock {
                 if (this.problem.textMove) {
                     this.problem.logMove("kmove");
                     this.problem.textMove = false;
+                    this.problem.updatePlaceholders();
                 }
                 this.problem.exitKeyboardMode();
             }
@@ -457,6 +455,7 @@ export default class ParsonsBlock {
         delete this.problem.movingY;
         this.problem.updateView();
         this.problem.logMove("move");
+        this.problem.updatePlaceholders();
     }
     // Called when a block is moved
     panMove(event) {
@@ -779,6 +778,7 @@ export default class ParsonsBlock {
             $(this.view).addClass("down");
             this.problem.textMove = false;
             this.problem.logMove("kmove");
+            this.problem.updatePlaceholders();
         } else {
             $(this.view).removeClass("down");
             $(this.view).addClass("up");

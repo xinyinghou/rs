@@ -321,10 +321,24 @@ export class ActiveCode extends RunestoneBase {
     }
 
     async parsonsBtnHandler() {
+        // create a loading prompt
+        if (!document.getElementById("scaffolding-loading-prompt")) {
+            let loadingPrompt = document.createElement('div');
+            loadingPrompt.id = 'scaffolding-loading-prompt';
+            this.outerDiv.insertBefore(loadingPrompt, this.outerDiv.firstChild);
+            loadingPrompt.innerText = "Parsons scaffolding loading...";
+            $('#scaffolding-loading-prompt').addClass('loading');
+        } else {
+            // if already exists: add loading status
+            $('#scaffolding-loading-prompt').addClass('loading');
+        }
+
         // send code to backend to get the rst for parsons problem
         // todo: change name
         let rst = await this.getParsonsRst();
         console.log('rst', rst);
+
+        $('#scaffolding-loading-prompt').removeClass('loading');
 
         var code = `
         <div class="runestone parsons-container ">

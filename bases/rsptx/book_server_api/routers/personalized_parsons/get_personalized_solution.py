@@ -1,7 +1,6 @@
 import openai
 
-openai.api_key = "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"
-#openai.organization = "org-YEK3YQ7BAM9Ag39zqbbXyRnS"
+openai.api_key = ""
 
 system_message = """
 Fix the provided Python [user-code] based on the provided [task-description] and [sample-solution] and generate [fixed-code]. 

@@ -2,8 +2,7 @@ import openai
 import re
 import time
 
-openai.api_key = "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"
-#openai.organization = "org-YEK3YQ7BAM9Ag39zqbbXyRnS"
+openai.api_key = ""
 
 system_message = """Generate a one-line [distractor] from [correct-line] based on the provided [task-description] and [sample-solution]. 
 This [distractor] should look samiliar as [correct-line] but contains one or two common syntax or semantic errors to highlight common misconceptions.

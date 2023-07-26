@@ -74,23 +74,23 @@ async def parsons_scaffolding(request: Request):
     # test_import_personalized()
     code = """        class Cat: #settled
 ---
-        def __init__(self, name, age): #settled
+    def __init__(self, name, age): #settled
 ---
-            self.name = name 
-            self.age = age #settled
+        self.name = name 
+        self.age = age
 ---
-            self.name = self.name #paired
-            self.age = age #settled
+        self.name = self.name
+        self.age = age #paired
 ---
-        def __str__(self): #settled
+    def __str__(self): #settled
 ---
-            return "name: " + self.name + ", age: " + str(self.age) 
+        return "name: " + self.name + ", age: " + str(self.age) 
 ---
-        def make_sound(self): #settled
+    def make_sound(self): #settled
 ---
-            return "Meow" 
+        return "Meow" 
 ---
-            return "Woof" #paired"""
+        return "Woof" #paired"""
     
     # html = '\n        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-order="' + data_order + '"      style="visibility: hidden;">\n        '
     # html = html + "\n---\n   ".join(lines) + "\n        </pre>"
@@ -100,7 +100,7 @@ async def parsons_scaffolding(request: Request):
         def fib(num):
 ---
    if num == 0:
-       return 0:
+       return 3:
 ---
    if num == 1:
        return 1:
