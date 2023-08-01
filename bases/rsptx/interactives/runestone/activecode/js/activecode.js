@@ -78,6 +78,8 @@ export class ActiveCode extends RunestoneBase {
         this.includes = $(orig).data("include");
         this.hidecode = $(orig).data("hidecode");
         this.chatcodes = $(orig).data("chatcodes");
+        this.openaiparsons = $(orig).data("openaiparsons");
+        this.openaicode = $(orig).data("openaicode");
         this.hidehistory = $(orig).data("hidehistory");
         this.question = $(opts.orig).find(`#${this.divid}_question`)[0];
         this.tie = $(orig).data("tie");
@@ -317,15 +319,16 @@ export class ActiveCode extends RunestoneBase {
 
     async parsonsBtnHandler() {
         // create a loading prompt
-        if (!document.getElementById("scaffolding-loading-prompt")) {
+        console.log($(this.outerDiv).find("#scaffolding-loading-prompt").length);
+        if (!$(this.outerDiv).find("#scaffolding-loading-prompt").length) {
             let loadingPrompt = document.createElement('div');
             loadingPrompt.id = 'scaffolding-loading-prompt';
             this.outerDiv.insertBefore(loadingPrompt, this.outerDiv.firstChild);
-            loadingPrompt.innerText = "Parsons scaffolding loading...";
-            $('#scaffolding-loading-prompt').addClass('loading');
+            loadingPrompt.innerText = "Scaffolding loading...";
+            $(loadingPrompt).addClass('loading');
         } else {
             // if already exists: add loading status
-            $('#scaffolding-loading-prompt').addClass('loading');
+            $(this.outerDiv).find("#scaffolding-loading-prompt").addClass('loading');
         }
 
         // send code to backend to get the rst for parsons problem
@@ -334,9 +337,23 @@ export class ActiveCode extends RunestoneBase {
         this.scaffoldingAnswer = answer_rst.split("||split||")[0];
         let rst = answer_rst.split("||split||")[1];
 
-        $('#scaffolding-loading-prompt').removeClass('loading');
+        $(this.outerDiv).find("#scaffolding-loading-prompt").removeClass('loading');
 
-        var code = `
+        var codeCode = `<div class="runestone explainer ac_section ">
+<div data-component="activecode" id=test_code_1 data-question_label="1.1.1">
+<div id=test_code_1_question class="ac_question">
+</div>
+<textarea data-lang="python" id="test_code_1_editor" 
+      data-timelimit=25000 
+    data-audio=''      
+           data-wasm=/_static
+     style="visibility: hidden;">` + this.scaffoldingAnswer + 
+`</textarea>
+</div>
+</div>`
+
+        
+        var parsonsCode = `
         <div class="runestone parsons-container ">
         <div data-component="parsons" id="test_parsons_1" class="parsons" >
         <div class="parsons_question parsons-text" >
@@ -349,7 +366,7 @@ export class ActiveCode extends RunestoneBase {
             this.outerDiv.insertBefore(scaffoldingContainer, this.outerDiv.firstChild);
             let closeScaffoldingButton = document.createElement('button');
             closeScaffoldingButton.classList.add('btn','btn-success');
-            closeScaffoldingButton.innerText = "Close Mixed Up Code";
+            closeScaffoldingButton.innerText = "Close Scaffolding";
             closeScaffoldingButton.onclick = () => {
                 $('#scaffolding-container').addClass('hidden');
             }
@@ -376,7 +393,11 @@ export class ActiveCode extends RunestoneBase {
             $('#copy-answer-button').addClass('copy-button-hide');
         }
 
-        await renderRunestoneComponent(code, "parsons-scaffolding");
+        if (this.openaiparsons) {
+            await renderRunestoneComponent(parsonsCode, "parsons-scaffolding");
+        } else if (this.openaicode) {
+            await renderRunestoneComponent(codeCode, "parsons-scaffolding");
+        }
 //             // get the text as above
 //             // send the text to an ajax endpoint that will insert it into
 //             // a sphinx project, run sphinx, and send back the generated index file
@@ -399,11 +420,17 @@ export class ActiveCode extends RunestoneBase {
         $(butt).attr("type", "button");
 
         // move this to a separate function "createParsonsScaffolding"
-        let parsonsScaffoldingBtn = document.createElement("button");
-        parsonsScaffoldingBtn.innerText = "Parsons Scaffolding";
-        parsonsScaffoldingBtn.classList.add(["btn", "btn-success"]);
-        parsonsScaffoldingBtn.onclick = this.parsonsBtnHandler.bind(this);
-        ctrlDiv.appendChild(parsonsScaffoldingBtn);
+        if (this.openaicode || this.openaiparsons) {
+            let parsonsScaffoldingBtn = document.createElement("button");
+            if (this.openaiparsons) {
+                parsonsScaffoldingBtn.innerText = "Show Parsons Scaffolding";
+            } else {
+                parsonsScaffoldingBtn.innerText = "Show Fixed Solution";
+            }
+            parsonsScaffoldingBtn.classList.add(["btn", "btn-success"]);
+            parsonsScaffoldingBtn.onclick = this.parsonsBtnHandler.bind(this);
+            ctrlDiv.appendChild(parsonsScaffoldingBtn);
+        }
 
         if (this.enabledownload || eBookConfig.downloadsEnabled) {
             this.addDownloadButton(ctrlDiv);

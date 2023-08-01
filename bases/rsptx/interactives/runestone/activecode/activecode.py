@@ -100,7 +100,7 @@ TEMPLATE_START = """
 TEMPLATE_END = """
 </div>
 <textarea data-lang="%(language)s" id="%(divid)s_editor" %(autorun)s
-    %(hidecode)s %(include)s %(timelimit)s %(coach)s %(codelens)s %(enabledownload)s %(chatcodes)s %(optional)s
+    %(hidecode)s %(include)s %(timelimit)s %(coach)s %(codelens)s %(enabledownload)s %(openaiparsons)s %(openaicode)s %(chatcodes)s %(optional)s
     data-audio='%(ctext)s' %(sourcefile)s %(datafile)s %(stdin)s %(tie)s %(dburl)s %(nopair)s
     %(cargs)s %(largs)s %(rargs)s %(iargs)s %(gradebutton)s %(caption)s %(hidehistory)s %(wasmuri)s
     %(showlastsql)s style="visibility: hidden;">
@@ -211,6 +211,8 @@ class ActiveCode(RunestoneIdDirective):
        :timelimit: -- set the time limit for this program in seconds
        :language: python, html, javascript, java, python2, python3
        :chatcodes: -- Enable users to talk about this code snippet with others
+       :openaiparsons: -- use query from openai to generate parsons
+       :openaicode: -- use query from openai to generate code
        :tour_1: audio tour track
        :tour_2: audio tour track
        :tour_3: audio tour track
@@ -257,6 +259,8 @@ class ActiveCode(RunestoneIdDirective):
             "hidecode": directives.flag,
             "language": directives.unchanged,
             "chatcodes": directives.flag,
+            "openaiparsons": directives.flag,
+            "openaicode": directives.flag,
             "tour_1": directives.unchanged,
             "tour_2": directives.unchanged,
             "tour_3": directives.unchanged,
@@ -360,6 +364,16 @@ class ActiveCode(RunestoneIdDirective):
             self.options["chatcodes"] = 'data-chatcodes="true"'
         else:
             self.options["chatcodes"] = ""
+
+        if "openaiparsons" in self.options:
+            self.options["openaiparsons"] = 'data-openaiparsons="true"'
+        else:
+            self.options["openaiparsons"] = ""
+
+        if "openaicode" in self.options:
+            self.options["openaicode"] = 'data-openaicode="true"'
+        else:
+            self.options["openaicode"] = ""
 
         if "language" not in self.options:
             self.options["language"] = "python"
