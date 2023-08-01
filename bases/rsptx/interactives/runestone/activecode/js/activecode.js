@@ -375,7 +375,7 @@ export class ActiveCode extends RunestoneBase {
             let copyAnswerButton = document.createElement('button');
             copyAnswerButton.id = "copy-answer-button";
             copyAnswerButton.classList.add('btn','btn-success', 'copy-button-hide');
-            copyAnswerButton.innerText = "Copy Answer to Code";
+            copyAnswerButton.innerText = "Copy Answer to Clipboard";
             copyAnswerButton.onclick = () => {
                 navigator.clipboard.writeText(this.scaffoldingAnswer).then(()=> {
                     alert("answer copied");
@@ -396,6 +396,8 @@ export class ActiveCode extends RunestoneBase {
         if (this.openaiparsons) {
             await renderRunestoneComponent(parsonsCode, "parsons-scaffolding");
         } else if (this.openaicode) {
+            // reveal copy button by default
+            $('#copy-answer-button').removeClass('copy-button-hide');
             await renderRunestoneComponent(codeCode, "parsons-scaffolding");
         }
 //             // get the text as above
