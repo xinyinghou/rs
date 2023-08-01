@@ -193,3 +193,7 @@
     background-color: aquamarine;
     font-weight: 400;
 }
+
+.copy-button-hide {
+    display: none;
+}

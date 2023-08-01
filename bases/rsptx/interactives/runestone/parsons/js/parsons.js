@@ -768,30 +768,70 @@ export default class Parsons extends RunestoneBase {
     updatePlaceholders() {
         var answerBlocks = this.answerBlocks();
         var i, hasNormalBlock;
+        var placeholder;
+        // hide placeholder
         for (i = 0; i < answerBlocks.length; ++i) {
             // checking on placeholders
             if (answerBlocks[i].isPlaceholder) {
+                placeholder = answerBlocks[i];
                 hasNormalBlock = false;
-                if (i > 0 && !answerBlocks[i - 1].isSettled) {
+                if (i > 0 && !answerBlocks[i - 1].isSettled && !answerBlocks[i - 1].isPlaceholder) {
                     hasNormalBlock = true;
                 }
-                if (i < answerBlocks.length - 1 && !answerBlocks[i + 1].isSettled) {
+                if (i < answerBlocks.length - 1 && !answerBlocks[i + 1].isSettled && !answerBlocks[i + 1].isPlaceholder) {
                     hasNormalBlock = true;
                 }
             
                 if (hasNormalBlock) {
                     // if a placeholder has a normal block before or after, hide it;
-                    if (!$(answerBlocks[i].view).hasClass('hide')) {
-                        $(answerBlocks[i].view).addClass("hide");
+                    if (!$(placeholder.view).hasClass('hide')) {
+                        $(placeholder.view).addClass("hide");
+                        for (var j = 0; j < answerBlocks.length - 1 - i; j++) {
+                            console.log('moving down')
+                            placeholder.moveDown();
+                        }
                     }
-                } else {
-                    // otherwise, show it
-                    if ($(answerBlocks[i].view).hasClass('hide')) {
-                        $(answerBlocks[i].view).removeClass("hide");
-                    }
+                }
+ 
+            }
+        }
+
+        answerBlocks = this.answerBlocks();
+        console.log('answerblocks for moving up', answerBlocks);
+        var contentLength = 0;
+        while (contentLength < answerBlocks.length && !$(answerBlocks[contentLength].view).hasClass('hide')) {
+            contentLength++;
+        }
+        console.log('contentlength', contentLength);
+        // show placeholder when needed
+        var prevIsSettled = true;
+        for (i = 0; i < contentLength; ++i) {
+            // locate two consecutive settled blocks
+            if (answerBlocks[i].isSettled && prevIsSettled) {
+                break;
+            }
+            if (answerBlocks[i].isSettled) {
+                prevIsSettled = true;
+            } else {
+                prevIsSettled = false;
+            }
+        }
+        console.log('i', i)
+        if (i < contentLength || answerBlocks[contentLength - 1].isSettled) {
+            // move up to index before "i"
+            placeholder = answerBlocks[answerBlocks.length - 1];
+            if ($(placeholder.view).hasClass('hide')) {
+                console.log("trying to move block ", placeholder)
+                console.log("trying to move to ", i)
+                $(placeholder.view).removeClass("hide");
+                // should be moved right before the block answerBlocks[i]
+                for (var j = 0; j < answerBlocks.length - 1 - i; j++) {
+                    console.log('moving up')
+                    placeholder.moveUp();
                 }
             }
         }
+        console.log("result blocks", this.answerBlocks())
     }
 
     /* =====================================================================
@@ -1226,6 +1266,7 @@ export default class Parsons extends RunestoneBase {
         var lines = [];
         var answerBlocksCount = 0;
         var line, i;
+        var settledBlocksBeforeCount = 0;
 
         for (i = 0; i < this.lines.length; i++) {
             line = this.lines[i];
@@ -1234,12 +1275,13 @@ export default class Parsons extends RunestoneBase {
                 if (line.isPlaceholderLine) {
                     // found a placeholder line. a placeholder line has at least one normal block before it.
                     // also a placeholder line always has "groupWithNext" false.
-                    blocks.push(new PlaceholderBlock(this, lines, answerBlocksCount));
+                    blocks.push(new PlaceholderBlock(this, lines, answerBlocksCount, settledBlocksBeforeCount));
                     // reset answer block count
                     answerBlocksCount = 0;
                     lines = [];
                 } else if (line.isSettled) {
                     blocks.push(new SettledBlock(this, lines));
+                    settledBlocksBeforeCount++;
                     answerBlocksCount = 0;
                     lines = [];
                 } else {
@@ -1367,6 +1409,7 @@ export default class Parsons extends RunestoneBase {
     }
     // Return array of codelines based on what is in the answer field
     answerLines() {
+        console.log("udpated answerlines")
         var answerLines = [];
         var blocks = this.answerBlocks();
         for (var i = 0; i < blocks.length; i++) {
@@ -1422,6 +1465,11 @@ export default class Parsons extends RunestoneBase {
                     this.adaptiveId + "recentAttempts",
                     this.recentAttempts
                 );
+                // TODO: look for the "copy scaffolding answer button" and reveal it. only for personalized scaffolding study
+                if ($('#copy-answer-button')) {
+                    console.log("revealing button")
+                    $('#copy-answer-button').removeClass('copy-button-hide');
+                }
             }
             localStorage.setItem(
                 this.adaptiveId + this.divid + "Count",

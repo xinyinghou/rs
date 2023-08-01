@@ -198,17 +198,18 @@
     /*background-color: transparent;*/
 }
 
-.parsons .placeholder-block {
+.parsons .placeholder-block.disabled.block {
     font-style: italic;
     background-color: white;
     border-style: dashed;
-    padding: 30px 10px;
+    padding: 20px 10px;
+    opacity: 1;
 }
 
 .parsons .settled-block.disabled.block {
     border: 1px solid black;
     background-color: #afe1af;
-    opacity: 0.5;
+    opacity: 1;
 }
 
 .parsons .settled-block .block-label {

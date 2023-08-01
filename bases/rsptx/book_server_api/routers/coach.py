@@ -94,7 +94,6 @@ async def parsons_scaffolding(request: Request):
     
     # html = '\n        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-order="' + data_order + '"      style="visibility: hidden;">\n        '
     # html = html + "\n---\n   ".join(lines) + "\n        </pre>"
-
     html1 = """
         <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-noindent="true"  data-numbered="left"   style="visibility: hidden;">
         def fib(num):
@@ -110,7 +109,6 @@ async def parsons_scaffolding(request: Request):
    return fib(num - 1) * fib(num - 2) #paired
         </pre>
 """
-
 
 
 #     html2 = """
@@ -130,11 +128,11 @@ async def parsons_scaffolding(request: Request):
 
     personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
 
-    html2 = """
+    parsons_html = """
         <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"     data-noindent="true"  data-numbered="left"    style="visibility: hidden;">
         """ + personalized_Parsons_block + """
         </pre>
 """
 
 
-    return personalized_code_solution+"|||"+html2
+    return personalized_code_solution + "||split||" + parsons_html 

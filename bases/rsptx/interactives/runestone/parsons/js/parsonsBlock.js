@@ -778,7 +778,9 @@ export default class ParsonsBlock {
             $(this.view).addClass("down");
             this.problem.textMove = false;
             this.problem.logMove("kmove");
-            this.problem.updatePlaceholders();
+            if (!this.isPlaceholder) {
+                this.problem.updatePlaceholders();
+            }
         } else {
             $(this.view).removeClass("down");
             $(this.view).addClass("up");
