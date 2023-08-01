@@ -92,23 +92,16 @@ async def parsons_scaffolding(request: Request):
     
     # html = '\n        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-order="' + data_order + '"      style="visibility: hidden;">\n        '
     # html = html + "\n---\n   ".join(lines) + "\n        </pre>"
-
     html1 = """
-        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-noindent="true"  data-numbered="left"   style="visibility: hidden;">
-        def fib(num):
----
-   if num == 0:
-       return 3:
----
-   if num == 1:
-       return 1:
----
-   return fib(num - 1) + fib(num - 2)
----
-   return fib(num - 1) * fib(num - 2) #paired
-        </pre>
+class Cat:
+    def __init__(self, name, age):
+        self.name = name 
+        self.age = age
+    def __str__(self):
+        return "name: " + self.name + ", age: " + str(self.age) 
+    def make_sound(self):
+        return "Meow"
 """
-
 
 
 #     html2 = """
@@ -124,4 +117,4 @@ async def parsons_scaffolding(request: Request):
 
     time.sleep(3)
 
-    return html2
+    return html1 + "||split||" + html2

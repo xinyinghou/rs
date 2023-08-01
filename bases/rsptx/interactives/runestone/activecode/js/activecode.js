@@ -330,8 +330,9 @@ export class ActiveCode extends RunestoneBase {
 
         // send code to backend to get the rst for parsons problem
         // todo: change name
-        let rst = await this.getParsonsRst();
-        console.log('rst', rst);
+        let answer_rst = await this.getParsonsRst();
+        this.scaffoldingAnswer = answer_rst.split("||split||")[0];
+        let rst = answer_rst.split("||split||")[1];
 
         $('#scaffolding-loading-prompt').removeClass('loading');
 
@@ -347,12 +348,23 @@ export class ActiveCode extends RunestoneBase {
             scaffoldingContainer.id = 'scaffolding-container';
             this.outerDiv.insertBefore(scaffoldingContainer, this.outerDiv.firstChild);
             let closeScaffoldingButton = document.createElement('button');
-            closeScaffoldingButton.classList.add(['btn','btn-success']);
+            closeScaffoldingButton.classList.add('btn','btn-success');
             closeScaffoldingButton.innerText = "Close Mixed Up Code";
             closeScaffoldingButton.onclick = () => {
                 $('#scaffolding-container').addClass('hidden');
             }
             scaffoldingContainer.appendChild(closeScaffoldingButton);
+
+            let copyAnswerButton = document.createElement('button');
+            copyAnswerButton.id = "copy-answer-button";
+            copyAnswerButton.classList.add('btn','btn-success', 'copy-button-hide');
+            copyAnswerButton.innerText = "Copy Answer to Code";
+            copyAnswerButton.onclick = () => {
+                navigator.clipboard.writeText(this.scaffoldingAnswer).then(()=> {
+                    alert("answer copied");
+                });
+            }
+            scaffoldingContainer.appendChild(copyAnswerButton);
 
             let parsonsDiv = document.createElement('div');
             parsonsDiv.id = "parsons-scaffolding"
@@ -361,6 +373,7 @@ export class ActiveCode extends RunestoneBase {
         } else {
             // if already exists: remove hidden
             $('#scaffolding-container').removeClass('hidden');
+            $('#copy-answer-button').addClass('copy-button-hide');
         }
 
         await renderRunestoneComponent(code, "parsons-scaffolding");

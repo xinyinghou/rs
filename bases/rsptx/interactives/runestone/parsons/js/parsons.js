@@ -1465,6 +1465,11 @@ export default class Parsons extends RunestoneBase {
                     this.adaptiveId + "recentAttempts",
                     this.recentAttempts
                 );
+                // TODO: look for the "copy scaffolding answer button" and reveal it. only for personalized scaffolding study
+                if ($('#copy-answer-button')) {
+                    console.log("revealing button")
+                    $('#copy-answer-button').removeClass('copy-button-hide');
+                }
             }
             localStorage.setItem(
                 this.adaptiveId + this.divid + "Count",
