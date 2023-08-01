@@ -306,12 +306,7 @@ export class ActiveCode extends RunestoneBase {
                 return response.json();
             })
             .then((html) => {
-                let htmls = html.split('|||');
-                console.log('html0:')
-                console.log(htmls[0])
-                console.log('html1:')
-                console.log(htmls[1])
-                resolve(htmls[1]);
+                resolve(html);
             })
             .catch(err => {
                 reject("Error in Parsons Scaffolding: " + err);

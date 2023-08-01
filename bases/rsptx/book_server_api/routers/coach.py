@@ -12,6 +12,7 @@
 # ----------------
 import ast
 import json
+import time
 
 # Third-party imports
 # -------------------
@@ -121,4 +122,6 @@ async def parsons_scaffolding(request: Request):
         </pre>
 """
 
-    return html1+"|||"+html2
+    time.sleep(3)
+
+    return html2
