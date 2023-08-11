@@ -299,10 +299,13 @@ export class ActiveCode extends RunestoneBase {
 
     async getParsonsRst() {
         let code = this.editor.getValue();
+        let problem_id = this.divid;
+        let body = code + "|||sep|||" + problem_id;
+        console.log('body:', body )
         let promise = new Promise(function (resolve, reject) {
             fetch('/ns/coach/parsons_scaffolding', {
                 method: 'POST',
-                body: code
+                body: body
             })
             .then((response) => {
                 return response.json();
@@ -424,11 +427,12 @@ export class ActiveCode extends RunestoneBase {
         // move this to a separate function "createParsonsScaffolding"
         if (this.openaicode || this.openaiparsons) {
             let parsonsScaffoldingBtn = document.createElement("button");
-            if (this.openaiparsons) {
-                parsonsScaffoldingBtn.innerText = "Show Parsons Scaffolding";
-            } else {
-                parsonsScaffoldingBtn.innerText = "Show Fixed Solution";
-            }
+            parsonsScaffoldingBtn.innerText = "Coding Aid";
+            // if (this.openaiparsons) {
+            //     parsonsScaffoldingBtn.innerText = "Show Parsons Scaffolding";
+            // } else {
+            //     parsonsScaffoldingBtn.innerText = "Show Fixed Solution";
+            // }
             parsonsScaffoldingBtn.classList.add(["btn", "btn-success"]);
             parsonsScaffoldingBtn.onclick = this.parsonsBtnHandler.bind(this);
             ctrlDiv.appendChild(parsonsScaffoldingBtn);

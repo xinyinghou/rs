@@ -1,0 +1,447 @@
+pair,type,question,w_question_description,Problem Name,Cluster,Example_student_solution,Example_buggy_code,Example_fixed_code,Unittest_Code,Default_Starting_Code,Default_Test_Code,Example_paired_distractor_correct,Example_paired_distractor_wrong,Edit_Distance_common,Edit_Distance_personalized,Edit_personalized_few,Similarity_common,Similarity_personalized,Similarity_personalized_better
+Pair A_oc_1,W,sum13_acoc,"Finish the function ``sum13(nums)`` to return the sum of the numbers in the list ``nums``, returning ``0`` for an empty list. Except the number 13 is very unlucky, so  it does not count and a number that comes immediately after a 13 also does not count.  For example, ``sum13([13,2])`` returns ``0`` , ``sum13([1, 13, 4, 2])``  returns ``3``, ``sum13([1, 2, 3])``  returns ``6``.",sum13_acoc,59,"def sum13(nums):
+    total = 0
+    count = 0
+    while count < len(nums):
+        if nums[count] == 13:
+            count += 2
+            continue
+        total += nums[count]
+        count += 1
+    return total","def sum13(nums):
+    if len(nums)==0:
+        return 0
+    total=0
+    for num in range(len(nums)):
+        total+=num
+        if num==13:
+            continue
+        if nums[num-1]==13:
+            continue
+    return total","def sum13(nums):
+    if len(nums)==0:
+        return 0
+    total=0
+    for num in range(len(nums)):
+        if nums[num]==13:
+            continue
+        if num>=1 and nums[num-1]==13:
+            continue
+        total+=nums[num]
+    return total","class myTests(TestCaseGui):
+
+       def testOne(self):
+           self.assertEqual(sum13([13,1]), 0, 'sum13([13,1])')
+           self.assertEqual(sum13([1,13]), 1, 'sum13([1,13])')
+           self.assertEqual(sum13([1,2,2,1]), 6, 'sum13([1,2,2,1])')
+           self.assertEqual(sum13([1,1]), 2, 'sum13([1,1])')
+           self.assertEqual(sum13([1,2,13,2,1]), 4, 'sum13([1,2,13,2,1])')
+           self.assertEqual(sum13([]), 0, 'sum13([])')
+           self.assertEqual(sum13([1,2,13]), 3, 'sum13([1,2,13])')
+           self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,if nums[count] == 13:,if nums == 13:,45,14,TRUE,0.990674198,0.992043436,TRUE
+Pair A_op_1,W,sum13_acop,"Finish the function ``sum13(nums)`` to return the sum of the numbers in the list ``nums``, returning ``0`` for an empty list. Except the number 13 is very unlucky, so  it does not count and a number that comes immediately after a 13 also does not count.  For example, ``sum13([13,2])`` returns ``0`` , ``sum13([1, 13, 4, 2])``  returns ``3``, ``sum13([1, 2, 3])``  returns ``6``.",sum13_acop,59,"def sum13(nums):
+    total = 0
+    count = 0
+    while count < len(nums):
+        if nums[count] == 13:
+            count += 2
+            continue
+        total += nums[count]
+        count += 1
+    return total","def sum13(nums):
+    if len(nums)==0:
+        return 0
+    total=0
+    for num in range(len(nums)):
+        total+=num
+        if num==13:
+            continue
+        if nums[num-1]==13:
+            continue
+    return total","def sum13(nums):
+    if len(nums)==0:
+        return 0
+    total=0
+    for num in range(len(nums)):
+        if nums[num]==13:
+            continue
+        if num>=1 and nums[num-1]==13:
+            continue
+        total+=nums[num]
+    return total","class myTests(TestCaseGui):
+
+       def testOne(self):
+           self.assertEqual(sum13([13,1]), 0, 'sum13([13,1])')
+           self.assertEqual(sum13([1,13]), 1, 'sum13([1,13])')
+           self.assertEqual(sum13([1,2,2,1]), 6, 'sum13([1,2,2,1])')
+           self.assertEqual(sum13([1,1]), 2, 'sum13([1,1])')
+           self.assertEqual(sum13([1,2,13,2,1]), 4, 'sum13([1,2,13,2,1])')
+           self.assertEqual(sum13([]), 0, 'sum13([])')
+           self.assertEqual(sum13([1,2,13]), 3, 'sum13([1,2,13])')
+           self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,if nums[count] == 13:,if nums == 13:,45,14,TRUE,0.990674198,0.992043436,TRUE
+Pair A_oc_2,W,sum67_acoc,"Write the ``sum67`` function that takes a list and should return the total of the items in the list except for all the numbers between a 6 and 7 (6 should before 7, inclusive).   For example, ``sum67([1,2])`` should return ``3`` and ``sum67([2, 6, 8, 7, 2])`` should return ``4``, ``sum67([3, 6, 7])``  should return ``3``.",sum67_acoc,238,"def sum67(nums):
+    total = 0               
+    found_6 = False          
+    for num in nums:        
+        if found_6 and num == 7:
+            found_6 = False 
+        elif num == 6:
+            found_6 = True  
+        elif found_6:
+            continue        
+        else:
+            total += num    
+    return total","def sum67(nums):
+    total = 0 
+    index6 = -1
+    index7 = -1
+    found6 = False
+    found7 = False
+    if 6 in nums:
+        index6 = nums.index(6)
+    else:
+        found6 = True
+        
+    if 7 in nums:
+        index7 = nums.index(7)
+    else:
+        found7 = True
+    
+    if found6 and found7:
+        for i in range(len(nums)):
+            if i >= index6 and i<= index7:
+                break
+            else:
+                total +=nums[i]
+        return total
+    else:
+        return sum(nums)","def sum67(nums):
+    total = 0 
+    index6 = -1
+    index7 = -1
+    found6 = False
+    found7 = False
+    if 6 in nums:
+        index6 = nums.index(6)
+        found6 = True
+        
+    if 7 in nums:
+        index7 = nums.index(7)
+        found7 = True
+        
+    if found6 and found7:
+        for i in range(len(nums)):
+            if i >= index6 and i<= index7:
+                continue
+            elif i == index6 and index7<index6:
+                continue
+            else:
+                total +=nums[i]
+        return total
+    else:
+        return sum(nums)  ","class myTests(TestCaseGui):
+
+       def testOne(self):
+           self.assertEqual(sum67([1,2]), 3, 'sum67([1,2])')
+           self.assertEqual(sum67([2, 6, 8, 7, 2]), 4, 'sum67([2, 6, 8, 7, 2])')
+           self.assertEqual(sum67([6, 2, 7]), 0, 'sum67([6, 2, 7])')
+           self.assertEqual(sum67([6, 2, 7, 5]), 5, 'sum67([6, 2, 7, 5])')
+           self.assertEqual(sum67([7, 2, 6]), 9, 'sum67([7, 2, 6])')
+           self.assertEqual(sum67([4, 6, 7]), 4, 'sum67([4, 6, 7])')
+           self.assertEqual(sum67([]), 0, 'sum67([])')",def sum67(nums):,,if found_6 and num == 7:,if found_6 and num = 7:,92,22,TRUE,0.951161385,0.993991852,TRUE
+Pair A_op_2,W,sum67_acop,"Write the ``sum67`` function that takes a list and should return the total of the items in the list except for all the numbers between a 6 and 7 (6 should before 7, inclusive).   For example, ``sum67([1,2])`` should return ``3`` and ``sum67([2, 6, 8, 7, 2])`` should return ``4``, ``sum67([3, 6, 7])``  should return ``3``.",sum67_acop,238,"def sum67(nums):
+    total = 0               
+    found_6 = False          
+    for num in nums:        
+        if found_6 and num == 7:
+            found_6 = False 
+        elif num == 6:
+            found_6 = True  
+        elif found_6:
+            continue        
+        else:
+            total += num    
+    return total","def sum67(nums):
+    total = 0 
+    index6 = -1
+    index7 = -1
+    found6 = False
+    found7 = False
+    if 6 in nums:
+        index6 = nums.index(6)
+    else:
+        found6 = True
+        
+    if 7 in nums:
+        index7 = nums.index(7)
+    else:
+        found7 = True
+    
+    if found6 and found7:
+        for i in range(len(nums)):
+            if i >= index6 and i<= index7:
+                break
+            else:
+                total +=nums[i]
+        return total
+    else:
+        return sum(nums)","def sum67(nums):
+    total = 0 
+    index6 = -1
+    index7 = -1
+    found6 = False
+    found7 = False
+    if 6 in nums:
+        index6 = nums.index(6)
+        found6 = True
+        
+    if 7 in nums:
+        index7 = nums.index(7)
+        found7 = True
+        
+    if found6 and found7:
+        for i in range(len(nums)):
+            if i >= index6 and i<= index7:
+                continue
+            elif i == index6 and index7<index6:
+                continue
+            else:
+                total +=nums[i]
+        return total
+    else:
+        return sum(nums)  ","class myTests(TestCaseGui):
+
+       def testOne(self):
+           self.assertEqual(sum67([1,2]), 3, 'sum67([1,2])')
+           self.assertEqual(sum67([2, 6, 8, 7, 2]), 4, 'sum67([2, 6, 8, 7, 2])')
+           self.assertEqual(sum67([6, 2, 7]), 0, 'sum67([6, 2, 7])')
+           self.assertEqual(sum67([6, 2, 7, 5]), 5, 'sum67([6, 2, 7, 5])')
+           self.assertEqual(sum67([7, 2, 6]), 9, 'sum67([7, 2, 6])')
+           self.assertEqual(sum67([4, 6, 7]), 4, 'sum67([4, 6, 7])')
+           self.assertEqual(sum67([]), 0, 'sum67([])')",def sum67(nums):,,if found_6 and num == 7:,if found_6 and num = 7:,92,22,TRUE,0.951161385,0.993991852,TRUE
+Pair B_oc_1,W,has_22_acoc," Finish the function ``has22`` below to return ``True`` if there are at least two items in the list ``nums`` that are adjacent and both equal to 2, otherwise return ``False``. For example, return ``True`` for ``has22([1, 2, 2])`` and ``has22([2, 2])`` and ``False`` for ``has22([2, 1, 2])`` and ``has22([3,3,1])``.",has_22_acoc,40,"def has22(nums):
+    for i in range(len(nums)-1):
+        if nums[i]==2 and nums[i+1]==2:
+            return True
+    return False","def has22(nums):
+    i = 1
+    while (i < len(nums) - 1):
+        last_num = nums[i - 1]
+        if (nums[i] == 2 and last_num == 2):
+            return True
+    return False","def has22(nums):
+    i = 1
+    while (i < len(nums)):
+        last_num = nums[i - 1]
+        if (nums[i] == 2 and last_num == 2):
+            return True
+        i += 1
+    return False","class myTests(unittest.TestCase):
+
+       def testOne(self):
+           self.assertEqual(has22([1, 2, 2]), True, 'has22([1, 2, 2])')
+           self.assertEqual(has22([1, 2, 1, 2]), False, 'has22([1, 2, 1, 2])')
+           self.assertEqual(has22([2, 1, 2]), False, 'has22([2, 1, 2])')
+           self.assertEqual(has22([2, 2, 1]), True, 'has22([2, 2, 1])')
+           self.assertEqual(has22([3, 4, 2]), False, 'has22([3, 4, 2])')
+           self.assertEqual(has22([2]), False, 'has22([2])')
+           self.assertEqual(has22([]), False, 'has22([])')
+           self.assertEqual(has22([3, 3, 1]), False, 'has22([3, 3, 1])')
+           self.assertEqual(has22([1, 4, 4]), False, 'has22([1, 4, 4])')",def has22(nums):,,for i in range(len(nums) - 1):,"for i in range(1, len(nums) + 1):",21,5,TRUE,0.985619605,0.996876121,TRUE
+Pair B_op_1,W,has_22_acoc," Finish the function ``has22`` below to return ``True`` if there are at least two items in the list ``nums`` that are adjacent and both equal to 2, otherwise return ``False``. For example, return ``True`` for ``has22([1, 2, 2])`` and ``has22([2, 2])`` and ``False`` for ``has22([2, 1, 2])`` and ``has22([3,3,1])``.",has_22_acoc,40,"def has22(nums):
+    for i in range(len(nums)-1):
+        if nums[i]==2 and nums[i+1]==2:
+            return True
+    return False","def has22(nums):
+    i = 1
+    while (i < len(nums) - 1):
+        last_num = nums[i - 1]
+        if (nums[i] == 2 and last_num == 2):
+            return True
+    return False","def has22(nums):
+    i = 1
+    while (i < len(nums)):
+        last_num = nums[i - 1]
+        if (nums[i] == 2 and last_num == 2):
+            return True
+        i += 1
+    return False","class myTests(unittest.TestCase):
+
+       def testOne(self):
+           self.assertEqual(has22([1, 2, 2]), True, 'has22([1, 2, 2])')
+           self.assertEqual(has22([1, 2, 1, 2]), False, 'has22([1, 2, 1, 2])')
+           self.assertEqual(has22([2, 1, 2]), False, 'has22([2, 1, 2])')
+           self.assertEqual(has22([2, 2, 1]), True, 'has22([2, 2, 1])')
+           self.assertEqual(has22([3, 4, 2]), False, 'has22([3, 4, 2])')
+           self.assertEqual(has22([2]), False, 'has22([2])')
+           self.assertEqual(has22([]), False, 'has22([])')
+           self.assertEqual(has22([3, 3, 1]), False, 'has22([3, 3, 1])')
+           self.assertEqual(has22([1, 4, 4]), False, 'has22([1, 4, 4])')",def has22(nums):,,for i in range(len(nums) - 1):,"for i in range(1, len(nums) + 1):",21,5,TRUE,0.985619605,0.996876121,TRUE
+Pair B_oc_2,W,is_ascending_acoc,"Write a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acoc,170,"def is_ascending(nums):
+    if len(nums) < 2:
+        return True 
+    for i in range(len(nums) - 1):
+        if nums[i] > nums[i + 1]:
+            return False
+    return True","def is_ascending(nums):
+    if len(nums) <= 1:
+        return True
+    prev = nums[0]
+    for i in range(1, len(nums)):
+        curr = nums[i]
+        if curr < prev:
+            return False
+    return True","def is_ascending(nums):
+    if len(nums) <= 1:
+        return True
+    prev = nums[0]
+    for i in range(1, len(nums)):
+        curr = nums[i]
+        prev = nums[i-1]
+        if curr < prev:
+            return False
+    return True","class myTests(unittest.TestCase):
+
+            def testOne(self):
+                self.assertEqual(is_ascending([1,2,3]),True,""is_ascending([1,2,3])"")
+                self.assertEqual(is_ascending([3, 3, 2, 1]),False,""is_ascending([3,3,2,1])"")
+                self.assertEqual(is_ascending([3,1,2]),False,""is_ascending([3,1,2])"")
+                self.assertEqual(is_ascending([2,3,1]),False,""is_ascending([2,3,1])"")
+                self.assertEqual(is_ascending([1,2,4,3]),False,""is_ascending([1,2,4,3])"")
+                self.assertEqual(is_ascending([1,2,3,0]),False,""is_ascending([1,2,3,0])"")
+                self.assertEqual(is_ascending([4,1,2,3]),False,""is_ascending(4,1,2,3])"")
+                self.assertEqual(is_ascending([1,4,2,3]),False,""is_ascending(1,4,2,3])"")
+                self.assertEqual(is_ascending([1,2,3,4]),True,""is_ascending([1,2,3,4])"")
+                self.assertEqual(is_ascending([1]),True,""is_ascending([1])"")
+                self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,"print(is_ascending([1, 2, 3]))
+print(is_ascending([1]))
+print(is_ascending([3, 3, 2, 1]))",if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1]:,22,8,TRUE,0.989606023,0.99348402,TRUE
+Pair B_op_2,W,is_ascending_acop,"Write a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acop,170,"def is_ascending(nums):
+    if len(nums) < 2:
+        return True 
+    for i in range(len(nums) - 1):
+        if nums[i] > nums[i + 1]:
+            return False
+    return True","def is_ascending(nums):
+    if len(nums) <= 1:
+        return True
+    prev = nums[0]
+    for i in range(1, len(nums)):
+        curr = nums[i]
+        if curr < prev:
+            return False
+    return True","def is_ascending(nums):
+    if len(nums) <= 1:
+        return True
+    prev = nums[0]
+    for i in range(1, len(nums)):
+        curr = nums[i]
+        prev = nums[i-1]
+        if curr < prev:
+            return False
+    return True","class myTests(unittest.TestCase):
+
+            def testOne(self):
+                self.assertEqual(is_ascending([1,2,3]),True,""is_ascending([1,2,3])"")
+                self.assertEqual(is_ascending([3, 3, 2, 1]),False,""is_ascending([3,3,2,1])"")
+                self.assertEqual(is_ascending([3,1,2]),False,""is_ascending([3,1,2])"")
+                self.assertEqual(is_ascending([2,3,1]),False,""is_ascending([2,3,1])"")
+                self.assertEqual(is_ascending([1,2,4,3]),False,""is_ascending([1,2,4,3])"")
+                self.assertEqual(is_ascending([1,2,3,0]),False,""is_ascending([1,2,3,0])"")
+                self.assertEqual(is_ascending([4,1,2,3]),False,""is_ascending(4,1,2,3])"")
+                self.assertEqual(is_ascending([1,4,2,3]),False,""is_ascending(1,4,2,3])"")
+                self.assertEqual(is_ascending([1,2,3,4]),True,""is_ascending([1,2,3,4])"")
+                self.assertEqual(is_ascending([1]),True,""is_ascending([1])"")
+                self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,"print(is_ascending([1, 2, 3]))
+print(is_ascending([1]))
+print(is_ascending([3, 3, 2, 1]))",if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1]:,22,8,TRUE,0.989606023,0.99348402,TRUE
+Pair C_oc_1,W,less_dict_acoc,"Finish the function ``less_dict`` below which takes a dictionary ``d`` and an integer ``cutoff`` and returns a new dictionary that contains only the key-value pairs where the value is less than the cutoff.  For example, ``less_dict({'a': 20, 'b': 10}, 15)`` returns ``{'b': 10}``, ``less_dict({'a': 30, 'b': 20}, 40)``  should return ``{'a': 30, 'b': 20}``, ``less_dict({'a': 20, 'b': 10}, 5)``  should return ``{}``.",less_dict_acoc,168,"def less_dict(d, cutoff):
+    new_dict = {}
+    for key, val in d.items():
+        if val < cutoff:
+            new_dict[key] = val
+    
+    return new_dict","def less_dict(d, cutoff):
+    new_d = {}
+    for keys in d:
+        if d[keys] > 15:
+            continue
+        new_d[keys] = d[keys]
+    return new_d","def less_dict(d, cutoff):
+    new_d = {}
+    for keys in d:
+        if d[keys] >= cutoff:
+            continue
+        new_d[keys] = d[keys]
+    return new_d","class myTests(TestCaseGui):
+
+       def testOne(self):
+           self.assertEqual(less_dict({'a': 20, 'b': 10}, 15), {'b': 10}, ""less_dict({'a': 20, 'b': 10}, 15)"")
+           self.assertEqual(less_dict({'a': 20, 'b': 10}, 30), {'a': 20, 'b': 10} , ""less_dict({'a': 20, 'b': 10}, 30)"")
+           self.assertEqual(less_dict({'a': 20, 'b': 10}, 5), {}, ""less_dict({'a': 20, 'b': 10}, 5)"")
+           self.assertEqual(less_dict({'a': 20, 'b': 10, 'c': 25}, 20), {'b': 10}, ""less_dict({'a': 20, 'b': 10, 'c': 25}, 20)"")
+           self.assertEqual(less_dict({'a': 20, 'b': 10, 'c': 25}, 22), {'a': 20, 'b': 10}, ""less_dict({'a': 20, 'b': 10, 'c': 25}, 22)"")","def less_dict(d, cutoff):","print(less_dict({'a': 20, 'b': 10}, 15))","for key, val in d.items():","for key, val in d():",25,2,TRUE,0.995906234,0.999706924,TRUE
+Pair C_op_1,W,less_dict_acop,"Finish the function ``less_dict`` below which takes a dictionary ``d`` and an integer ``cutoff`` and returns a new dictionary that contains only the key-value pairs where the value is less than the cutoff.  For example, ``less_dict({'a': 20, 'b': 10}, 15)`` returns ``{'b': 10}``, ``less_dict({'a': 30, 'b': 20}, 40)``  should return ``{'a': 30, 'b': 20}``, ``less_dict({'a': 20, 'b': 10}, 5)``  should return ``{}``.",less_dict_acop,168,"def less_dict(d, cutoff):
+    new_dict = {}
+    for key, val in d.items():
+        if val < cutoff:
+            new_dict[key] = val
+    
+    return new_dict","def less_dict(d, cutoff):
+    new_d = {}
+    for keys in d:
+        if d[keys] > 15:
+            continue
+        new_d[keys] = d[keys]
+    return new_d","def less_dict(d, cutoff):
+    new_d = {}
+    for keys in d:
+        if d[keys] >= cutoff:
+            continue
+        new_d[keys] = d[keys]
+    return new_d","class myTests(TestCaseGui):
+
+       def testOne(self):
+           self.assertEqual(less_dict({'a': 20, 'b': 10}, 15), {'b': 10}, ""less_dict({'a': 20, 'b': 10}, 15)"")
+           self.assertEqual(less_dict({'a': 20, 'b': 10}, 30), {'a': 20, 'b': 10} , ""less_dict({'a': 20, 'b': 10}, 30)"")
+           self.assertEqual(less_dict({'a': 20, 'b': 10}, 5), {}, ""less_dict({'a': 20, 'b': 10}, 5)"")
+           self.assertEqual(less_dict({'a': 20, 'b': 10, 'c': 25}, 20), {'b': 10}, ""less_dict({'a': 20, 'b': 10, 'c': 25}, 20)"")
+           self.assertEqual(less_dict({'a': 20, 'b': 10, 'c': 25}, 22), {'a': 20, 'b': 10}, ""less_dict({'a': 20, 'b': 10, 'c': 25}, 22)"")","def less_dict(d, cutoff):","print(less_dict({'a': 20, 'b': 10}, 15))","for key, val in d.items():","for key, val in d():",25,2,TRUE,0.995906234,0.999706924,TRUE
+Pair C_oc_2,W,greater_dict_acoc,"Finish the function ``greater_dict`` below which takes a dictionary d and an integer cutoff and returns a new dictionary that contains only the key-value pairs where the value is greater than or equal to the cutoff. For example, ``greater_dict({'a': 20, 'b': 10}, 15)`` returns ``{'a': 20}``, ``greater_dict({'a': 20, 'b': 10}, 30)`` should return  ``{}``, ``greater_dict({'a': 20, 'b': 10}, 5)`` should return ``{'a': 20, 'b':10}``.",greater_dict_acoc,171,"def greater_dict(d, cutoff):
+    result = {}
+    for key in d:
+        if d[key] >= cutoff:
+            result[key] = d[key]
+    return result","def greater_dict(d, cutoff):
+
+    greater = {key: value for key, value in dict.items() if value >= cutoff} #this will select items with value greater than the cutoff
+    return greater 
+","def greater_dict(d, cutoff):
+
+    greater = {key: value for key, value in d.items() if value >= cutoff} 
+    return greater ","class myTests(unittest.TestCase):
+
+       def testOne(self):
+           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 15), {'a': 20}, ""greater_dict({'a': 20, 'b': 10}, 15)"")
+           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 30), {}, ""greater_dict({'a': 20, 'b': 10}, 30)"")
+           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 5), {'a': 20, 'b':10}, ""greater_dict({'a': 20, 'b': 10}, 5)"")
+           self.assertEqual(greater_dict({'a': 20, 'b': 10, 'c': 25}, 15), {'a': 20, 'c': 25}, ""greater_dict({'a': 20, 'b': 10, 'c': 25}, 15)"")","def greater_dict(d, cutoff):",,for key in d:,for key in d.items():,35,1,TRUE,0.972467065,0.98587811,TRUE
+Pair C_op_2,W,greater_dict_acop,"Finish the function ``greater_dict`` below which takes a dictionary d and an integer cutoff and returns a new dictionary that contains only the key-value pairs where the value is greater than or equal to the cutoff. For example, ``greater_dict({'a': 20, 'b': 10}, 15)`` returns ``{'a': 20}``, ``greater_dict({'a': 20, 'b': 10}, 30)`` should return  ``{}``, ``greater_dict({'a': 20, 'b': 10}, 5)`` should return ``{'a': 20, 'b':10}``.",greater_dict_acop,171,"def greater_dict(d, cutoff):
+    result = {}
+    for key in d:
+        if d[key] >= cutoff:
+            result[key] = d[key]
+    return result","def greater_dict(d, cutoff):
+
+    greater = {key: value for key, value in dict.items() if value >= cutoff} #this will select items with value greater than the cutoff
+    return greater 
+","def greater_dict(d, cutoff):
+
+    greater = {key: value for key, value in d.items() if value >= cutoff} 
+    return greater ","class myTests(unittest.TestCase):
+
+       def testOne(self):
+           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 15), {'a': 20}, ""greater_dict({'a': 20, 'b': 10}, 15)"")
+           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 30), {}, ""greater_dict({'a': 20, 'b': 10}, 30)"")
+           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 5), {'a': 20, 'b':10}, ""greater_dict({'a': 20, 'b': 10}, 5)"")
+           self.assertEqual(greater_dict({'a': 20, 'b': 10, 'c': 25}, 15), {'a': 20, 'c': 25}, ""greater_dict({'a': 20, 'b': 10, 'c': 25}, 15)"")","def greater_dict(d, cutoff):",,for key in d:,for key in d.items():,35,1,TRUE,0.972467065,0.98587811,TRUE

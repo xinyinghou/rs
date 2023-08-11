@@ -68,47 +68,49 @@ async def parsons_scaffolding(request: Request):
     Takes in student code, generate a personalized Parsons problems with openAI,
     then converts the generated problem to .rst, and returns the .rst string.
     """
-    #code_bytes = await request.body()
-    #code = code_bytes.decode("utf-8")
+    req_bytes = await request.body()
+    req = req_bytes.decode("utf-8")
+    student_code = req.split("|||sep|||")[0]
+    problem_name = req.split("|||sep|||")[1]
     #lines = code.split('\n=====\n')
     # test_import_personalized()
-    code = """        class Cat: #settled
----
-    def __init__(self, name, age): #settled
----
-        self.name = name 
-        self.age = age
----
-        self.name = self.name
-        self.age = age #paired
----
-    def __str__(self): #settled
----
-        return "name: " + self.name + ", age: " + str(self.age) 
----
-    def make_sound(self): #settled
----
-        return "Meow" 
----
-        return "Woof" #paired"""
+#     code = """        class Cat: #settled
+# ---
+#     def __init__(self, name, age): #settled
+# ---
+#         self.name = name 
+#         self.age = age
+# ---
+#         self.name = self.name
+#         self.age = age #paired
+# ---
+#     def __str__(self): #settled
+# ---
+#         return "name: " + self.name + ", age: " + str(self.age) 
+# ---
+#     def make_sound(self): #settled
+# ---
+#         return "Meow" 
+# ---
+#         return "Woof" #paired"""
     
     # html = '\n        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-order="' + data_order + '"      style="visibility: hidden;">\n        '
     # html = html + "\n---\n   ".join(lines) + "\n        </pre>"
-    html1 = """
-        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-noindent="true"  data-numbered="left"   style="visibility: hidden;">
-        def fib(num):
----
-   if num == 0:
-       return 3:
----
-   if num == 1:
-       return 1:
----
-   return fib(num - 1) + fib(num - 2)
----
-   return fib(num - 1) * fib(num - 2) #paired
-        </pre>
-"""
+#     html1 = """
+#         <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"  data-noindent="true"  data-numbered="left"   style="visibility: hidden;">
+#         def fib(num):
+# ---
+#    if num == 0:
+#        return 3:
+# ---
+#    if num == 1:
+#        return 1:
+# ---
+#    return fib(num - 1) + fib(num - 2)
+# ---
+#    return fib(num - 1) * fib(num - 2) #paired
+#         </pre>
+# """
 
 
 #     html2 = """
@@ -123,8 +125,8 @@ async def parsons_scaffolding(request: Request):
         input_dict = {"Problem Name": problem_name, "CF (Code)":student_code, "id": 0, "_comment": ""}
         return get_personalized_parsons_help(input_dict, df_question_bank)
 
-    student_code = "Class cat:\n    def __init__(self, name, age):\n        name = name\n        self.age = age\n    def __str__()\n        return \"name: \" + self.name + \", age: \" + str(self.age)\n        ret 'Meow'\n c = Cat(\"Fluffy\", 3)\nprint(c)\nprint(c.make_sound())\n\n"
-    problem_name = "Classes_Basic_Cat_ac"
+    # student_code = "Class cat:\n    def __init__(self, name, age):\n        name = name\n        self.age = age\n    def __str__()\n        return \"name: \" + self.name + \", age: \" + str(self.age)\n        ret 'Meow'\n c = Cat(\"Fluffy\", 3)\nprint(c)\nprint(c.make_sound())\n\n"
+    # problem_name = "Classes_Basic_Cat_ac"
 
     personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
 
