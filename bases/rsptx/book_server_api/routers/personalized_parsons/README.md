@@ -7,7 +7,7 @@ To start, please run the requirements.txt
 * An incorrect solution to a programming problem (written by a student) - see `example_buggy_code.json`
 * Basic Information of the write-code question itself - see `example_code_question_bank.xlsx`
   * `Problem Name`: Question Name 
-  * Both Write-Code (`w_question_description`) & Parsons (`p_question_description`) question description
+  * Write-Code (`w_question_description`) question description
   * `Example_student_solution`: One representative student solution from the most common student solution cluster 
   * `Example_buggy_code`: One example student buggy solution from the previous student solution data
   * `Example_fixed_code`: One verified example personalized fixed solution written by the researcher

@@ -1,5 +1,4 @@
-{"Problem Name":"Classes_Basic_Cat_ac",
-"CF (Code)":"Class cat:\n    def __init__(self, name, age):\n        name = name\n        self.age = age\n    def __str__()\n        return \"name: \" + self.name + \", age: \" + str(self.age)\n        ret 'Meow'\n c = Cat(\"Fluffy\", 3)\nprint(c)\nprint(c.make_sound())\n\n",
-"id":7,
-"_comment": "Partial solution: class Cat:\n    def __init__(self, name, age):\n        name = name\n        self.age = age\n    def __str__(self):\n        return \"name: \" + self.name + \", age: \" + str(self.age)\nc = Cat(\"Fluffy\", 3)\nprint(c)\nprint(c.make_sound())\n\n"}
+{"Problem Name":"less_dict_acop",
+"CF (Code)":"def         less_dict(d, cutoff):\n    d2 = {}\n    for k in d:\n        if d[k] < cutoff:\n            d2[k] = cutoff\n    return d2\n"
+}
 

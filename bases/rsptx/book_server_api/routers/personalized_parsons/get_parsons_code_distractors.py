@@ -3,6 +3,7 @@ import re
 import time
 
 openai.api_key = ""
+#openai.organization = "org-YEK3YQ7BAM9Ag39zqbbXyRnS"
 
 system_message = """Generate a one-line [distractor] from [correct-line] based on the provided [task-description] and [sample-solution]. 
 This [distractor] should look samiliar as [correct-line] but contains one or two common syntax or semantic errors to highlight common misconceptions.
@@ -75,30 +76,32 @@ def get_personalized_distractor(prompt_messages, correct_line, distractor = ""):
         except:
             time.sleep(0.1)
 
-def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_dict):
+def get_student_distractor(correct_line, student_buggy_line):
+    return 
+
+
+def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_tuple):
+    print("distractor_tuple", distractor_tuple)
     # each distractor is like (corresponding_fixed_line, distractor)
     # (7, 18, '     def __str__(self):\n') location, length, actual code
     # for each element in unchanged_lines, add #settled to the end of the line
     unchanged_lines = [(line[0], line[1], line[2]) for line in unchanged_lines if line[2].strip()]
     fixed_lines = [(line[0], line[1], line[2]) for line in fixed_lines if line[2].strip()]
-
-    for key_fixed_line in distractor_dict.keys():
-        fixed_line_code = key_fixed_line[2]
-        line_indentation = fixed_line_code[:len(fixed_line_code) - len(fixed_line_code.lstrip())]
-        distractor_dict[key_fixed_line] = (key_fixed_line[0]+0.5, key_fixed_line[0], line_indentation + distractor_dict[key_fixed_line])
-        
+    key_fixed_line = distractor_tuple[0]
+    fixed_line_code = key_fixed_line[2]
+    line_indentation = fixed_line_code[:len(fixed_line_code) - len(fixed_line_code.lstrip())]
  
     # if distractor_dict[key_fixed_line] has a value, then remove the corresponding distractor_dict[key_fixed_line] from the fixed_lines
-    for key_fixed_line in distractor_dict.keys():
-        for i, fixed_line in enumerate(fixed_lines):
-            if key_fixed_line[2] == fixed_line[2]:
-                #print("pop", key_fixed_line, fixed_line[2])
-                fixed_lines.pop(i)
-            else:
-                continue
-    
-    blocks = fixed_lines + unchanged_lines + list(distractor_dict.values())
-    #print("All blocks", blocks)
+    for i, fixed_line in enumerate(fixed_lines):
+        if key_fixed_line[2] == fixed_line[2]:
+            #print("pop", key_fixed_line, fixed_line[2])
+            fixed_lines.pop(i)
+        else:
+            continue
+    print((key_fixed_line[0]+0.5, key_fixed_line[0], line_indentation + distractor_tuple[1].strip()))
+    blocks = fixed_lines + unchanged_lines + [(key_fixed_line[0]+0.5, key_fixed_line[0], line_indentation + distractor_tuple[1])]
+
+    print("All blocks", blocks)
     
     # Sort the blocks by their starting line number
     blocks = sorted(blocks, key=lambda x: x[0])
@@ -107,4 +110,5 @@ def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_dict):
     actual_code_blocks = [t[-1] for t in blocks]
     code_with_distrator = '\n'.join(actual_code_blocks)
 
+    print("code_with_single_distrator", code_with_distrator)
     return code_with_distrator
