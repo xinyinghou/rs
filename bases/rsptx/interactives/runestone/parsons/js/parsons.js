@@ -765,73 +765,94 @@ export default class Parsons extends RunestoneBase {
         localStorage.setItem(this.storageId, JSON.stringify(toStore));
     }
 
-    updatePlaceholders() {
-        var answerBlocks = this.answerBlocks();
-        var i, hasNormalBlock;
-        var placeholder;
-        // hide placeholder
-        for (i = 0; i < answerBlocks.length; ++i) {
-            // checking on placeholders
-            if (answerBlocks[i].isPlaceholder) {
-                placeholder = answerBlocks[i];
-                hasNormalBlock = false;
-                if (i > 0 && !answerBlocks[i - 1].isSettled && !answerBlocks[i - 1].isPlaceholder) {
-                    hasNormalBlock = true;
-                }
-                if (i < answerBlocks.length - 1 && !answerBlocks[i + 1].isSettled && !answerBlocks[i + 1].isPlaceholder) {
-                    hasNormalBlock = true;
-                }
-            
-                if (hasNormalBlock) {
-                    // if a placeholder has a normal block before or after, hide it;
-                    if (!$(placeholder.view).hasClass('hide')) {
-                        $(placeholder.view).addClass("hide");
-                        for (var j = 0; j < answerBlocks.length - 1 - i; j++) {
-                            console.log('moving down')
-                            placeholder.moveDown();
+    async updatePlaceholders() {
+        setTimeout(() => {
+            var answerBlocks = this.answerBlocks();
+            var i, hasNormalBlock;
+            var placeholder;
+            // hide placeholder
+            for (i = 0; i < answerBlocks.length; ++i) {
+                // checking on placeholders
+                if (answerBlocks[i].isPlaceholder) {
+                    placeholder = answerBlocks[i];
+                    hasNormalBlock = false;
+                    if (i > 0 && !answerBlocks[i - 1].isSettled && !answerBlocks[i - 1].isPlaceholder) {
+                        hasNormalBlock = true;
+                    }
+                    if (i < answerBlocks.length - 1 && !answerBlocks[i + 1].isSettled && !answerBlocks[i + 1].isPlaceholder) {
+                        hasNormalBlock = true;
+                    }
+                
+                    if (hasNormalBlock) {
+                        // if a placeholder has a normal block before or after, hide it;
+                        if (!$(placeholder.view).hasClass('hide')) {
+                            $(placeholder.view).addClass("hide");
+                            for (var j = 0; j < answerBlocks.length - 1 - i; j++) {
+                                console.log('moving down')
+                                placeholder.moveDown();
+                            }
                         }
                     }
+     
                 }
- 
             }
-        }
+        }, 5);
 
-        answerBlocks = this.answerBlocks();
-        console.log('answerblocks for moving up', answerBlocks);
-        var contentLength = 0;
-        while (contentLength < answerBlocks.length && !$(answerBlocks[contentLength].view).hasClass('hide')) {
-            contentLength++;
-        }
-        console.log('contentlength', contentLength);
-        // show placeholder when needed
-        var prevIsSettled = true;
-        for (i = 0; i < contentLength; ++i) {
-            // locate two consecutive settled blocks
-            if (answerBlocks[i].isSettled && prevIsSettled) {
-                break;
+        setTimeout(() => {
+            var answerBlocks = this.answerBlocks();
+            console.log('answerblocks for moving up', answerBlocks);
+            var contentLength = 0;
+            while (contentLength < answerBlocks.length && !$(answerBlocks[contentLength].view).hasClass('hide')) {
+                contentLength++;
             }
-            if (answerBlocks[i].isSettled) {
-                prevIsSettled = true;
-            } else {
+            console.log('contentlength', contentLength);
+            // show placeholder when needed
+            var prevIsSettled = true;
+            if (this.firstBlockSettled) {
                 prevIsSettled = false;
             }
-        }
-        console.log('i', i)
-        if (i < contentLength || answerBlocks[contentLength - 1].isSettled) {
-            // move up to index before "i"
-            placeholder = answerBlocks[answerBlocks.length - 1];
-            if ($(placeholder.view).hasClass('hide')) {
-                console.log("trying to move block ", placeholder)
-                console.log("trying to move to ", i)
-                $(placeholder.view).removeClass("hide");
-                // should be moved right before the block answerBlocks[i]
-                for (var j = 0; j < answerBlocks.length - 1 - i; j++) {
-                    console.log('moving up')
-                    placeholder.moveUp();
+            var settledCount = 0;
+            var i;
+            for (i = 0; i < contentLength; ++i) {
+                // locate two consecutive settled blocks
+                if (answerBlocks[i].isSettled && prevIsSettled) {
+                    break;
+                }
+                if (answerBlocks[i].isSettled) {
+                    prevIsSettled = true;
+                    settledCount++;
+                } else {
+                    prevIsSettled = false;
                 }
             }
-        }
-        console.log("result blocks", this.answerBlocks())
+            console.log('i', i)
+            var placeholder;
+            if (i < contentLength || (answerBlocks[contentLength - 1].isSettled && !this.lastBlockSettled)) {
+                // looking for the placeholder block that should be after "settledCount" number of settled blocks;
+                var placeholderIndex;
+                for (placeholderIndex = answerBlocks.length - 1; placeholderIndex >= contentLength; placeholderIndex--) {
+                    if (answerBlocks[placeholderIndex].afterSettledBlockCount == settledCount) {
+                        placeholder = answerBlocks[placeholderIndex];
+                        break;
+                    }
+                }
+                if (answerBlocks[placeholderIndex].afterSettledBlockCount != settledCount) {
+                    console.log("error moving up; no placeholder found");
+                    return;
+                }
+                if ($(placeholder.view).hasClass('hide')) {
+                    console.log("trying to move block ", placeholder)
+                    console.log("trying to move to ", i)
+                    $(placeholder.view).removeClass("hide");
+                    // should be moved right before the block answerBlocks[i]
+                    for (var j = 0; j < placeholderIndex - i; j++) {
+                        console.log('moving up')
+                        placeholder.moveUp();
+                    }
+                }
+            }
+            console.log("result blocks", this.answerBlocks())
+        }, 10);
     }
 
     /* =====================================================================
@@ -1280,6 +1301,9 @@ export default class Parsons extends RunestoneBase {
                     answerBlocksCount = 0;
                     lines = [];
                 } else if (line.isSettled) {
+                    if (blocks.length == 0) {
+                        this.firstBlockSettled = true;
+                    }
                     blocks.push(new SettledBlock(this, lines));
                     settledBlocksBeforeCount++;
                     answerBlocksCount = 0;
@@ -1291,6 +1315,9 @@ export default class Parsons extends RunestoneBase {
                     lines = [];
                 }
             }
+        }
+        if (blocks.length > 0 && blocks[blocks.length - 1].isSettled) {
+            this.lastBlockSettled = true;
         }
         console.log('settledblocksfromsource', blocks)
         return blocks;

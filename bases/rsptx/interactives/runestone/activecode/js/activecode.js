@@ -326,6 +326,7 @@ export class ActiveCode extends RunestoneBase {
             $('#scaffolding-container').removeClass('hidden');
             return;
         }
+        window.latestParsonsHelpID = this.divid;
 
         this.scaffoldingAnswer = this.helpText.split("||split||")[0];
         let rst = this.helpText.split("||split||")[1];
@@ -404,7 +405,6 @@ export class ActiveCode extends RunestoneBase {
 //             // send the text to an ajax endpoint that will insert it into
 //             // a sphinx project, run sphinx, and send back the generated index file
 //             // this generated index can then be displayed...
-        window.latestParsonsHelpID = this.divid;
 
     }
 
