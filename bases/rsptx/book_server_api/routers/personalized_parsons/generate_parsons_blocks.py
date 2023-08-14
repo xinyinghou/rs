@@ -13,14 +13,37 @@ def check_indentation_level(line):
 
 # generate corresponding Parsons problems for each type
 def generate_Parsons_block(Parsons_type, df_question_line, cleaned_fixed_code, unchanged_lines, fixed_lines, distractors):
+    problem_description = df_question_line["w_question_description"][0].replace("\\n", "\n")
     # if total_similairity is less than 30%, return a fully movable Parsons problem
     if Parsons_type == "Full":
-        return generate_full_Parsons(cleaned_fixed_code)
+        return generate_full_Parsons(cleaned_fixed_code, problem_description)
     else:
-        return generate_partial_Parsons(Parsons_type, unchanged_lines, fixed_lines, distractors)
+        return generate_partial_Parsons(Parsons_type, problem_description, unchanged_lines, fixed_lines, distractors)
+
+def break_and_indent(text, max_line_length, indent=4):
+    lines = []
+    current_line = ""
     
+    words = text.split()
+    
+    for word in words:
+        if len(current_line) + len(word) + 1 > max_line_length:
+            lines.append(" " * indent + current_line)
+            current_line = word
+        else:
+            if current_line:
+                current_line += " " + word
+            else:
+                current_line = word
+    
+    if current_line:
+        lines.append(" " * indent + current_line)
+    
+    return '\n'.join(lines)
+
+
 # Generate full Parsons problems
-def generate_full_Parsons(fixed_code):
+def generate_full_Parsons(fixed_code, problem_description):
     # Remove empty lines
     fixed_code = re.sub(r'\n\s*\n', '\n', fixed_code)
     # Extract code blocks based on indentation patterns
@@ -29,11 +52,12 @@ def generate_full_Parsons(fixed_code):
     blocks = ['    ' + block[0] + block[1] for block in matches if block[1].strip()]
     
     blocks = aggregate_code_to_full_Parsons_block(blocks)
-
-    return convert_code_to_block(blocks)
+    problem_description = break_and_indent(problem_description, max_line_length=80)
+    Parsons_problem = problem_description + "\n" + convert_code_to_block(blocks)
+    return Parsons_problem
 
 # Generate the partial Parsons problem with unmovable blocks and distractors
-def generate_partial_Parsons(Parsons_type, unchanged_lines, fixed_lines, distractor_tuple_dict):
+def generate_partial_Parsons(Parsons_type, problem_description, unchanged_lines, fixed_lines, distractor_tuple_dict):
     # each distractor is like (corresponding_fixed_line, distractor)
     # (7, 18, '     def __str__(self):\n') location, length, actual code
     # for each element in unchanged_lines, add #settled to the end of the line
@@ -87,7 +111,9 @@ def generate_partial_Parsons(Parsons_type, unchanged_lines, fixed_lines, distrac
     # lst_blocks = ['    ' + block for block in lst_blocks]
     blocks = aggregate_code_to_Parsons_block_with_distractor(blocks)
     #print("blocks after aggregate_code_to_Parsons_block_with_distractor", blocks)
-    return convert_code_to_block(blocks)
+    problem_description = break_and_indent(problem_description, max_line_length=80)
+    Parsons_problem = problem_description + "\n" + convert_code_to_block(blocks)
+    return Parsons_problem
 
 def reset_distractor_flag(distractor_block):
     has_paired = False
@@ -223,19 +249,36 @@ def aggregate_code_to_full_Parsons_block(blocks):
 
     return all_Parsons_blocks
 
-def reduce_whitespace(s):
-    indentation = s[:len(s) - len(s.lstrip())][:-1]
-    rest_of_string = re.sub(r'\s+', ' ', s.lstrip())
-    #print(rest_of_string, f"{indentation} {rest_of_string}")
-    return f"{indentation} {rest_of_string}"
 
+def reduce_whitespace(text):
+    lines = text.split('\n')  # Split the text into lines based on '\n'
+    processed_lines = []
+    if len(lines) == 1:
+        indentation = text[:len(text) - len(text.lstrip())][:-1]
+        rest_of_string = re.sub(r'\s+', ' ', text.lstrip())
+        return f"{indentation} {rest_of_string}"
+    else:
+        for line in lines:
+            if line != '':
+                indentation = text[:len(line) - len(line.lstrip())][:-1]
+                rest_of_string = re.sub(r'\s+', ' ', line.lstrip())
+                processed_lines.append(f"{indentation} {rest_of_string}")
+            # Join the processed lines back using '\n'
+            print("processed_lines",processed_lines)
+        # Determine the join character based on whether the line ends with '\n'
+        join_char = '\n' if processed_lines[-1] != '' else ''
+
+        # Join the processed lines back using '\n' or '' as the join character
+        processed_text = join_char.join(processed_lines)
+        return processed_text
 
 def convert_code_to_block(blocks):
+    print("blocks-before", blocks)
     for i, block in enumerate(blocks):
-        print("block", block)
-        block = re.sub(r'\n+', '\n', block)
-            # Normalize indentation
         block = reduce_whitespace(block)
+        print("block-reduce-whitespace", block)
+        block = re.sub(r'\n+', '\n', block)
+        print("block-remove_multiple\n", block)
         # Add -----\n at the beginning of the first block
         if not block.endswith('\n'):
             block += '\n'
@@ -249,7 +292,12 @@ def convert_code_to_block(blocks):
         # Add ===== after each block and then \n
         elif (i != 0) & (i < len(blocks) - 1):
             blocks[i] = block + '---\n'
+
+    print(blocks)
     # Save the blocks into a string
-    blocks =  ''.join(blocks)
+    blocks =  '-----\n' + ''.join(blocks)
     return blocks
+
+
+
 

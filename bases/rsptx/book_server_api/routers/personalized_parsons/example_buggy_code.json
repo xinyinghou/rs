@@ -1,4 +1,4 @@
 {"Problem Name":"less_dict_acop",
-"CF (Code)":"def         less_dict(d, cutoff):\n    d2 = {}\n    for k in d:\n        if d[k] < cutoff:\n            d2[k] = cutoff\n    return d2\n"
+"CF (Code)":"def         less_dict(d, cutoff):\n    d2 = {}\n    for k in d:\n        if (d[k] < cutoff):\n            d2[k] == cutoff\n    return d2\n"
 }
 

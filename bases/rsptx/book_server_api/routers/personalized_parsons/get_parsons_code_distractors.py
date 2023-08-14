@@ -8,11 +8,16 @@ openai.api_key = ""
 system_message = """Generate a one-line [distractor] from [correct-line] based on the provided [task-description] and [sample-solution]. 
 This [distractor] should look samiliar as [correct-line] but contains one or two common syntax or semantic errors to highlight common misconceptions.
 This [distractor] could not be the same as [correct-line].
+This [distractor] should not be the [old-distractor].
 
 [task-description]: '{question_description}'
 
 [sample-solution]: '{Example_student_solution}'
+
 [end-solution]
+
+[old-distractor]: '{old_distractor}'
+[end-old-distractor]
 """
 
 # user message here is the example student answer
@@ -25,10 +30,11 @@ assistant_message = """[distractor]:
 {Example_distractor}
 [end-distractor]"""
 
-def build_distractor_prompt(question_line, correct_line, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
+def build_distractor_prompt(question_line, correct_line, old_distractor, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
     system_message = system_message.format(
         question_description = question_line["w_question_description"].values[0],
-        Example_student_solution = question_line["Example_student_solution"].values[0]
+        Example_student_solution = question_line["Example_student_solution"].values[0],
+        old_distractor = old_distractor
     )
     user_message = user_message.format(
         Example_correct_line = question_line["Example_paired_distractor_correct"].values[0]
@@ -65,7 +71,7 @@ def request_distractor_from_openai(prompt_messages):
         distractor = distractor
     return distractor
 
-def get_personalized_distractor(prompt_messages, correct_line, distractor = ""):
+def get_personalized_distractor(prompt_messages, correct_line, distractor):
     while True:
         try:
             while (distractor.count('\n') != 0) or (distractor == "") or (distractor == correct_line):
@@ -75,9 +81,6 @@ def get_personalized_distractor(prompt_messages, correct_line, distractor = ""):
                     return distractor 
         except:
             time.sleep(0.1)
-
-def get_student_distractor(correct_line, student_buggy_line):
-    return 
 
 
 def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_tuple):
@@ -98,8 +101,7 @@ def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_tuple)
             fixed_lines.pop(i)
         else:
             continue
-    print((key_fixed_line[0]+0.5, key_fixed_line[0], line_indentation + distractor_tuple[1].strip()))
-    blocks = fixed_lines + unchanged_lines + [(key_fixed_line[0]+0.5, key_fixed_line[0], line_indentation + distractor_tuple[1])]
+    blocks = fixed_lines + unchanged_lines + [(key_fixed_line[0]+0.5, key_fixed_line[0], line_indentation + distractor_tuple[1].strip())]
 
     print("All blocks", blocks)
     

@@ -22,30 +22,29 @@ To start, please run the requirements.txt
 ### Output:
 A personalized Parsons problem in the Runestone format that is close to the incorrect input written solution.
 ```
------
-    class Cat: 
+    Finish the function ``less_dict`` below which takes a dictionary ``d`` and an
+    integer ``cutoff`` and returns a new dictionary that contains only the key-value
+    pairs where the value is less than the cutoff. For example, ``less_dict({'a':
+    20, 'b': 10}, 15)`` returns ``{'b': 10}``, ``less_dict({'a': 30, 'b': 20}, 40)``
+    should return ``{'a': 30, 'b': 20}``, ``less_dict({'a': 20, 'b': 10}, 5)``
+    should return ``{}``.
+    -----
+    def less_dict(d, cutoff): 
     =====
-    class cat:  #paired
+    def less_dict(c, cutoff): #paired
     =====
-        def __init__(self, name, age): #settled
+        d2 = {} 
+        for k in d: #settled
     =====
-            self.name = name 
-            self.age = age 
+            if d[k] < cutoff: 
     =====
-            self.name == name 
-            self.age = age  #paired
+            if d[k] <= cutoff: #paired
     =====
-        def __str__(self): 
+                d2[k] = d[k] 
     =====
-        def __str__:  #paired
+                d2[k] = cutoff #paired
     =====
-            return "name: " + self.name + ", age: " + str(self.age) #settled
-    =====
-        def make_sound(self): 
-    =====
-        def make_sound():  #paired
-    =====
-            return 'Meow'
+        return d2 #settled
 ```
 
 A good entry point is [entry_point.py](https://github.com/xinyinghou/personalized-parsons-runestone/blob/main/entry_point.py): it's an end-to-end example of how the system is designed to work.

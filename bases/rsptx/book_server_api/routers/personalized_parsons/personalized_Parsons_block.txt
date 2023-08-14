@@ -1,18 +1,26 @@
-   -----
-    def less_dict(d, cutoff): 
-    =====
-        d2 = {} for key, val in d.items(): 
-    =====
-        d2 = {} for k in d: #paired
-    =====
-        d2 = {} #settled 
-    =====
+    Finish the function ``less_dict`` below which takes a dictionary ``d`` and an
+    integer ``cutoff`` and returns a new dictionary that contains only the key-value
+    pairs where the value is less than the cutoff. For example, ``less_dict({'a':
+    20, 'b': 10}, 15)`` returns ``{'b': 10}``, ``less_dict({'a': 30, 'b': 20}, 40)``
+    should return ``{'a': 30, 'b': 20}``, ``less_dict({'a': 20, 'b': 10}, 5)``
+    should return ``{}``.
+-----
+    def less_dict(d, cutoff):
+---
+        d2 = {} 
+        for key, val in d.items(): 
+---
+        d2 = {} 
+        for k in dict: #paired
+---
+        d2 = {} #settled
+---
             if val < cutoff: 
-    =====
-            if d[k] < cutoff: #paired
-    =====
+---
+            if (d[k] < cutoff): #paired
+---
                 d2[key] = val 
-    =====
-                d2[k] = cutoff #paired
-    =====
-        return d2 #settled 
+---
+                d2[k] == cutoff #paired
+---
+        return d2 #settled

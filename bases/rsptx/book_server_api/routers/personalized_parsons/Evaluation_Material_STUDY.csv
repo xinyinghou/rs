@@ -79,7 +79,7 @@ Pair A_op_1,W,sum13_acop,"Finish the function ``sum13(nums)`` to return the sum 
            self.assertEqual(sum13([]), 0, 'sum13([])')
            self.assertEqual(sum13([1,2,13]), 3, 'sum13([1,2,13])')
            self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,if nums[count] == 13:,if nums == 13:,45,14,TRUE,0.990674198,0.992043436,TRUE
-Pair A_oc_2,W,sum67_acoc,"Write the ``sum67`` function that takes a list and should return the total of the items in the list except for all the numbers between a 6 and 7 (6 should before 7, inclusive).   For example, ``sum67([1,2])`` should return ``3`` and ``sum67([2, 6, 8, 7, 2])`` should return ``4``, ``sum67([3, 6, 7])``  should return ``3``.",sum67_acoc,238,"def sum67(nums):
+Pair A_oc_2,W,sum67_acoc,"Finish the ``sum67`` function that takes a list and should return the total of the items in the list except for all the numbers between a 6 and 7 (6 should before 7, inclusive).   For example, ``sum67([1,2])`` should return ``3`` and ``sum67([2, 6, 8, 7, 2])`` should return ``4``, ``sum67([3, 6, 7])``  should return ``3``.",sum67_acoc,238,"def sum67(nums):
     total = 0               
     found_6 = False          
     for num in nums:        
@@ -149,7 +149,7 @@ Pair A_oc_2,W,sum67_acoc,"Write the ``sum67`` function that takes a list and sho
            self.assertEqual(sum67([7, 2, 6]), 9, 'sum67([7, 2, 6])')
            self.assertEqual(sum67([4, 6, 7]), 4, 'sum67([4, 6, 7])')
            self.assertEqual(sum67([]), 0, 'sum67([])')",def sum67(nums):,,if found_6 and num == 7:,if found_6 and num = 7:,92,22,TRUE,0.951161385,0.993991852,TRUE
-Pair A_op_2,W,sum67_acop,"Write the ``sum67`` function that takes a list and should return the total of the items in the list except for all the numbers between a 6 and 7 (6 should before 7, inclusive).   For example, ``sum67([1,2])`` should return ``3`` and ``sum67([2, 6, 8, 7, 2])`` should return ``4``, ``sum67([3, 6, 7])``  should return ``3``.",sum67_acop,238,"def sum67(nums):
+Pair A_op_2,W,sum67_acop,"Finish the ``sum67`` function that takes a list and should return the total of the items in the list except for all the numbers between a 6 and 7 (6 should before 7, inclusive).   For example, ``sum67([1,2])`` should return ``3`` and ``sum67([2, 6, 8, 7, 2])`` should return ``4``, ``sum67([3, 6, 7])``  should return ``3``.",sum67_acop,238,"def sum67(nums):
     total = 0               
     found_6 = False          
     for num in nums:        
@@ -219,7 +219,7 @@ Pair A_op_2,W,sum67_acop,"Write the ``sum67`` function that takes a list and sho
            self.assertEqual(sum67([7, 2, 6]), 9, 'sum67([7, 2, 6])')
            self.assertEqual(sum67([4, 6, 7]), 4, 'sum67([4, 6, 7])')
            self.assertEqual(sum67([]), 0, 'sum67([])')",def sum67(nums):,,if found_6 and num == 7:,if found_6 and num = 7:,92,22,TRUE,0.951161385,0.993991852,TRUE
-Pair B_oc_1,W,has_22_acoc," Finish the function ``has22`` below to return ``True`` if there are at least two items in the list ``nums`` that are adjacent and both equal to 2, otherwise return ``False``. For example, return ``True`` for ``has22([1, 2, 2])`` and ``has22([2, 2])`` and ``False`` for ``has22([2, 1, 2])`` and ``has22([3,3,1])``.",has_22_acoc,40,"def has22(nums):
+Pair B_oc_1,W,has_22_acoc,"Finish the function ``has22`` below to return ``True`` if there are at least two items in the list ``nums`` that are adjacent and both equal to 2, otherwise return ``False``. For example, return ``True`` for ``has22([1, 2, 2])`` and ``has22([2, 2])`` and ``False`` for ``has22([2, 1, 2])`` and ``has22([3,3,1])``.",has_22_acoc,40,"def has22(nums):
     for i in range(len(nums)-1):
         if nums[i]==2 and nums[i+1]==2:
             return True
@@ -248,7 +248,7 @@ Pair B_oc_1,W,has_22_acoc," Finish the function ``has22`` below to return ``True
            self.assertEqual(has22([]), False, 'has22([])')
            self.assertEqual(has22([3, 3, 1]), False, 'has22([3, 3, 1])')
            self.assertEqual(has22([1, 4, 4]), False, 'has22([1, 4, 4])')",def has22(nums):,,for i in range(len(nums) - 1):,"for i in range(1, len(nums) + 1):",21,5,TRUE,0.985619605,0.996876121,TRUE
-Pair B_op_1,W,has_22_acop," Finish the function ``has22`` below to return ``True`` if there are at least two items in the list ``nums`` that are adjacent and both equal to 2, otherwise return ``False``. For example, return ``True`` for ``has22([1, 2, 2])`` and ``has22([2, 2])`` and ``False`` for ``has22([2, 1, 2])`` and ``has22([3,3,1])``.",has_22_acop,40,"def has22(nums):
+Pair B_op_1,W,has_22_acop,"Finish the function ``has22`` below to return ``True`` if there are at least two items in the list ``nums`` that are adjacent and both equal to 2, otherwise return ``False``. For example, return ``True`` for ``has22([1, 2, 2])`` and ``has22([2, 2])`` and ``False`` for ``has22([2, 1, 2])`` and ``has22([3,3,1])``.",has_22_acop,40,"def has22(nums):
     for i in range(len(nums)-1):
         if nums[i]==2 and nums[i+1]==2:
             return True
@@ -277,7 +277,7 @@ Pair B_op_1,W,has_22_acop," Finish the function ``has22`` below to return ``True
            self.assertEqual(has22([]), False, 'has22([])')
            self.assertEqual(has22([3, 3, 1]), False, 'has22([3, 3, 1])')
            self.assertEqual(has22([1, 4, 4]), False, 'has22([1, 4, 4])')",def has22(nums):,,for i in range(len(nums) - 1):,"for i in range(1, len(nums) + 1):",21,5,TRUE,0.985619605,0.996876121,TRUE
-Pair B_oc_2,W,is_ascending_acoc,"Write a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acoc,170,"def is_ascending(nums):
+Pair B_oc_2,W,is_ascending_acoc,"Finish a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acoc,170,"def is_ascending(nums):
     if len(nums) < 2:
         return True 
     for i in range(len(nums) - 1):
@@ -314,7 +314,7 @@ Pair B_oc_2,W,is_ascending_acoc,"Write a function ``is_ascending(nums)`` that re
                 self.assertEqual(is_ascending([1,2,3,4]),True,""is_ascending([1,2,3,4])"")
                 self.assertEqual(is_ascending([1]),True,""is_ascending([1])"")
                 self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,,if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1]:,22,8,TRUE,0.989606023,0.99348402,TRUE
-Pair B_op_2,W,is_ascending_acop,"Write a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acop,170,"def is_ascending(nums):
+Pair B_op_2,W,is_ascending_acop,"Finish a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acop,170,"def is_ascending(nums):
     if len(nums) < 2:
         return True 
     for i in range(len(nums) - 1):
@@ -441,7 +441,7 @@ Pair C_op_2,W,greater_dict_acop,"Finish the function ``greater_dict`` below whic
            self.assertEqual(greater_dict({'a': 20, 'b': 10}, 30), {}, ""greater_dict({'a': 20, 'b': 10}, 30)"")
            self.assertEqual(greater_dict({'a': 20, 'b': 5}, 5), {'a': 20, 'b': 5}, ""greater_dict({'a': 20, 'b': 5}, 5)"")
            self.assertEqual(greater_dict({'a': 20, 'b': 10, 'c': 25}, 15), {'a': 20, 'c': 25}, ""greater_dict({'a': 20, 'b': 10, 'c': 25}, 15)"")","def greater_dict(d, cutoff):",,for key in d:,for key in d.items():,35,1,TRUE,0.972467065,0.98587811,TRUE
-Intro-op,W,intro-sample-write-code-acop,"Write a function called ``double(num)`` that takes a number ``num`` and returns the number times 2. For example, ``double(2)`` should return 4 and ``double(-1)`` should return -2.  Look below the code to check for any compiler errors or the results from the test cases.  Be sure to return the result.",intro-sample-write-code-acop,,"def double(num):
+Intro-op,W,intro-sample-write-code-acop,"Finish a function called ``double(num)`` that takes a number ``num`` and returns the number times 2. For example, ``double(2)`` should return 4 and ``double(-1)`` should return -2.  Look below the code to check for any compiler errors or the results from the test cases.  Be sure to return the result.",intro-sample-write-code-acop,,"def double(num):
         return num*2","def double():
        num = num*2
 return num*2","def double(num):
@@ -455,17 +455,19 @@ return num*2","def double(num):
             self.assertEqual(double(0),0,""double(0)"")
             self.assertEqual(double(11),22,""double(11)"")
 
-    myTests().main()",def double(num):,print(double(2)),def double(num):,def double(num),,,,,,
-Intro-oc,W,intro-sample-write-code-acoc,"Write a function called ``triple(num)`` that takes a number ``num`` and returns the number times 3. For example, ``double(2)`` should return 6 and ``double(-1)`` should return -3.  Look below the code to check for any compiler errors or the results from the test cases.  Be sure to return the result.",intro-sample-write-code-acoc,,"def triple(num):
-        return num*3","def triple():
-        return num*-3","def triple(num):
-        return num*3","class myTests(unittest.TestCase):
+    myTests().main()",def double(num):,,def double(num):,def double(num),,,,,,
+Intro-oc,W,intro-sample-write-code-acoc,"Finish a function called ``double(num)`` that takes a number ``num`` and returns the number times 2. For example, ``double(2)`` should return 4 and ``double(-1)`` should return -2.  Look below the code to check for any compiler errors or the results from the test cases.  Be sure to return the result.",intro-sample-write-code-acoc,,"def double(num):
+        return num*3","def double():
+       num = num*2
+return num*3","def double(num):
+       num = num*2
+       return num","class myTests(unittest.TestCase):
 
         def testOne(self):
-            self.assertEqual(triple(2),6,""triple(2)"")
-            self.assertEqual(triple(3),9,""triple(3)"")
-            self.assertEqual(triple(-1),-3,""triple(-1)"")
-            self.assertEqual(triple(0),0,""triple(0)"")
-            self.assertEqual(triple(11),33,""triple(11)"")
+            self.assertEqual(double(2),4,""double(2)"")
+            self.assertEqual(double(3),6,""double(3)"")
+            self.assertEqual(double(-1),-2,""double(-1)"")
+            self.assertEqual(double(0),0,""double(0)"")
+            self.assertEqual(double(11),22,""double(11)"")
 
-    myTests().main()",def triple(num):,print(triple(2)),        return num*3,return num*3,,,,,,
+    myTests().main()",def double(num):,,def double(num):,def double(num),,,,,,

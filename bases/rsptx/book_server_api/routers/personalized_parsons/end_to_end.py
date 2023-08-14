@@ -92,30 +92,33 @@ def generate_personalized_Parsons_blocks(df_question_line, buggy_code, cleaned_f
     #print(code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity)
     # decide the types of Parsons problems and generate correspoding distractors
     Parsons_type, distractors, distractor_candidates = personalize_Parsons_block(df_question_line, code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity)
-    #print("distractions\n", distractors)
+    print("distractions\n", distractors)
     unittest_flag = True
     print("distractors", distractors)
-    if Parsons_type != "Full" and distractors != {}:
-        print("here")
+    if len(distractors) > 0:
         for distractor in distractors.items():
-            print("distractor", distractor)
+            unittest_True = 0
+            distractor_correct_line = distractor[0]
             # Prepare the code with distractors for unittest evaluation - cannot pass the tests this time
             code_with_distrator = generate_code_with_distrator(unchanged_lines, fixed_lines, distractor)
             #print("code_with_distractors\n", code_with_distrator)
             unittest_flag, cleaned_code_with_distractors = code_distractor_unittest_evaluation(code_with_distrator, default_start_code, default_test_code, unittest_code)
-            print("unittest_flag", unittest_flag, "cleaned_code_with_distractors\n", cleaned_code_with_distractors)
-            while (unittest_flag == True) & (attempt <= 2):
-                attempt += 1
-                Parsons_type, distractor, distractor_candidates = personalize_Parsons_block(df_question_line, code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity)
-                code_with_distrator = generate_code_with_distrator(unchanged_lines, fixed_lines, distractor)
+            while (unittest_flag == True) & (unittest_True <= 2):
+                unittest_True += 1
+                #def build_distractor_prompt(question_line, correct_line, regeneration_message, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
+                new_distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_correct_line[2],distractor[1]), distractor_correct_line[2],distractor[1])
+                distractors[distractor_correct_line] = new_distractor
+                print("new_distractor", new_distractor)
+                print("distractors[distractor_correct_line]", distractors[distractor_correct_line])
+                print("distractors_with_new", distractors)
+                # Prepare the code with distractors for unittest evaluation - cannot pass the tests this time
+                code_with_distrator = generate_code_with_distrator(unchanged_lines, fixed_lines, (distractor_correct_line, new_distractor))
                 #print("code_with_distractors\n", code_with_distrator)
                 unittest_flag, cleaned_code_with_distractors = code_distractor_unittest_evaluation(code_with_distrator, default_start_code, default_test_code, unittest_code)
-                #print("cleaned_code_with_distractors\n", cleaned_code_with_distractors)
-            if (attempt > 2) & (unittest_flag == True):
-                print("attempt", attempt, "unittest_flag", unittest_flag, "cleaned_code_with_distractors\n", cleaned_code_with_distractors)
-                # can access the individual elements within the tuple using indexing (e.g., item[0] for the key and item[1] for the value)
-                distractors.pop(distractor[0])
-    
+            if (unittest_flag == True) & (unittest_True > 2):
+                distractors.pop(distractor_correct_line)
+                continue
+
     print("cleaned_fixed_code\n", cleaned_fixed_code)
     personalized_Parsons_block = generate_Parsons_block(Parsons_type, df_question_line, cleaned_fixed_code, unchanged_lines, fixed_lines, distractors)
     print("personalized_Parsons_block\n", personalized_Parsons_block)

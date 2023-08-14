@@ -110,7 +110,8 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, fixed_lin
             print("distractor_candidates", distractor_candidates)
             for distractor_candidate in distractor_candidates:
                 print("distractor_candidate", distractor_candidate)
-                distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_candidate[2]), distractor_candidate[2])
+                #def build_distractor_prompt(question_line, correct_line, regeneration_message, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
+                distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_candidate[2],""), distractor_candidate[2],"")
                 # the keys should be tuple (location, length, code) instead of only the actual code
                 distractors[distractor_candidate] = distractor
 
@@ -120,4 +121,5 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, fixed_lin
             parsons_type = "Partial_Own_Random"
         print("distractors_personalize_Parsons_block", distractors)
         return parsons_type, distractors, distractor_candidates
+
 

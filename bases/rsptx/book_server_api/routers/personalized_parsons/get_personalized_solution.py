@@ -6,9 +6,10 @@ openai.api_key = ""
 
 system_message = """
 Fix the provided Python [user-code] based on the provided [task-description] and [sample-solution] and generate [fixed-code]. 
-The [fixed-code] should follow the existing solving strategy and solution path in [user-code], use the same type of use the same variable names as [user-code] and requires the least amount of edits from the [user-code].
+The [fixed-code] should follow the existing solving strategy and solution path in [user-code], use the same type of [control_structures], use the same variable names as [user-code] and requires the least amount of edits from the [user-code].
 For example, the [user-code] uses [control_structures], the [fixed-code] should also these [control_structures].
 The [fixed-code] should pass the provided [unittest-code] and be more similar to the [user-code] than the [sample-solution].
+The [fixed-code] should follow the Python style guide.
 [task-description]: '{question_description}'
 [end-task-description]
 
