@@ -165,6 +165,7 @@ export class ActiveCode extends RunestoneBase {
         if (typeof Prism !== "undefined") {
             Prism.highlightAllUnder(this.containerDiv);
         }
+        this.helpLoaded = false;
     }
 
     createEditor(index) {
@@ -320,27 +321,15 @@ export class ActiveCode extends RunestoneBase {
         return promise;
     }
 
-    async parsonsBtnHandler() {
-        // create a loading prompt
-        console.log($(this.outerDiv).find("#scaffolding-loading-prompt").length);
-        if (!$(this.outerDiv).find("#scaffolding-loading-prompt").length) {
-            let loadingPrompt = document.createElement('div');
-            loadingPrompt.id = 'scaffolding-loading-prompt';
-            this.outerDiv.insertBefore(loadingPrompt, this.outerDiv.firstChild);
-            loadingPrompt.innerText = "Loading help...";
-            $(loadingPrompt).addClass('loading');
-        } else {
-            // if already exists: add loading status
-            $(this.outerDiv).find("#scaffolding-loading-prompt").addClass('loading');
+    async reopenHelpBtnHandler() {
+        if (window.latestParsonsHelpID == this.divid) {
+            $('#scaffolding-container').removeClass('hidden');
+            return;
         }
 
-        // send code to backend to get the rst for parsons problem
-        // todo: change name
-        let answer_rst = await this.getParsonsRst();
-        this.scaffoldingAnswer = answer_rst.split("||split||")[0];
-        let rst = answer_rst.split("||split||")[1];
+        this.scaffoldingAnswer = this.helpText.split("||split||")[0];
+        let rst = this.helpText.split("||split||")[1];
 
-        $(this.outerDiv).find("#scaffolding-loading-prompt").removeClass('loading');
         let probDescHTML = $(this.outerDiv).find(".ac_question").last().html();
 
 
@@ -415,6 +404,37 @@ export class ActiveCode extends RunestoneBase {
 //             // send the text to an ajax endpoint that will insert it into
 //             // a sphinx project, run sphinx, and send back the generated index file
 //             // this generated index can then be displayed...
+        window.latestParsonsHelpID = this.divid;
+
+    }
+
+    async parsonsBtnHandler() {
+        // create a loading prompt
+        console.log($(this.outerDiv).find("#scaffolding-loading-prompt").length);
+        if (!$(this.outerDiv).find("#scaffolding-loading-prompt").length) {
+            let loadingPrompt = document.createElement('div');
+            loadingPrompt.id = 'scaffolding-loading-prompt';
+            this.outerDiv.insertBefore(loadingPrompt, this.outerDiv.firstChild);
+            loadingPrompt.innerText = "Loading help...";
+            $(loadingPrompt).addClass('loading');
+        } else {
+            // if already exists: add loading status
+            $(this.outerDiv).find("#scaffolding-loading-prompt").addClass('loading');
+        }
+
+        // send code to backend to get the rst for parsons problem
+        // todo: change name
+        this.helpText = await this.getParsonsRst();
+        $(this.outerDiv).find("#scaffolding-loading-prompt").removeClass('loading');
+        window.latestParsonsHelpID = "";
+        this.reopenHelpBtnHandler();
+        
+        if (!this.helpLoaded) {
+            this.helpLoaded = true;
+            $(this.outerDiv).find(".reopen-help-btn").removeClass('hide');
+            $(this.outerDiv).find(".parsons-scaffolding-btn").text("Refresh Help");
+        }
+
     }
 
     createControls() {
@@ -444,6 +464,17 @@ export class ActiveCode extends RunestoneBase {
             parsonsScaffoldingBtn.classList.add("btn", "parsons-scaffolding-btn");
             parsonsScaffoldingBtn.onclick = this.parsonsBtnHandler.bind(this);
             ctrlDiv.appendChild(parsonsScaffoldingBtn);
+
+            let reopenScaffoldingBtn = document.createElement("button");
+            reopenScaffoldingBtn.innerText = "Reopen Help";
+            // if (this.openaiparsons) {
+            //     parsonsScaffoldingBtn.innerText = "Show Parsons Scaffolding";
+            // } else {
+            //     parsonsScaffoldingBtn.innerText = "Show Fixed Solution";
+            // }
+            reopenScaffoldingBtn.classList.add("btn", "reopen-help-btn", "hide");
+            reopenScaffoldingBtn.onclick = this.reopenHelpBtnHandler.bind(this);
+            ctrlDiv.appendChild(reopenScaffoldingBtn);
         }
 
         if (this.enabledownload || eBookConfig.downloadsEnabled) {

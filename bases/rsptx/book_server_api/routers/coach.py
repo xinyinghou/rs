@@ -84,7 +84,7 @@ async def parsons_scaffolding(request: Request):
     personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
 
     parsons_html = """
-        <pre  class="parsonsblocks" data-question_label="1"   data-adaptive="true"     data-noindent="true"  data-numbered="left"    style="visibility: hidden;">
+        <pre  class="parsonsblocks" data-question_label="1"    data-noindent="true"  data-numbered="left"    style="visibility: hidden;">
         """ + personalized_Parsons_block + """
         </pre>
 """

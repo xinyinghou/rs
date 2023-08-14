@@ -201,5 +201,14 @@
 /* open coding aid*/
 .parsons-scaffolding-btn {
     background-color: #ED7014;
-    color: white;
+    color: white !important;
+}
+
+.reopen-help-btn {
+    background-color: #FDA172;
+    color: black;
+}
+
+.reopen-help-btn.hide {
+    display: none;
 }
