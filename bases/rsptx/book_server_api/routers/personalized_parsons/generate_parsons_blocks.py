@@ -53,7 +53,7 @@ def generate_full_Parsons(fixed_code, problem_description):
     
     blocks = aggregate_code_to_full_Parsons_block(blocks)
     problem_description = break_and_indent(problem_description, max_line_length=80)
-    Parsons_problem = problem_description + "\n" + convert_code_to_block(blocks)
+    Parsons_problem = convert_code_to_block(blocks)
     return Parsons_problem
 
 # Generate the partial Parsons problem with unmovable blocks and distractors
@@ -112,7 +112,7 @@ def generate_partial_Parsons(Parsons_type, problem_description, unchanged_lines,
     blocks = aggregate_code_to_Parsons_block_with_distractor(blocks)
     #print("blocks after aggregate_code_to_Parsons_block_with_distractor", blocks)
     problem_description = break_and_indent(problem_description, max_line_length=80)
-    Parsons_problem = problem_description + "\n" + convert_code_to_block(blocks)
+    Parsons_problem = convert_code_to_block(blocks)
     return Parsons_problem
 
 def reset_distractor_flag(distractor_block):
@@ -295,7 +295,7 @@ def convert_code_to_block(blocks):
 
     print(blocks)
     # Save the blocks into a string
-    blocks =  '-----\n' + ''.join(blocks)
+    blocks =  ''.join(blocks)
     return blocks
 
 

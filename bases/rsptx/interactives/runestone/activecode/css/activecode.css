@@ -197,3 +197,9 @@
 .copy-button-hide {
     display: none;
 }
+
+/* open coding aid*/
+.parsons-scaffolding-btn {
+    background-color: #ED7014;
+    color: white;
+}
