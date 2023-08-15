@@ -27,7 +27,6 @@ RUN apt update
 
 # copy project
 COPY ./dist/$wheel /usr/src/app/$wheel
-COPY ./example_code_question_bank.xlsx /usr/src/app/example_code_question_bank.xlsx
 COPY ./Evaluation_Material_STUDY.csv /usr/src/app/Evaluation_Material_STUDY.csv
 # When you pip install a wheel it also installs all of the dependencies
 # which are stored in the METADATA file inside the wheel

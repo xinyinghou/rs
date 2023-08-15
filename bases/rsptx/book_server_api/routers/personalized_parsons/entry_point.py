@@ -27,9 +27,8 @@ def personalized_help(student_code, problem_name):
     }
     return get_personalized_parsons_help(input_dict, df_question_bank)
 
-problem_name = "less_dict_acop"
-student_code = "def         less_dict(d, cutoff):\n    d2 = {}\n    for k in dict:\n        if (d[k] < cutoff):\n            d2[k] == cutoff\n    return d2\n"
-
+problem_name = "sum13_acop"
+student_code = "def sum13(nums):\n    total = 0\n    count === 0\n    while count < len(nums)\n        if nums[count] == :\n            count += 2\n            continue\n        total += nums[count\n        count += 1\n    return"
 personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
 
 # personalized_code_solution, personalized_Parsons_block = get_personalized_parsons_help(dict_buggy_code, df_question_bank)

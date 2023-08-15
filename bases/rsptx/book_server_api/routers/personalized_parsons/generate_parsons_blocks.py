@@ -46,12 +46,16 @@ def break_and_indent(text, max_line_length, indent=4):
 def generate_full_Parsons(fixed_code, problem_description):
     # Remove empty lines
     fixed_code = re.sub(r'\n\s*\n', '\n', fixed_code)
+    print("fixed_code", fixed_code)
     # Extract code blocks based on indentation patterns
     matches = re.findall(r'(?<=\n)(\s*)(.*)', fixed_code)
+    matches = [('',fixed_code.split('\n')[0])] + matches
+    # if no indentation, add to matches as ("", code_line)
     # Remove empty and whitespace-only blocks and add four indentation spaces to each block
     blocks = ['    ' + block[0] + block[1] for block in matches if block[1].strip()]
-    
+    print("full_blocks",blocks)
     blocks = aggregate_code_to_full_Parsons_block(blocks)
+    print("full_blocks_aggregate_code_to_full_Parsons_block",blocks)
     problem_description = break_and_indent(problem_description, max_line_length=80)
     Parsons_problem = convert_code_to_block(blocks)
     return Parsons_problem
@@ -115,7 +119,23 @@ def generate_partial_Parsons(Parsons_type, problem_description, unchanged_lines,
     Parsons_problem = convert_code_to_block(blocks)
     return Parsons_problem
 
+def keep_last_hash_tag_lines(input_string, hash_tag):
+    lines = input_string.split('\n')
+    output_lines = []
+    found_last_settled = False
+    for line in reversed(lines):
+        if (hash_tag in line) & (not found_last_settled):
+            output_lines.append(line)
+            found_last_settled = True
+        elif (hash_tag in line) & (found_last_settled == True):
+            line = line.replace(hash_tag, "")
+            output_lines.append(line)
+        else:
+            output_lines.append(line)
+    return '\n'.join(reversed(output_lines))
+
 def reset_distractor_flag(distractor_block):
+    distractor_block = list(filter(None, distractor_block))
     has_paired = False
 
     for i, item in enumerate(distractor_block):
@@ -128,105 +148,122 @@ def reset_distractor_flag(distractor_block):
     if has_paired:
         #print("distractor_block[-1] ", distractor_block[-1])
         distractor_block[-1] = distractor_block[-1].replace("\n", "") + " #paired" + "\n"
+            
+    print("distractor_block_all ", distractor_block)
 
     return distractor_block
 
-def extract_distractor_Parsons_block(blocks, distractor_index):
-    # Find the line with #paired and extract the neighboring tuples with the same third value
-    neighbor_tuples = []
 
-    current_indentation = blocks[distractor_index][2]
-    
-    # Collect the neighboring tuples with the same third value until the third value changes
-    for tpl in blocks[distractor_index::-1]:
-        if tpl[2] == current_indentation:
-            neighbor_tuples.insert(0, tpl)
-        else:
-            break
+def extract_distractor_Parsons_block(distractor_block_stack):
+    # Count how many #paired in distractor_block_stack
+    print("distractor_block_stack", distractor_block_stack)
+    count_distractor = sum(1 for block_tuple in distractor_block_stack if "#paired" in block_tuple[1])
 
-    for tpl in blocks[distractor_index+1:]:
-        if tpl[2] == current_indentation:
-            neighbor_tuples.append(tpl)
-        else:
-            break
-    
-    # Create two separate lists based on the extracted neighbor tuples
-    fixed_line_block = reset_distractor_flag([tpl[3] for tpl in neighbor_tuples if "#paired" not in tpl[3]])
-    fixed_line_block = '\n'.join([block.rstrip('\n') for block in fixed_line_block])
-    distractor_block = reset_distractor_flag([tpl[3] for tpl in neighbor_tuples if "#matched-fixed" not in tpl[3]])
-    distractor_block = '\n'.join([block.rstrip('\n') for block in distractor_block])
-    #print("fixed_line_block, distractor_block", fixed_line_block, distractor_block)
-    return fixed_line_block, distractor_block
+    if count_distractor == 1:
+        # Create two separate lists based on the extracted neighbor tuples
+        fixed_line_block = reset_distractor_flag([tpl[1] for tpl in distractor_block_stack if "#paired" not in tpl[1]])
+        fixed_line_block = '\n'.join([block.rstrip('\n') for block in fixed_line_block])
+        distractor_line_block = reset_distractor_flag([tpl[1] for tpl in distractor_block_stack if "#matched-fixed" not in tpl[1]])
+        distractor_line_block = '\n'.join([block.rstrip('\n') for block in distractor_line_block])
+        #print("fixed_line_block, distractor_block", fixed_line_block, distractor_block)
+        #print("fixed_line_block", fixed_line_block, "distractor_block", distractor_line_block)
+        return fixed_line_block, distractor_line_block
+    # If more than one match-paired distractors in a distractor block stack
+    # then create fixed_line and distractor block (include more than one match-paired distractors)
+    else: 
+        # only keep the last line that has "#paired", one is settled + all paired; one is settled + all match-fixed
+        d_stack_remove_matched_lines = [tup for tup in distractor_block_stack if '#matched-fixed' not in tup[1]]
+        print("d_stack_remove_matched_lines", d_stack_remove_matched_lines)
+        d_blocks = ''.join(str(block[1]) for block in d_stack_remove_matched_lines)
+        print("d_blocks", d_blocks)
+        d_block_keep_last_distractor = keep_last_hash_tag_lines(d_blocks, "#paired")
+        print("d_block_keep_last_distractor", d_block_keep_last_distractor)
+        d_blocks_list = reset_distractor_flag(d_block_keep_last_distractor.split('\n'))
+        print("d_blocks_list", d_blocks_list)
+        distractor_line_block = '\n'.join([block.rstrip('\n') for block in d_blocks_list])
 
-def keep_last_settled_lines(input_string):
-    lines = input_string.split('\n')
-    output_lines = []
-    found_last_settled = False
-    for line in reversed(lines):
-        if ("#settled" in line) & (not found_last_settled):
-            output_lines.append(line)
-            found_last_settled = True
-        elif ("#settled" in line) & (found_last_settled == True):
-            line = line.replace("#settled", "")
-            output_lines.append(line)
-        else:
-            output_lines.append(line)
-    return '\n'.join(reversed(output_lines))
+        f_stack_remove_matched_lines = [tup for tup in distractor_block_stack if '#paired' not in tup[1]]
+        print("f_stack_remove_matched_lines", f_stack_remove_matched_lines)
+        f_blocks = ''.join(str(block[1]) for block in f_stack_remove_matched_lines)
+        f_block_keep_last_distractor = keep_last_hash_tag_lines(f_blocks, "#matched-fixed")
+        f_blocks_list = reset_distractor_flag(f_block_keep_last_distractor.split('\n'))
+        fixed_line_block = '\n'.join([block.rstrip('\n') for block in f_blocks_list])
+
+        print("fixed_line_block_multi", fixed_line_block, "distractor_block_multi", distractor_line_block)
+        return fixed_line_block, distractor_line_block
 
 def aggregate_code_to_Parsons_block_with_distractor(blocks):
+    blocks = [(tup[0], tup[1], tup[2], tup[3] if tup[3].endswith('\n') else tup[3] + '\n') for tup in blocks]
     # Sort the blocks by their starting line number and then indentation level
     blocks = sorted(blocks, key=lambda tpl: (tpl[0], tpl[1]))
-    current_indent_in_block_building = blocks[0][2]
-    distractor_indent = ""
+    current_indent_in_block_stack = blocks[0][2]
+    distractor_indent = False
     all_Parsons_blocks = {}
-    Parsons_block = ""
-    for block in blocks:
+    block_stack = []
+    match_fixed_verification = False
+    print("all_original_blocks\n", blocks)
+    for index, block in enumerate(blocks):
         this_indent = block[2]
-        print("block", block,"all_Parsons_blocks", all_Parsons_blocks,"current_indent_in_block_building", current_indent_in_block_building, "this_indent", this_indent, "distractor_indent", distractor_indent)
-        if this_indent == distractor_indent:
-            continue
-        else:
-            distractor_indent = ""
-
-        if '#matched-fixed' in block[3]:
-            print('#matched-fixed', block[3])
-            if (Parsons_block != "") & (this_indent!=current_indent_in_block_building):
-                all_Parsons_blocks[block[0]-0.6] = Parsons_block
-                Parsons_block = ""
-            continue
-        elif '#paired' in block[3]:
-            if (Parsons_block != "") & (this_indent != current_indent_in_block_building):
-                all_Parsons_blocks[block[0]-0.6] = Parsons_block
-                Parsons_block = ""
+        # check wehther the current stack will be marked as a distractor block stack
+        if ('#paired' in block[3]):
+            print("#paired-#matched-fixed", block[3])
             distractor_indent = this_indent
-            current_indent_in_block_building = this_indent
-            #print(blocks, blocks.index(block))
-            fixed_line_block, distractor_block = extract_distractor_Parsons_block(blocks, blocks.index(block))
-            all_Parsons_blocks[block[0]+0.20] = fixed_line_block
-            all_Parsons_blocks[block[0]+0.22] = distractor_block
-            #print("fixed_line_block\n", fixed_line_block, "distractor_block\n", distractor_block)
-        elif (this_indent == current_indent_in_block_building) & (current_indent_in_block_building != distractor_indent):
-            Parsons_block += str(block[3]) 
-        
-        if (this_indent != current_indent_in_block_building):
-            if Parsons_block != "":
-                all_Parsons_blocks[block[0]] = Parsons_block
-                Parsons_block = ""
+        print("index", index, len(blocks), "block", block,"all_Parsons_blocks", all_Parsons_blocks,"current_indent_in_block_stack", current_indent_in_block_stack, "this_indent", this_indent, "distractor_indent", distractor_indent, "current_block_stack", block_stack)
 
-            Parsons_block = str(block[3])
-            current_indent_in_block_building = this_indent 
-            
-    if Parsons_block != "":
-        all_Parsons_blocks[block[0]+0.4] = Parsons_block
-    
+        # store the current block into the block stack
+        if this_indent == current_indent_in_block_stack:
+            block_stack.append((index, block[3]))
+        elif (distractor_indent == False) & (this_indent != current_indent_in_block_stack):
+            # use the first line number of the block as the line sequence number
+            all_Parsons_blocks[block_stack[0][0]] = ''.join(str(block[1]) for block in block_stack)
+            #print("all_Parsons_blocks", all_Parsons_blocks)
+            block_stack = [(index, block[3])]
+            current_indent_in_block_stack = this_indent
+        # distractor_indent != "" means that detected that this is an end of a distractor block stack  or a start of a distractor block stack -- how to distinguish?
+        # this_indent != current_indent_in_block_stack means that we have finished building a block stack
+        # so we have stored all the related lines in this distractor block stack
+        # now we need to do some special processing for the distractor block stack
+        elif (distractor_indent != False) & (this_indent != current_indent_in_block_stack):
+            # if this, then we have finished building a distractor block stack
+            count_fixed= sum(1 for block in block_stack if "#matched-fixed" in block[1])
+            print("count_fixed", count_fixed, "block_stack", block_stack)
+            if (count_fixed == 0):
+                #then this is just a start of a distractor block stack, moved what we have stored in the block stack to the all_Parsons_blocks first
+                all_Parsons_blocks[block_stack[0][0]] = block_stack
+            # then continue
+            fixed_line_block, distractor_block = extract_distractor_Parsons_block(block_stack)
+            all_Parsons_blocks[block_stack[0][0]+0.20] = fixed_line_block
+            all_Parsons_blocks[block_stack[0][0]+0.22] = distractor_block
+            # prepare for the next loop
+            distractor_indent = False
+            block_stack = [(index, block[3])]
+            current_indent_in_block_stack = this_indent
+            # if it is the last item, then no loop anymore, just store the last block stack           
+
+        if index == len(blocks)-1:
+            if (distractor_indent == False):
+                # use the first line number of the block as the line sequence number
+                all_Parsons_blocks[block_stack[0][0]] = ''.join(str(block[1]) for block in block_stack)
+            elif (distractor_indent != False):
+                count_fixed= sum(1 for block in block_stack if "#matched-fixed" in block[1])
+                print("count_fixed", count_fixed, "block_stack", block_stack)
+                if (count_fixed == 0):
+                    #then this is just a start of a distractor block stack, moved what we have stored in the block stack to the all_Parsons_blocks first
+                    all_Parsons_blocks[block_stack[0][0]] = block_stack
+                # then continue
+                fixed_line_block, distractor_block = extract_distractor_Parsons_block(block_stack)
+                all_Parsons_blocks[block_stack[0][0]+0.20] = fixed_line_block
+                all_Parsons_blocks[block_stack[0][0]+0.22] = distractor_block
+
     print("all_Parsons_blocks", all_Parsons_blocks)
 
     all_Parsons_blocks = OrderedDict(sorted(all_Parsons_blocks.items()))
     all_Parsons_blocks = list(all_Parsons_blocks.values())
-    all_Parsons_blocks = [item.replace('#matched-fixed', '') if '#matched-fixed' in item  else item for item in all_Parsons_blocks]
+    all_Parsons_blocks = [item.replace(' #matched-fixed', '') if '#matched-fixed' in item  else item for item in all_Parsons_blocks]
     # removing all occurrences of "#settled" lines except for the last one
-    all_Parsons_blocks = [keep_last_settled_lines(item) for item in all_Parsons_blocks]
-    print(all_Parsons_blocks)
+    all_Parsons_blocks = [keep_last_hash_tag_lines(item, "#settled") for item in all_Parsons_blocks]
+
+    print("all_Parsons_blocks", all_Parsons_blocks)
     return all_Parsons_blocks
 
 def aggregate_code_to_full_Parsons_block(blocks):
@@ -295,7 +332,7 @@ def convert_code_to_block(blocks):
 
     print(blocks)
     # Save the blocks into a string
-    blocks =  ''.join(blocks)
+    blocks = ''.join(blocks)
     return blocks
 
 
