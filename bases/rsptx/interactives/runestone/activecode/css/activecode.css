@@ -190,8 +190,10 @@
 
 #scaffolding-loading-prompt{
     display: none;
-    background-color: aquamarine;
-    font-weight: 400;
+    background-color: #fad9c8;
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 12pt;
 }
 
 .copy-button-hide {

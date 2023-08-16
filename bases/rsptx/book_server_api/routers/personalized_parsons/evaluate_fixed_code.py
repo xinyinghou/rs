@@ -1,33 +1,50 @@
 import unittest
 import pandas as pd
-from fuzzywuzzy import fuzz
 import re
 import difflib
+from fuzzywuzzy import fuzz
 from types import ModuleType
 import difflib
+import signal
 
 class NullOutput:
     def write(self, _):
         pass
 
-def load_and_run_tests(unittest_case, code_to_test):
-    # Create a dummy module to hold the test cases
-    test_module = ModuleType("test_module")
-    test_module.unittest = unittest
+class TimeoutError(Exception):
+    pass
 
-    # Execute the test cases string within the dummy module's namespace
-    exec(unittest_case, test_module.__dict__)
+def handler(signum, frame):
+    raise TimeoutError("Test execution exceeded time limit")
 
-    # Execute the code to test within the desired scope
-    exec(code_to_test, test_module.__dict__)
+def load_and_run_tests(unittest_case, code_to_test, time_limit=5):
 
-    # Retrieve the loaded test cases
-    test_suite = unittest.TestLoader().loadTestsFromModule(test_module)
-    # Run the test suite
-    test_results = unittest.TextTestRunner(verbosity=0, failfast=True, stream=NullOutput()).run(test_suite)
+    # Set up a signal handler for timeout
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(time_limit)
 
-    ##print("test_results\n", test_results)
+    try:
+        # Create a dummy module to hold the test cases
+        test_module = ModuleType("test_module")
+        test_module.unittest = unittest
+
+        print("test_module", test_module)
+        # Execute the test cases string within the dummy module's namespace
+        exec(unittest_case, test_module.__dict__)
+        # Execute the code to test within the desired scope
+        exec(code_to_test, test_module.__dict__)
+        # Retrieve the loaded test cases
+        test_suite = unittest.TestLoader().loadTestsFromModule(test_module)
+        # Run the test suite
+        test_results = unittest.TextTestRunner(verbosity=0, failfast=True, stream=NullOutput()).run(test_suite)
+    except TimeoutError:
+        return False
+    finally:
+        signal.alarm(0)
+
+    print("test_results", test_results)
     return test_results
+
 
 def fix_indentation(text):
     lines = text.split('\n')
@@ -169,9 +186,9 @@ def unittest_evaluation(fixed_code, starting_code, default_test_code, unittest_c
     try:
         ##print("fixed_code_first attempt", fixed_code)
         results = load_and_run_tests(unittest_case, fixed_code)
-        ##print("results.wasSuccessful()\n", results.wasSuccessful())
+        #print("results.wasSuccessful()\n", results.wasSuccessful())
         if contain_default_starting_code(starting_code, fixed_code):
-            ##print("results.wasSuccessful()\n", results.wasSuccessful())
+            #print("results.wasSuccessful()\n", results.wasSuccessful())
             return results.wasSuccessful(), fixed_code
         else:
             return "No starting code", fixed_code
@@ -202,13 +219,17 @@ def code_distractor_unittest_evaluation(code_with_distrator, starting_code, defa
     #     code_with_distrator.split('\n')
     # except Exception as e:
     #     return "No enough code", code_with_distrator
+    print("distractor_unittest_evaluation")
     try:
+        print("unittest_case", unittest_case, "code_with_distrator", code_with_distrator)
         results = load_and_run_tests(unittest_case, code_with_distrator)
+        print("distractor_results.wasSuccessful()\n", results.wasSuccessful())
         if contain_default_starting_code(starting_code, code_with_distrator):
             return results.wasSuccessful(), code_with_distrator
         else:
             return "No starting code", code_with_distrator
     except:
+        print("remove_potential_default_lines")
         code_with_distrator = remove_potential_default_lines(default_test_code, code_with_distrator)
         try:
             results = load_and_run_tests(unittest_case, code_with_distrator)
@@ -218,14 +239,16 @@ def code_distractor_unittest_evaluation(code_with_distrator, starting_code, defa
                 return "No starting code", code_with_distrator
         except:
             try:
+                print("fix_indentation")
                 code_with_distrator = fix_indentation(code_with_distrator)
                 results = load_and_run_tests(unittest_case, code_with_distrator)
+                print("distractor_results.wasSuccessful()\n", results.wasSuccessful())
                 if contain_default_starting_code(starting_code, code_with_distrator):
                     return results.wasSuccessful(), code_with_distrator
                 else:
                     return "No starting code", code_with_distrator
             except Exception as e:
-                return f"We got errors, {e}", code_with_distrator
+                return False, code_with_distrator
 
 def clean_student_code(student_code, default_test_code):
     try:

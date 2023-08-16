@@ -1,19 +1,7 @@
-    def less_dict(d, cutoff):
+    def double(num):
 ---
-        d2 = {} 
-        for key, val in d.items(): 
+    def double(num) #paired
 ---
-        d2 = {} 
-        for k in dict: #paired
+            return num*2
 ---
-        d2 = {} #settled
----
-            if val < cutoff: 
----
-            if (d[k] < cutoff): #paired
----
-                d2[key] = val 
----
-                d2[k] == cutoff #paired
----
-        return d2 #settled
+            return #paired

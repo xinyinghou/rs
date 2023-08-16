@@ -104,6 +104,7 @@ def generate_personalized_Parsons_blocks(df_question_line, buggy_code, cleaned_f
             #print("code_with_distractors\n", code_with_distrator)
             unittest_flag, cleaned_code_with_distractors = code_distractor_unittest_evaluation(code_with_distrator, default_start_code, default_test_code, unittest_code)
             while (unittest_flag == True) & (unittest_True <= 2):
+                print("unittest_True", unittest_True)
                 unittest_True += 1
                 #def build_distractor_prompt(question_line, correct_line, regeneration_message, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
                 new_distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_correct_line[2],distractor[1]), distractor_correct_line[2],distractor[1])

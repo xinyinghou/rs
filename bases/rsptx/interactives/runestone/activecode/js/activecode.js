@@ -432,7 +432,7 @@ export class ActiveCode extends RunestoneBase {
         if (!this.helpLoaded) {
             this.helpLoaded = true;
             $(this.outerDiv).find(".reopen-help-btn").removeClass('hide');
-            $(this.outerDiv).find(".parsons-scaffolding-btn").text("Refresh Help");
+            $(this.outerDiv).find(".parsons-scaffolding-btn").text("🔁Regenerate Help");
         }
 
     }
@@ -466,7 +466,7 @@ export class ActiveCode extends RunestoneBase {
             ctrlDiv.appendChild(parsonsScaffoldingBtn);
 
             let reopenScaffoldingBtn = document.createElement("button");
-            reopenScaffoldingBtn.innerText = "Reopen Help";
+            reopenScaffoldingBtn.innerText = "Check Help Again";
             // if (this.openaiparsons) {
             //     parsonsScaffoldingBtn.innerText = "Show Parsons Scaffolding";
             // } else {

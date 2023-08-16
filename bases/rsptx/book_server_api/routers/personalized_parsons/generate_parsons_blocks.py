@@ -192,15 +192,15 @@ def extract_distractor_Parsons_block(distractor_block_stack):
         print("fixed_line_block_multi", fixed_line_block, "distractor_block_multi", distractor_line_block)
         return fixed_line_block, distractor_line_block
 
+
 def aggregate_code_to_Parsons_block_with_distractor(blocks):
     blocks = [(tup[0], tup[1], tup[2], tup[3] if tup[3].endswith('\n') else tup[3] + '\n') for tup in blocks]
     # Sort the blocks by their starting line number and then indentation level
     blocks = sorted(blocks, key=lambda tpl: (tpl[0], tpl[1]))
     current_indent_in_block_stack = blocks[0][2]
-    distractor_indent = False
+    distractor_indent = ""
     all_Parsons_blocks = {}
     block_stack = []
-    match_fixed_verification = False
     print("all_original_blocks\n", blocks)
     for index, block in enumerate(blocks):
         this_indent = block[2]
@@ -208,12 +208,14 @@ def aggregate_code_to_Parsons_block_with_distractor(blocks):
         if ('#paired' in block[3]):
             print("#paired-#matched-fixed", block[3])
             distractor_indent = this_indent
-        print("index", index, len(blocks), "block", block,"all_Parsons_blocks", all_Parsons_blocks,"current_indent_in_block_stack", current_indent_in_block_stack, "this_indent", this_indent, "distractor_indent", distractor_indent, "current_block_stack", block_stack)
+        print("\nindex", index, len(blocks), "block", block,"all_Parsons_blocks", all_Parsons_blocks,"current_indent_in_block_stack", current_indent_in_block_stack, "this_indent", this_indent, "distractor_indent", distractor_indent, "current_block_stack", block_stack)
 
         # store the current block into the block stack
         if this_indent == current_indent_in_block_stack:
+            print("this_indent == current_indent_in_block_stack", this_indent, current_indent_in_block_stack)
             block_stack.append((index, block[3]))
-        elif (distractor_indent == False) & (this_indent != current_indent_in_block_stack):
+        elif (distractor_indent == "") & (this_indent != current_indent_in_block_stack):
+            print("distractor_indent == False & this_indent != current_indent_in_block_stack", distractor_indent, this_indent, current_indent_in_block_stack)
             # use the first line number of the block as the line sequence number
             all_Parsons_blocks[block_stack[0][0]] = ''.join(str(block[1]) for block in block_stack)
             #print("all_Parsons_blocks", all_Parsons_blocks)
@@ -223,7 +225,8 @@ def aggregate_code_to_Parsons_block_with_distractor(blocks):
         # this_indent != current_indent_in_block_stack means that we have finished building a block stack
         # so we have stored all the related lines in this distractor block stack
         # now we need to do some special processing for the distractor block stack
-        elif (distractor_indent != False) & (this_indent != current_indent_in_block_stack):
+        elif (distractor_indent != "") & (this_indent != current_indent_in_block_stack):
+            print("distractor_indent != False & this_indent != current_indent_in_block_stack", distractor_indent, this_indent, current_indent_in_block_stack)
             # if this, then we have finished building a distractor block stack
             count_fixed= sum(1 for block in block_stack if "#matched-fixed" in block[1])
             print("count_fixed", count_fixed, "block_stack", block_stack)
@@ -235,16 +238,16 @@ def aggregate_code_to_Parsons_block_with_distractor(blocks):
             all_Parsons_blocks[block_stack[0][0]+0.20] = fixed_line_block
             all_Parsons_blocks[block_stack[0][0]+0.22] = distractor_block
             # prepare for the next loop
-            distractor_indent = False
+            distractor_indent = ""
             block_stack = [(index, block[3])]
             current_indent_in_block_stack = this_indent
             # if it is the last item, then no loop anymore, just store the last block stack           
 
         if index == len(blocks)-1:
-            if (distractor_indent == False):
+            if (distractor_indent == ""):
                 # use the first line number of the block as the line sequence number
                 all_Parsons_blocks[block_stack[0][0]] = ''.join(str(block[1]) for block in block_stack)
-            elif (distractor_indent != False):
+            elif (distractor_indent != ""):
                 count_fixed= sum(1 for block in block_stack if "#matched-fixed" in block[1])
                 print("count_fixed", count_fixed, "block_stack", block_stack)
                 if (count_fixed == 0):
