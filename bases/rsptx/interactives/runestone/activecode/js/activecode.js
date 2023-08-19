@@ -379,7 +379,7 @@ export class ActiveCode extends RunestoneBase {
             copyAnswerButton.innerText = "Copy Answer to Clipboard";
             copyAnswerButton.onclick = () => {
                 navigator.clipboard.writeText(this.scaffoldingAnswer).then(()=> {
-                    alert("answer copied");
+                    $('#copy-answer-button').text('Copied!');
                 });
             }
             scaffoldingContainer.appendChild(copyAnswerButton);
@@ -392,6 +392,7 @@ export class ActiveCode extends RunestoneBase {
             // if already exists: remove hidden
             $('#scaffolding-container').removeClass('hidden');
             $('#copy-answer-button').addClass('copy-button-hide');
+            $('#copy-answer-button').text('Copy Answer to Clipboard');
         }
 
         if (this.openaiparsons) {
@@ -414,8 +415,12 @@ export class ActiveCode extends RunestoneBase {
         if (!$(this.outerDiv).find("#scaffolding-loading-prompt").length) {
             let loadingPrompt = document.createElement('div');
             loadingPrompt.id = 'scaffolding-loading-prompt';
+            // Create the loading spinner element
+            let spinner = document.createElement('div');
+            spinner.id = 'loading-spinner';
             this.outerDiv.insertBefore(loadingPrompt, this.outerDiv.firstChild);
-            loadingPrompt.innerText = "Loading help...";
+            loadingPrompt.innerText = "Loading help... You're capable of achieving great things. We will help you get there!";
+            loadingPrompt.appendChild(spinner);
             $(loadingPrompt).addClass('loading');
         } else {
             // if already exists: add loading status

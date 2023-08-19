@@ -441,33 +441,92 @@ Pair C_op_2,W,greater_dict_acop,"Finish the function ``greater_dict`` below whic
            self.assertEqual(greater_dict({'a': 20, 'b': 10}, 30), {}, ""greater_dict({'a': 20, 'b': 10}, 30)"")
            self.assertEqual(greater_dict({'a': 20, 'b': 5}, 5), {'a': 20, 'b': 5}, ""greater_dict({'a': 20, 'b': 5}, 5)"")
            self.assertEqual(greater_dict({'a': 20, 'b': 10, 'c': 25}, 15), {'a': 20, 'c': 25}, ""greater_dict({'a': 20, 'b': 10, 'c': 25}, 15)"")","def greater_dict(d, cutoff):",,for key in d:,for key in d.items():,35,1,TRUE,0.972467065,0.98587811,TRUE
-Intro-op,W,intro-sample-write-code-acop,"Finish a function called ``double(num)`` that takes a number ``num`` and returns the number times 2. For example, ``double(2)`` should return 4 and ``double(-1)`` should return -2.  Look below the code to check for any compiler errors or the results from the test cases.  Be sure to return the result.",intro-sample-write-code-acop,,"def double(num):
-        return num*2","def double():
-       num = num*2
-return num*2","def double(num):
-       num = num*2
-       return num","class myTests(unittest.TestCase):
+Pair C,W,tuples_to_dict_acoc,"Finish the function make_dir below which takes a list of tuples tuple_list and returns a dictionary where the first item in each tuple is the key and the second is the value. The first items in each tuple of ``tuple_list`` are unique strings and the second items are integers. For example, make_dir([('gray', -3), ('blue', 2)]) returns {'gray': -3, 'blue': 2}.",tuples_to_dict_acoc,168,"def make_dir(tuple_list):
+    new_dict = {}
+    for key,value in tuple_list:
+        new_dict[key] = value
+    return new_dict","def make_dir(tuple_list):
+    d = {}
+    for i in range(len(tuple_list)):
+        d[tuple_list[0]] = d[tuple_list[1]]
+    return d","def make_dir(tuple_list):
+    d = {}
+    for i in range(len(tuple_list)):
+        d[tuple_list[i][0]] = tuple_list[i][1]
+    return d","class myTests(unittest.TestCase):
 
+def testOne(self):
+self.assertEqual(make_dir([('a', 0), ('b', 3), ('c', 2)]), {'a': 0, 'b': 3, 'c': 2}, ""make_dir([('a', 0), ('b', 3), ('c', 2)])"")
+self.assertEqual(make_dir([('a', 5)]), {'a': 5}, ""make_dir([('a', 5)])"")
+self.assertEqual(make_dir([('gray', -3), ('blue', 2)]), {'gray': -3, 'blue': 2}, ""make_dir([('gray', -3), ('blue', 2)])"")",def make_dir(tuple_list):,,d[item[0]] = item[1],d[item[0]] == item[1],15,8,TRUE,0.98255426,0.99843252,TRUE
+Pair C,W,tuples_to_dict_acop,"Finish the function make_dir below which takes a list of tuples tuple_list and returns a dictionary where the first item in each tuple is the key and the second is the value.  The first items in each tuple of ``tuple_list`` are unique strings and the second items are integers. For example, make_dir([('gray', -3), ('blue', 2)]) returns {'gray': -3, 'blue': 2}.
+",tuples_to_dict_acop,168,"def make_dir(tuple_list): 
+new_dict = {} 
+for key,value in tuple_list: 
+new_dict[key] = value 
+return new_dict","def make_dir(tuple_list):
+d = {}
+for i in range(len(tuple_list)):
+d[tuple_list[0]] = d[tuple_list[1]]
+return d","def make_dir(tuple_list):
+d = {}
+for i in range(len(tuple_list)):
+d[tuple_list[i][0]] = tuple_list[i][1]
+return d","class myTests(unittest.TestCase):
+
+def testOne(self):
+self.assertEqual(make_dir([('a', 0), ('b', 3), ('c', 2)]), {'a': 0, 'b': 3, 'c': 2}, ""make_dir([('a', 0), ('b', 3), ('c', 2)])"")
+self.assertEqual(make_dir([('a', 5)]), {'a': 5}, ""make_dir([('a', 5)])"")
+self.assertEqual(make_dir([('gray', -3), ('blue', 2)]), {'gray': -3, 'blue': 2}, ""make_dir([('gray', -3), ('blue', 2)])"")",def make_dir(tuple_list):,,d[item[0]] = item[1],d[item[0]] == item[1],15,8,TRUE,0.98255426,0.99843252,TRUE
+Intro-op,W,str-mixed-example-op,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-op,,"def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","def phrase(person, thing):
+    if (type(person) == str) or (type(thing) = str):
+        person = person.capitalize()
+        thing = thing.lowercase
+        return person  + thing
+    else:
+        return ""False""","def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","class myTests(unittest.TestCase):
         def testOne(self):
-            self.assertEqual(double(2),4,""double(2)"")
-            self.assertEqual(double(3),6,""double(3)"")
-            self.assertEqual(double(-1),-2,""double(-1)"")
-            self.assertEqual(double(0),0,""double(0)"")
-            self.assertEqual(double(11),22,""double(11)"")
+              self.assertEqual(phrase(""sam"", ""Likes to code""), ""Sam likes to code"", 'phrase(""sam"", "" Likes to code"")')
+              self.assertEqual(phrase(""mary-anne"", ""likes to sing""), ""Mary-anne likes to sing"", 'phrase(""mary-anne"", "" likes to sing"")')
+              self.assertEqual(phrase(""ANNA"", ""likes to dance""), ""Anna likes to dance"", 'phrase(""ANNA"", "" likes to dance"")')
+              self.assertEqual(phrase(1111, ""likes programming""), False, 'phrase(1111, "" likes programming"")')
 
-    myTests().main()",def double(num):,,def double(num):,def double(num),,,,,,
-Intro-oc,W,intro-sample-write-code-acoc,"Finish a function called ``double(num)`` that takes a number ``num`` and returns the number times 2. For example, ``double(2)`` should return 4 and ``double(-1)`` should return -2.  Look below the code to check for any compiler errors or the results from the test cases.  Be sure to return the result.",intro-sample-write-code-acoc,,"def double(num):
-        return num*2","def double():
-       num = num*2
-return num*2","def double(num):
-       num = num*2
-       return num","class myTests(unittest.TestCase):
-
+    myTests().main()","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",,,,,,
+Intro-oc,W,str-mixed-example-oc,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-oc,,"def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","def phrase(person, thing):
+    if (type(person) == str) or (type(thing) = str):
+        person = person.capitalize()
+        thing = thing.lowercase
+        return person  + thing
+    else:
+        return ""False""","def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","""class myTests(unittest.TestCase):
         def testOne(self):
-            self.assertEqual(double(2),4,""double(2)"")
-            self.assertEqual(double(3),6,""double(3)"")
-            self.assertEqual(double(-1),-2,""double(-1)"")
-            self.assertEqual(double(0),0,""double(0)"")
-            self.assertEqual(double(11),22,""double(11)"")
+              self.assertEqual(phrase(""""sam"""", """"Likes to code""""), """"Sam likes to code"""", 'phrase(""""sam"""", """" Likes to code"""")')
+              self.assertEqual(phrase(""""mary-anne"""", """"likes to sing""""), """"Mary-anne likes to sing"""", 'phrase(""""mary-anne"""", """" likes to sing"""")')
+              self.assertEqual(phrase(""""ANNA"""", """"likes to dance""""), """"Anna likes to dance"""", 'phrase(""""ANNA"""", """" likes to dance"""")')
+              self.assertEqual(phrase(1111, """"likes programming""""), False, 'phrase(1111, """" likes programming"""")')
 
-    myTests().main()",def double(num):,,def double(num):,def double(num),,,,,,
+    myTests().main()""","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",,,,,,

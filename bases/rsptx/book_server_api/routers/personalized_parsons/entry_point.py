@@ -27,8 +27,10 @@ def personalized_help(student_code, problem_name):
     }
     return get_personalized_parsons_help(input_dict, df_question_bank)
 
-problem_name = "intro-sample-write-code-acop"
-student_code = "def double(nums):\n    return "
+problem_name = "has_22_acop"
+student_code = "def has22(nums):\n    for num in nums:\n        if num == 2 and flag == 0:\n            flag = 1\n            return True\n        elif num != 2:\n            flag = 0\n            return False"
+        
+
 personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
 
 # personalized_code_solution, personalized_Parsons_block = get_personalized_parsons_help(dict_buggy_code, df_question_bank)

@@ -3,6 +3,7 @@ import pandas as pd
 from collections import namedtuple
 from .get_parsons_code_distractors import *
 from .generate_parsons_blocks import *
+from .token_compare import *
 # compare the similarity between the student code and the fixed code
 
 #  It prints the difference between the two code snippets line by line using a loop. It also prints the similarity ratio.
@@ -24,7 +25,7 @@ def compare_code(buggy_code, fixed_code):
     diff = list(difflib.Differ().compare(student_lines, fixed_lines))
 
     # Calculate similarity ratio
-    total_similarity = difflib.SequenceMatcher(None, buggy_code, fixed_code).ratio()
+    total_similarity = code_similarity_score(buggy_code, fixed_code)
 
     #print("diff here\n", diff)
     # Get the line similarity pairs
@@ -56,10 +57,10 @@ def compare_code(buggy_code, fixed_code):
                 line_similarity_pairs.append((['student', removed_lines[i]], ['fixed', (0, '', '')]))
             
     # one line similarity > 30%
-    #Calculate similarity ratio only for different lines
+    # Calculate similarity ratio only for different lines
     for i, pair in enumerate(line_similarity_pairs):
         if pair[0][1] != pair[1][1]:
-            similarity = difflib.SequenceMatcher(None, pair[0][1][2], pair[1][1][2]).ratio()
+            similarity = code_similarity_score(pair[0][1][2], pair[1][1][2])
             pair = CodeComparison(pair[0][1], pair[1][1], similarity)
             code_comparison_pairs.append(pair)
      
@@ -96,7 +97,7 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, fixed_lin
         if len(code_comparison_pairs)>0:
             for pair in code_comparison_pairs:
                 normalize_and_compare = normalize_and_compare_lines(pair[0][2], pair[1][2])
-                if (pair[2] >= 0.30) & (normalize_and_compare == False):
+                if (pair[2] >= 0.50) & (normalize_and_compare == False):
                     # if the student code is wrong (not just a different way to write the same code), generate a distractor using student buggy code
                     distractor = pair[0][2]
                     distractors[pair[1]] =  distractor
