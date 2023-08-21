@@ -40,11 +40,17 @@ print("len",len(buggy_code), len(fixed_code),len(common_code))
 similarity_personalized = difflib.SequenceMatcher(None, buggy_code.split(), fixed_code.split()).ratio()
 similarity_most_common = difflib.SequenceMatcher(None, buggy_code.split(), common_code.split()).ratio()
 """
+def normalize_indentation(code):
+    lines = code.split('\n')
+    normalized_lines = [line.lstrip() for line in lines]
+    return '\n'.join(normalized_lines)
+
+
 def code_similarity_score(code1, code2):
     # Tokenize code snippets using ASTTokens
         # Tokenize code snippets using the tokenize module
-    tokens1 = [token.string for token in tokenize.tokenize(io.BytesIO(code1.encode('utf-8')).readline)]
-    tokens2 = [token.string for token in tokenize.tokenize(io.BytesIO(code2.encode('utf-8')).readline)]
+    tokens1 = [token.string for token in tokenize.tokenize(io.BytesIO(normalize_indentation(code1).encode('utf-8')).readline)]
+    tokens2 = [token.string for token in tokenize.tokenize(io.BytesIO(normalize_indentation(code2).encode('utf-8')).readline)]
 
     # Create a SequenceMatcher object
     matcher = difflib.SequenceMatcher(None, tokens1, tokens2)
@@ -52,3 +58,8 @@ def code_similarity_score(code1, code2):
     similarity_ratio = matcher.ratio()
 
     return similarity_ratio
+
+#code1 = "for i in range(0,len(tuple_list)):"
+#code2 = "for i in range(0,len(tuple_list)-1):"
+
+#print(code_similarity_score(code1, code2))

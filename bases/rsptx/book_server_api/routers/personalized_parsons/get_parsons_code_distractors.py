@@ -71,16 +71,15 @@ def request_distractor_from_openai(prompt_messages):
         distractor = distractor
     return distractor
 
-def get_personalized_distractor(prompt_messages, correct_line, distractor):
-    while True:
-        try:
-            while (distractor.count('\n') != 0) or (distractor == "") or (distractor == correct_line):
-                distractor = request_distractor_from_openai(prompt_messages)
-                #print("distractor", distractor)
-                if (distractor.count('\n') == 0) & (distractor != "") & (distractor != correct_line):
-                    return distractor 
-        except:
-            time.sleep(0.1)
+def get_personalized_distractor(prompt_messages, correct_line, distractor, attempt = 0):
+    line_indentation = correct_line[:len(correct_line) - len(correct_line.lstrip())]
+    while ((distractor.count('\n') != 0) or (distractor == "") or (distractor == correct_line)) and (attempt < 3):
+        attempt += 1
+        distractor = request_distractor_from_openai(prompt_messages)
+        if (distractor.count('\n') == 0) & (distractor != "") & (distractor != correct_line):
+            return line_indentation + distractor.strip()
+
+    return ""
 
 
 def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_tuple):
@@ -90,20 +89,21 @@ def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_tuple)
     # for each element in unchanged_lines, add #settled to the end of the line
     unchanged_lines = [(line[0], line[1], line[2]) for line in unchanged_lines if line[2].strip()]
     fixed_lines = [(line[0], line[1], line[2]) for line in fixed_lines if line[2].strip()]
+    other_lines = unchanged_lines + fixed_lines
     key_fixed_line = distractor_tuple[0]
     fixed_line_code = key_fixed_line[2]
     line_indentation = fixed_line_code[:len(fixed_line_code) - len(fixed_line_code.lstrip())]
- 
+    distractor_line = distractor_tuple[1]
     # if distractor_dict[key_fixed_line] has a value, then remove the corresponding distractor_dict[key_fixed_line] from the fixed_lines
-    for i, fixed_line in enumerate(fixed_lines):
-        if key_fixed_line[2] == fixed_line[2]:
-            #print("pop", key_fixed_line, fixed_line[2])
-            fixed_lines.pop(i)
+    print("other_lines",other_lines, "key_fixed_line", key_fixed_line)
+    for i, other_line in enumerate(other_lines):
+        if key_fixed_line[2] == other_line[2]:
+            print("pop", key_fixed_line, other_line[2])
+            other_lines.pop(i)
         else:
             continue
-    blocks = fixed_lines + unchanged_lines + [(key_fixed_line[0]+0.5, key_fixed_line[0], line_indentation + distractor_tuple[1].strip())]
-
-    print("All blocks", blocks)
+    print("after-pop", other_lines)
+    blocks = other_lines + [(key_fixed_line[0]+0.5, key_fixed_line[0], distractor_line)]
     
     # Sort the blocks by their starting line number
     blocks = sorted(blocks, key=lambda x: x[0])

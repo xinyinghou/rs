@@ -77,13 +77,45 @@ def normalize_and_compare_lines(line1, line2):
     line1_cleaned = re.sub(r'\s+', '', line1_normalized).strip()
     line2_cleaned = re.sub(r'\s+', '', line2_normalized).strip()
 
-    # Compare normalized lines
-    print("line1_cleaned", line1_cleaned, "line2_cleaned", line2_cleaned, line1_cleaned == line2_cleaned)
-    return line1_cleaned == line2_cleaned
+    # Compare normalized lines, highlight the indentation differences
+    if line1_cleaned != line2_cleaned:
+        return False
+    elif (line1_cleaned == line2_cleaned) and (indentation1!=indentation2):
+        return False
+    elif (line1_cleaned == line2_cleaned) and (indentation1 == indentation2):
+        return True
 
+def regenerate_distractor(fixed_line, buggy_code):
+    student_lines = buggy_code.splitlines(keepends=True)
+    # check whether there is any line achieved a high similarity than the line of comparable location
+    for student_line in student_lines:
+        similarity = code_similarity_score(fixed_line, student_line)
+        if similarity >= 0.8:
+            return similarity, student_line
+        else:
+            continue
+    return False, False
+
+
+def generate_unique_distractor_dict(distractor_dict):
+    # Group values by value[1]
+    value_groups = {}
+    for key, value in distractor_dict.items():
+        _, code = value
+        if code not in value_groups:
+            value_groups[code] = []
+        value_groups[code].append((key, value))
+
+    # Select the highest similarity value for each value[1]
+    result_distractor_dict = {}
+    for code, group in value_groups.items():
+        highest_similarity = max(group, key=lambda x: x[1][0])
+        result_distractor_dict[highest_similarity[0]] = highest_similarity[1][1]    
+
+    return result_distractor_dict
 
 # Decide which type of Parsons problem we will generate and generate the corresponding distractors
-def personalize_Parsons_block(df_question_line, code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity):
+def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_code, fixed_lines, unchanged_lines, total_similarity):
     #print(code_comparison_pairs, total_similarity)
     distractors = {}
     distractor_candidates = []
@@ -97,25 +129,50 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, fixed_lin
         if len(code_comparison_pairs)>0:
             for pair in code_comparison_pairs:
                 normalize_and_compare = normalize_and_compare_lines(pair[0][2], pair[1][2])
-                if (pair[2] >= 0.50) & (normalize_and_compare == False):
+                print("line similarity", pair[2])
+                if (pair[2] > 0.60) & (normalize_and_compare == False):
                     # if the student code is wrong (not just a different way to write the same code), generate a distractor using student buggy code
                     distractor = pair[0][2]
-                    distractors[pair[1]] =  distractor
-                else:
-                    continue
-        print("len(distractors):", len(distractors))
+                    distractors[pair[1]] = (pair[2], distractor)
+                elif (pair[2] <= 0.60) & (normalize_and_compare == False):
+                    regenerate_distractor_similarity, distractor = regenerate_distractor(pair[1][2], buggy_code)
+                    if distractor != False:
+                        distractors[pair[1]] =  (regenerate_distractor_similarity, distractor)
+                        print("after regeneration", distractors[pair[1]], distractor)
+                    else:
+                        continue 
+                    
+        print("len(distractors):", len(distractors), distractors)
+        # check to make sure all the paired distractors are different, if some are same, pop up the key value with the least similarity
+        if len(distractors) > 0:
+            distractors = generate_unique_distractor_dict(distractors)
+        else:
+            distractors = {}
+
         # if no line_similarity > 0.2, generate the distractor from the top 3 longest lines
+        if len(distractors) > 0:
+            distractor_keys = [key[2] for key in distractors.keys()]
+        else:
+            distractor_keys = []
+
+        print("distractor_keys", distractor_keys)
+        distractor_candidate_depot = [item for item in fixed_lines + unchanged_lines if item[2] not in distractor_keys]
+        print("distractor_candidate_depot", distractor_candidate_depot)
         if len(distractors) < 3:
             candidate_num = 3 - len(distractors)
-            distractor_candidates = sorted(fixed_lines + unchanged_lines, key=lambda x: x[1], reverse=True)[:candidate_num]
+            distractor_candidates = sorted(distractor_candidate_depot, key=lambda x: x[1], reverse=True)[:candidate_num]
             print("distractor_candidates", distractor_candidates)
             for distractor_candidate in distractor_candidates:
                 print("distractor_candidate", distractor_candidate)
                 #def build_distractor_prompt(question_line, correct_line, regeneration_message, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
                 distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_candidate[2],""), distractor_candidate[2],"")
                 # the keys should be tuple (location, length, code) instead of only the actual code
+                while distractor in distractors.values():
+                    print("regenerate a distractor", distractor)
+                    distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_candidate[2],distractor), distractor_candidate[2],distractor)
+                
                 distractors[distractor_candidate] = distractor
-
+        
         if distractor_candidates == []:
             parsons_type = "Partial_Own"
         else:

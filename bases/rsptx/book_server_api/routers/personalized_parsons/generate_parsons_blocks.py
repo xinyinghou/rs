@@ -93,9 +93,9 @@ def generate_partial_Parsons(Parsons_type, problem_description, unchanged_lines,
         line_indentation = fixed_line_code[:len(fixed_line_code) - len(fixed_line_code.lstrip())]
         #print("distractor_tuple_dict[key_fixed_line][2].strip()", distractor_tuple_dict[fixed_line_key])
         if type(distractor_tuple_dict[fixed_line_key]) == tuple:
-            distractor_tuple_dict[fixed_line_key] = (fixed_line_key[0]+0.5, fixed_line_key[0], line_indentation + distractor_tuple_dict[fixed_line_key][2].strip() + " #paired")
+            distractor_tuple_dict[fixed_line_key] = (fixed_line_key[0]+0.5, fixed_line_key[0], distractor_tuple_dict[fixed_line_key][2].replace("\n", "") + " #paired")
         elif type(distractor_tuple_dict[fixed_line_key]) == str:
-            distractor_tuple_dict[fixed_line_key] = (fixed_line_key[0]+0.5, fixed_line_key[0], line_indentation + distractor_tuple_dict[fixed_line_key].strip() + " #paired")
+            distractor_tuple_dict[fixed_line_key] = (fixed_line_key[0]+0.5, fixed_line_key[0], distractor_tuple_dict[fixed_line_key].replace("\n", "") + " #paired")
     # add both unchanged_lines and fixed_lines of the fixed solution to blocks
     # add distractors to blocks
     blocks = blocks + list(distractor_tuple_dict.values())
@@ -134,6 +134,7 @@ def keep_last_hash_tag_lines(input_string, hash_tag):
             output_lines.append(line)
     return '\n'.join(reversed(output_lines))
 
+
 def reset_distractor_flag(distractor_block):
     distractor_block = list(filter(None, distractor_block))
     has_paired = False
@@ -166,7 +167,7 @@ def extract_distractor_Parsons_block(distractor_block_stack):
         distractor_line_block = reset_distractor_flag([tpl[1] for tpl in distractor_block_stack if "#matched-fixed" not in tpl[1]])
         distractor_line_block = '\n'.join([block.rstrip('\n') for block in distractor_line_block])
         #print("fixed_line_block, distractor_block", fixed_line_block, distractor_block)
-        #print("fixed_line_block", fixed_line_block, "distractor_block", distractor_line_block)
+        print("fixed_line_block", fixed_line_block, "distractor_block", distractor_line_block)
         return fixed_line_block, distractor_line_block
     # If more than one match-paired distractors in a distractor block stack
     # then create fixed_line and distractor block (include more than one match-paired distractors)
@@ -259,13 +260,12 @@ def aggregate_code_to_Parsons_block_with_distractor(blocks):
                 all_Parsons_blocks[block_stack[0][0]+0.22] = distractor_block
 
     print("all_Parsons_blocks", all_Parsons_blocks)
-
     all_Parsons_blocks = OrderedDict(sorted(all_Parsons_blocks.items()))
     all_Parsons_blocks = list(all_Parsons_blocks.values())
     all_Parsons_blocks = [item.replace(' #matched-fixed', '') if '#matched-fixed' in item  else item for item in all_Parsons_blocks]
     # removing all occurrences of "#settled" lines except for the last one
     all_Parsons_blocks = [keep_last_hash_tag_lines(item, "#settled") for item in all_Parsons_blocks]
-
+    all_Parsons_blocks = [item for item in all_Parsons_blocks if item is not None and item != ""]
     print("all_Parsons_blocks", all_Parsons_blocks)
     return all_Parsons_blocks
 

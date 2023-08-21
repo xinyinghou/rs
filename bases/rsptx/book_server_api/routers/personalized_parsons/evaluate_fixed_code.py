@@ -10,6 +10,8 @@ import signal
 class NullOutput:
     def write(self, _):
         pass
+    def flush(self):
+        pass
 
 class TimeoutError(Exception):
     pass
@@ -18,7 +20,7 @@ def handler(signum, frame):
     raise TimeoutError("Test execution exceeded time limit")
 
 def load_and_run_tests(unittest_case, code_to_test, time_limit=5):
-
+    print("code_to_test\n", code_to_test)
     # Set up a signal handler for timeout
     signal.signal(signal.SIGALRM, handler)
     signal.alarm(time_limit)
@@ -28,22 +30,25 @@ def load_and_run_tests(unittest_case, code_to_test, time_limit=5):
         test_module = ModuleType("test_module")
         test_module.unittest = unittest
 
-        print("test_module", test_module)
         # Execute the test cases string within the dummy module's namespace
         exec(unittest_case, test_module.__dict__)
         # Execute the code to test within the desired scope
         exec(code_to_test, test_module.__dict__)
         # Retrieve the loaded test cases
         test_suite = unittest.TestLoader().loadTestsFromModule(test_module)
+        print("test_suite",test_suite)
         # Run the test suite
         test_results = unittest.TextTestRunner(verbosity=0, failfast=True, stream=NullOutput()).run(test_suite)
+        print("test_results",test_results)
+    
     except TimeoutError:
+        print("test_results", test_results)
         return False
     finally:
         signal.alarm(0)
 
-    print("test_results", test_results)
     return test_results
+
 
 
 def fix_indentation(text):
@@ -186,14 +191,13 @@ def unittest_evaluation(fixed_code, starting_code, default_test_code, unittest_c
     try:
         ##print("fixed_code_first attempt", fixed_code)
         results = load_and_run_tests(unittest_case, fixed_code)
-        #print("results.wasSuccessful()\n", results.wasSuccessful())
         if contain_default_starting_code(starting_code, fixed_code):
-            #print("results.wasSuccessful()\n", results.wasSuccessful())
+            print("results.wasSuccessful()\n", results.wasSuccessful())
             return results.wasSuccessful(), fixed_code
         else:
             return "No starting code", fixed_code
     except Exception as e:
-        #print(e)
+        print("Exception", e)
         fixed_code = remove_potential_default_lines(default_test_code, fixed_code)
         try:
             results = load_and_run_tests(unittest_case, fixed_code)
@@ -206,6 +210,7 @@ def unittest_evaluation(fixed_code, starting_code, default_test_code, unittest_c
             try:
                 fixed_code = fix_indentation(fixed_code)
                 results = load_and_run_tests(unittest_case, fixed_code)
+                #print("fix_indentation", fixed_code)
                 if contain_default_starting_code(starting_code, fixed_code):
                     #print("results.wasSuccessful()\n", results.wasSuccessful())
                     return results.wasSuccessful(), fixed_code
@@ -225,6 +230,7 @@ def code_distractor_unittest_evaluation(code_with_distrator, starting_code, defa
         results = load_and_run_tests(unittest_case, code_with_distrator)
         print("distractor_results.wasSuccessful()\n", results.wasSuccessful())
         if contain_default_starting_code(starting_code, code_with_distrator):
+            print("distractor_results.wasSuccessful()\n", results.wasSuccessful())
             return results.wasSuccessful(), code_with_distrator
         else:
             return "No starting code", code_with_distrator

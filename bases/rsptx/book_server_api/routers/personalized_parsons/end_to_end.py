@@ -91,12 +91,10 @@ def generate_personalized_Parsons_blocks(df_question_line, buggy_code, cleaned_f
 
     #print(code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity)
     # decide the types of Parsons problems and generate correspoding distractors
-    Parsons_type, distractors, distractor_candidates = personalize_Parsons_block(df_question_line, code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity)
-    print("distractions\n", distractors)
+    Parsons_type, distractors, distractor_candidates = personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_code, fixed_lines, unchanged_lines, total_similarity)
     unittest_flag = True
-    print("distractors", distractors)
     if len(distractors) > 0:
-        for distractor in distractors.items():
+        for distractor in distractors.copy().items():
             unittest_True = 0
             distractor_correct_line = distractor[0]
             # Prepare the code with distractors for unittest evaluation - cannot pass the tests this time
@@ -106,17 +104,25 @@ def generate_personalized_Parsons_blocks(df_question_line, buggy_code, cleaned_f
             while (unittest_flag == True) & (unittest_True <= 2):
                 print("unittest_True", unittest_True)
                 unittest_True += 1
+                print("unittest_True", unittest_True)
                 #def build_distractor_prompt(question_line, correct_line, regeneration_message, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
                 new_distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_correct_line[2],distractor[1]), distractor_correct_line[2],distractor[1])
-                distractors[distractor_correct_line] = new_distractor
-                print("new_distractor", new_distractor)
-                print("distractors[distractor_correct_line]", distractors[distractor_correct_line])
-                print("distractors_with_new", distractors)
-                # Prepare the code with distractors for unittest evaluation - cannot pass the tests this time
-                code_with_distrator = generate_code_with_distrator(unchanged_lines, fixed_lines, (distractor_correct_line, new_distractor))
-                #print("code_with_distractors\n", code_with_distrator)
-                unittest_flag, cleaned_code_with_distractors = code_distractor_unittest_evaluation(code_with_distrator, default_start_code, default_test_code, unittest_code)
-            if (unittest_flag == True) & (unittest_True > 2):
+                print("new_distractor",new_distractor,distractor_correct_line[2],distractor[1])
+                if (new_distractor == "") or (new_distractor is None):
+                    distractors.pop(distractor_correct_line)
+                    print("break")
+                    break
+                else:
+                    print("new_distractor", new_distractor)
+                    print("distractors[distractor_correct_line]", distractors[distractor_correct_line])
+                    print("distractors_with_new", distractors)
+                    # Prepare the code with distractors for unittest evaluation - cannot pass the tests this time
+                    code_with_distrator = generate_code_with_distrator(unchanged_lines, fixed_lines, (distractor_correct_line, new_distractor))
+                    #print("code_with_distractors\n", code_with_distrator)
+                    unittest_flag, cleaned_code_with_distractors = code_distractor_unittest_evaluation(code_with_distrator, default_start_code, default_test_code, unittest_code)
+            
+            if unittest_True > 2:
+                print("pop-distractor")
                 distractors.pop(distractor_correct_line)
                 continue
 
