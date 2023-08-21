@@ -17,6 +17,7 @@ __author__ = "isaiahmayerchak"
 from textwrap import dedent
 import pdb
 import random
+import re
 from docutils import nodes
 from docutils.parsers.rst import directives
 from runestone.mchoice import Assessment
@@ -304,6 +305,7 @@ class ParsonsProblem(Assessment):
             self.options["code"] = "\n".join(self.options["code"])
 
             self.options["code"] = self.options["code"].replace("=====", "---")
+            self.options["code"] = re.sub(r'<(?=\S)', '< ', self.options["code"])
         else:
             self.options["code"] = "\n".join(self.options["code"])
 

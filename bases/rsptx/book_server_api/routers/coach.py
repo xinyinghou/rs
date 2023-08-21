@@ -13,6 +13,7 @@
 import ast
 # import json
 import pandas as pd
+import re
 
 # Third-party imports
 # -------------------
@@ -82,6 +83,9 @@ async def parsons_scaffolding(request: Request):
         return get_personalized_parsons_help(input_dict, df_question_bank)
 
     personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
+
+    personalized_code_solution = re.sub(r'<(?=\S)', '< ', personalized_code_solution)
+    personalized_Parsons_block = re.sub(r'<(?=\S)', '< ', personalized_Parsons_block)
 
     parsons_html = """
         <pre  class="parsonsblocks" data-question_label="1"    data-noindent="true"  data-numbered="left"    style="visibility: hidden;">
