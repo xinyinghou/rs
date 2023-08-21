@@ -368,6 +368,9 @@ export default class Parsons extends RunestoneBase {
                 placeholderLine.distractHelptext = "";
                 placeholderLine.groupWithNext = false;
                 placeholderLine.indent = 0;
+            }
+
+            if (options["settled"]) {
                 placeholderNeeded = true;
             }
 
@@ -1288,6 +1291,8 @@ export default class Parsons extends RunestoneBase {
         var answerBlocksCount = 0;
         var line, i;
         var settledBlocksBeforeCount = 0;
+        var prevSettledBlock = undefined;
+        var prevPlaceholderSize = 0;
 
         for (i = 0; i < this.lines.length; i++) {
             line = this.lines[i];
@@ -1297,6 +1302,12 @@ export default class Parsons extends RunestoneBase {
                     // found a placeholder line. a placeholder line has at least one normal block before it.
                     // also a placeholder line always has "groupWithNext" false.
                     blocks.push(new PlaceholderBlock(this, lines, answerBlocksCount, settledBlocksBeforeCount));
+                    // update the number of blocks missing for the settled block above
+                    if (prevSettledBlock) {
+                        prevSettledBlock.setBlocksAfter(answerBlocksCount);
+                    }
+                    // save the current number of answer blocks to update the tooltip for the settled block below
+                    prevPlaceholderSize = answerBlocksCount;
                     // reset answer block count
                     answerBlocksCount = 0;
                     lines = [];
@@ -1304,7 +1315,12 @@ export default class Parsons extends RunestoneBase {
                     if (blocks.length == 0) {
                         this.firstBlockSettled = true;
                     }
-                    blocks.push(new SettledBlock(this, lines));
+                    var set = new SettledBlock(this, lines);
+                    blocks.push(set);
+                    if (prevPlaceholderSize > 0) {
+                        set.setBlocksBefore(prevPlaceholderSize);
+                    }
+                    prevSettledBlock = set;
                     settledBlocksBeforeCount++;
                     answerBlocksCount = 0;
                     lines = [];

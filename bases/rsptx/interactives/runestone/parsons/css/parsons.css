@@ -212,6 +212,25 @@
     opacity: 1;
 }
 
+.parsons .settled-block.disabled.block:hover .settled-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.parsons .settled-block.disabled.block .settled-tooltip {
+    visibility: hidden;
+    position: sticky;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 2px 8px;
+    border-radius: 6px;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity .6s;
+    left: 100%;
+}
+
 .parsons .settled-block .block-label {
     color: transparent;
 }
