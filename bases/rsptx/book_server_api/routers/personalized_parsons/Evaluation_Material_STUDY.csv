@@ -460,19 +460,19 @@ Pair C,W,tuples_to_dict_acoc,"Finish the function make_dir below which takes a l
         self.assertEqual(make_dir([('a', 5)]), {'a': 5}, ""make_dir([('a', 5)])"")
         self.assertEqual(make_dir([('gray', -3), ('blue', 2)]), {'gray': -3, 'blue': 2}, ""make_dir([('gray', -3), ('blue', 2)])"")",def make_dir(tuple_list):,,d[item[0]] = item[1],d[item[0]] == item[1],15,8,TRUE,0.98255426,0.99843252,TRUE
 Pair C,W,tuples_to_dict_acop,"Finish the function make_dir below which takes a list of tuples tuple_list and returns a dictionary where the first item in each tuple is the key and the second is the value.  The first items in each tuple of ``tuple_list`` are unique strings and the second items are integers. For example, make_dir([('gray', -3), ('blue', 2)]) returns {'gray': -3, 'blue': 2}.
-",tuples_to_dict_acop,168,"def make_dir(tuple_list): 
-new_dict = {} 
-for key,value in tuple_list: 
-new_dict[key] = value 
-return new_dict","def make_dir(tuple_list):
-d = {}
-for i in range(len(tuple_list)):
-d[tuple_list[0]] = d[tuple_list[1]]
-return d","def make_dir(tuple_list):
-d = {}
-for i in range(len(tuple_list)):
-d[tuple_list[i][0]] = tuple_list[i][1]
-return d","class myTests(unittest.TestCase):
+",tuples_to_dict_acop,168,"def make_dir(tuple_list):
+    new_dict = {}
+    for key,value in tuple_list:
+        new_dict[key] = value
+    return new_dict","def make_dir(tuple_list):
+    d = {}
+    for i in range(len(tuple_list)):
+        d[tuple_list[0]] = d[tuple_list[1]]
+    return d","def make_dir(tuple_list):
+    d = {}
+    for i in range(len(tuple_list)):
+        d[tuple_list[i][0]] = tuple_list[i][1]
+    return d","class myTests(unittest.TestCase):
 
     def testOne(self):
         self.assertEqual(make_dir([('a', 0), ('b', 3), ('c', 2)]), {'a': 0, 'b': 3, 'c': 2}, ""make_dir([('a', 0), ('b', 3), ('c', 2)])"")

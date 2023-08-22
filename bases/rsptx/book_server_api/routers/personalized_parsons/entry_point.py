@@ -28,7 +28,7 @@ def personalized_help(student_code, problem_name):
     return get_personalized_parsons_help(input_dict, df_question_bank)
 
 problem_name = "has_22_acop"
-student_code = "def has22(nums):\n    for i in range(len(nums)-1):\n        if nums[i] == 2 & nums[i+1] == 2:\n            return True\n        return False    "
+student_code = "def has22(nums):\n    for i in range(len(nums)-1):\n        if nums[i]==2 and nums[i+1]==2:\n            return True\n    return "
 
 
 personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)

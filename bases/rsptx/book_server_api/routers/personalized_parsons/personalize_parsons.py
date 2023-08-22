@@ -14,9 +14,11 @@ from .token_compare import *
 CodeComparison = namedtuple('CodeComparison', ['student_removed', 'fixed_modified', 'line_similarity'])
 
 
-def compare_code(buggy_code, fixed_code):
+def compare_code(buggy_code, fixed_code, default_start_code):
+
     #print(fixed_code)
     code_comparison_pairs = []
+
     # Split the code into lines
     student_lines = buggy_code.splitlines(keepends=True)
     fixed_lines = fixed_code.splitlines(keepends=True)
@@ -24,8 +26,11 @@ def compare_code(buggy_code, fixed_code):
     # Perform a line-based comparison
     diff = list(difflib.Differ().compare(student_lines, fixed_lines))
 
-    # Calculate similarity ratio
-    total_similarity = code_similarity_score(buggy_code, fixed_code)
+    # Calculate similarity ratio without the starting line
+    buggy_code_no_starting = '\n'.join([line for line in buggy_code.split('\n') if line != default_start_code])
+    fixed_code_no_starting = '\n'.join([line for line in fixed_code.split('\n') if line != default_start_code])
+
+    total_similarity = code_similarity_score(buggy_code_no_starting, fixed_code_no_starting)
 
     #print("diff here\n", diff)
     # Get the line similarity pairs
@@ -64,7 +69,7 @@ def compare_code(buggy_code, fixed_code):
             pair = CodeComparison(pair[0][1], pair[1][1], similarity)
             code_comparison_pairs.append(pair)
      
-    return code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity
+    return code_comparison_pairs, fixed_lines, removed_lines, unchanged_lines, total_similarity
 
 def normalize_and_compare_lines(line1, line2):
     # Normalize indentation
@@ -85,16 +90,20 @@ def normalize_and_compare_lines(line1, line2):
     elif (line1_cleaned == line2_cleaned) and (indentation1 == indentation2):
         return True
 
-def regenerate_distractor(fixed_line, buggy_code):
-    student_lines = buggy_code.splitlines(keepends=True)
+def find_distractor(fixed_line, removed_lines):
+    removed_lines = [tup[2] for tup in removed_lines]
+    highest_similarity = 0.7
+    distractor_line = False
+    print("removed_lines",removed_lines)
     # check whether there is any line achieved a high similarity than the line of comparable location
-    for student_line in student_lines:
+    for student_line in removed_lines:
         similarity = code_similarity_score(fixed_line, student_line)
-        if similarity >= 0.8:
-            return similarity, student_line
-        else:
-            continue
-    return False, False
+        if similarity > highest_similarity:
+            highest_similarity = similarity
+            distractor_line = student_line
+            
+    return highest_similarity, distractor_line
+
 
 
 def generate_unique_distractor_dict(distractor_dict):
@@ -115,53 +124,64 @@ def generate_unique_distractor_dict(distractor_dict):
     return result_distractor_dict
 
 # Decide which type of Parsons problem we will generate and generate the corresponding distractors
-def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_code, fixed_lines, unchanged_lines, total_similarity):
+def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_code, fixed_lines, removed_lines, unchanged_lines, total_similarity):
     #print(code_comparison_pairs, total_similarity)
     distractors = {}
     distractor_candidates = []
     print("code_comparison_pairs\n", len(code_comparison_pairs), code_comparison_pairs, "total_similarity\n", total_similarity)
     if total_similarity < 0.30:
-        return "Full", distractors, []
-    
-    # have more than 3 wrong lines
-    elif total_similarity >= 0.30:
-        # check each line_similarity
-        if len(code_comparison_pairs)>0:
+        return "Full", {}, []
+    else:
+        # if has 3 or more than 3 fixed lines (movable blocks)
+        if len(code_comparison_pairs)>=3:
+            # use students' own buggy code as resource to build distractors
             for pair in code_comparison_pairs:
                 normalize_and_compare = normalize_and_compare_lines(pair[0][2], pair[1][2])
-                print("line similarity", pair[2])
-                if (pair[2] > 0.60) & (normalize_and_compare == False):
+                if normalize_and_compare == False:
                     # if the student code is wrong (not just a different way to write the same code), generate a distractor using student buggy code
-                    distractor = pair[0][2]
-                    distractors[pair[1]] = (pair[2], distractor)
-                elif (pair[2] <= 0.60) & (normalize_and_compare == False):
-                    regenerate_distractor_similarity, distractor = regenerate_distractor(pair[1][2], buggy_code)
+                    distractor_similarity, distractor = find_distractor(pair[1][2], removed_lines)
                     if distractor != False:
-                        distractors[pair[1]] =  (regenerate_distractor_similarity, distractor)
-                        print("after regeneration", distractors[pair[1]], distractor)
+                        distractors[pair[1]] =  (distractor_similarity, distractor)
                     else:
                         continue 
-                    
-        print("len(distractors):", len(distractors), distractors)
-        # check to make sure all the paired distractors are different, if some are same, pop up the key value with the least similarity
-        if len(distractors) > 0:
-            distractors = generate_unique_distractor_dict(distractors)
-        else:
-            distractors = {}
+            # check to make sure all the paired distractors are different, if some are same, pop up the key value with the least similarity - leave it as a movable line
+            if len(distractors) > 0:
+                distractors = generate_unique_distractor_dict(distractors)
+            else:
+                distractors = {}
 
-        # if no line_similarity > 0.2, generate the distractor from the top 3 longest lines
-        if len(distractors) > 0:
-            distractor_keys = [key[2] for key in distractors.keys()]
-        else:
-            distractor_keys = []
+            return "Partial_Own", distractors, distractor_candidates
+        # if the movable blocks are less than 3, then still generate distractors from student code first, and use LLM-generated code to make up
+        elif (len(code_comparison_pairs)<3) and (len(code_comparison_pairs)> 0):
+            for pair in code_comparison_pairs:
+                normalize_and_compare = normalize_and_compare_lines(pair[0][2], pair[1][2])
+                if normalize_and_compare == False:
+                    # if the student code is wrong (not just a different way to write the same code), generate a distractor using student buggy code
+                    distractor_similarity, distractor = find_distractor(pair[1][2], removed_lines)
+                    if distractor != False:
+                        distractors[pair[1]] =  (distractor_similarity, distractor)
+                    else:
+                        continue 
+            # check to make sure all the paired distractors are different, if some are same, pop up the key value with the least similarity
+            if len(distractors) > 0:
+                distractors = generate_unique_distractor_dict(distractors)
+            else:
+                distractors = {}
 
-        print("distractor_keys", distractor_keys)
-        distractor_candidate_depot = [item for item in fixed_lines + unchanged_lines if item[2] not in distractor_keys]
-        print("distractor_candidate_depot", distractor_candidate_depot)
-        if len(distractors) < 3:
+            # given that we need to provide at least three distractors for them
+            # check whether need to generate distractors from the top N longest lines
+            if len(distractors) > 0:
+                distractor_keys = [key[2] for key in distractors.keys()]
+            else:
+                distractor_keys = []
+
+            # pass to the LLM distractor generation station
+            distractor_candidate_depot = [item for item in fixed_lines + unchanged_lines if item[2] not in distractor_keys]
+            print("distractor_candidate_depot", distractor_candidate_depot)
             candidate_num = 3 - len(distractors)
+            
             distractor_candidates = sorted(distractor_candidate_depot, key=lambda x: x[1], reverse=True)[:candidate_num]
-            print("distractor_candidates", distractor_candidates)
+
             for distractor_candidate in distractor_candidates:
                 print("distractor_candidate", distractor_candidate)
                 #def build_distractor_prompt(question_line, correct_line, regeneration_message, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
@@ -173,11 +193,6 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_cod
                 
                 distractors[distractor_candidate] = distractor
         
-        if distractor_candidates == []:
-            parsons_type = "Partial_Own"
-        else:
-            parsons_type = "Partial_Own_Random"
-        print("distractors_personalize_Parsons_block", distractors)
-        return parsons_type, distractors, distractor_candidates
+            return "Partial_Own_Random", distractors, distractor_candidates
 
 

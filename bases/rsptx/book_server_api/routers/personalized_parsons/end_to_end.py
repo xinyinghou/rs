@@ -53,10 +53,10 @@ def request_fixed_code_from_openai(df_question_line, buggy_code, default_start_c
             # Remove leading whitespace from the first line
             return cleaned_fixed_code.lstrip()
         elif (unittest_result == True) & (similarity_personalized < similarity_most_common):
-            fixed_code = get_fixed_code_repeat(build_code_prompt(df_question_line, buggy_code), cleaned_fixed_code)
+            fixed_code = get_fixed_code_repeat(build_code_prompt(df_question_line, buggy_code), cleaned_fixed_code, "close enough")
             solution_generation += 1
         else:
-            fixed_code = get_fixed_code(build_code_prompt(df_question_line, buggy_code))
+            fixed_code = get_fixed_code_repeat(build_code_prompt(df_question_line, buggy_code), cleaned_fixed_code, "a correct answer")
             solution_generation += 1
             
     if solution_generation > 2:
@@ -87,11 +87,11 @@ def generate_personalized_Parsons_blocks(df_question_line, buggy_code, cleaned_f
     buggy_code_for_blocks = clean_student_code(buggy_code, default_test_code)
     # generate the Parsons blocks
     # add paired distractors on their code when there are some meaningful comparison (one line similarity > 30%)
-    code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity = compare_code(buggy_code_for_blocks, cleaned_fixed_code)
+    code_comparison_pairs, fixed_lines, removed_lines, unchanged_lines, total_similarity = compare_code(buggy_code_for_blocks, cleaned_fixed_code, default_start_code)
 
     #print(code_comparison_pairs, fixed_lines, unchanged_lines, total_similarity)
     # decide the types of Parsons problems and generate correspoding distractors
-    Parsons_type, distractors, distractor_candidates = personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_code, fixed_lines, unchanged_lines, total_similarity)
+    Parsons_type, distractors, distractor_candidates = personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_code, fixed_lines, removed_lines, unchanged_lines, total_similarity)
     unittest_flag = True
     if len(distractors) > 0:
         for distractor in distractors.copy().items():
