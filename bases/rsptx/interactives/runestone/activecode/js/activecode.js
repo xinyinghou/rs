@@ -476,7 +476,7 @@ export class ActiveCode extends RunestoneBase {
             ctrlDiv.appendChild(parsonsScaffoldingBtn);
 
             let reopenScaffoldingBtn = document.createElement("button");
-            reopenScaffoldingBtn.innerText = "Check Help Again";
+            reopenScaffoldingBtn.innerText = "View Help Again";
             // if (this.openaiparsons) {
             //     parsonsScaffoldingBtn.innerText = "Show Parsons Scaffolding";
             // } else {
