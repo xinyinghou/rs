@@ -92,9 +92,9 @@ def get_fixed_code(prompt_messages):
     #print("fixed_code here: \n", fixed_code)
     return fixed_code
 
-def get_fixed_code_repeat(prompt_messages, old_fixed_code):
+def get_fixed_code_repeat(prompt_messages, old_fixed_code, situation):
     attachment = f"""
-    The [old-fixed-code] is not close enough to the [user-code]. Again, please try to generate a [fixed-code] that is more similar to the [user-code] than the [sample-solution] above.
+    The [old-fixed-code] is not {situation} to the [user-code]. Again, please try to generate a [fixed-code] that is more similar to the [user-code] than the [sample-solution] above.
     [old-fixed-code]: '{old_fixed_code}'
     [end-old-fixed-code]
     """

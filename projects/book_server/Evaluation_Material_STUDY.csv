@@ -1,14 +1,14 @@
-,Unnamed: 0,pair,type,question,w_question_description,Problem Name,Cluster,Example_student_solution,Example_buggy_code,Example_fixed_code,Unittest_Code,Default_Starting_Code,Default_Test_Code,Example_paired_distractor_correct,Example_paired_distractor_wrong,Edit_Distance_common,Edit_Distance_personalized,Edit_personalized_few,Similarity_common,Similarity_personalized,Similarity_personalized_high
-0,0,Pair A_oc_1,W,sum13_acoc,"Finish the function ``sum13(nums)`` to return the sum of the numbers in the list ``nums``, returning ``0`` for an empty list. Except the number 13 is very unlucky, so  it does not count and a number that comes immediately after a 13 also does not count.  For example, ``sum13([13,2])`` returns ``0`` , ``sum13([1, 13, 4, 2])``  returns ``3``, ``sum13([1, 2, 3])``  returns ``6``.",sum13_acoc,59.0,"def sum13(nums):
+,pair,type,question,w_question_description,Problem Name,Cluster,Example_student_solution,Example_buggy_code,Example_fixed_code,Unittest_Code,Default_Starting_Code,Default_Test_Code,Example_paired_distractor_correct,Example_paired_distractor_wrong,Edit_Distance_common,Edit_Distance_personalized,Edit_personalized_few,Similarity_common,Similarity_personalized,Similarity_personalized_high
+0,Pair A_oc_1,W,sum13_acoc,"Finish the function ``sum13(nums)`` to return the sum of the numbers in the list ``nums``, returning ``0`` for an empty list. Except the number 13 is very unlucky, so  it does not count and a number that comes immediately after a 13 also does not count.  For example, ``sum13([13,2])`` returns ``0`` , ``sum13([1, 13, 4, 2])``  returns ``3``, ``sum13([1, 2, 3])``  returns ``6``.",sum13_acoc,36,"def sum13(nums):
     total = 0
-    count = 0
-    while count < len(nums):
-        if nums[count] == 13:
-            count += 2
-            continue
-        total += nums[count]
-        count += 1
-    return total","def sum13(nums):
+    found_13 = False
+    for num in nums:
+        if found_13:
+            found_13 = False
+        elif num == 13:
+            found_13 = True
+        else:
+            total += num","def sum13(nums):
     if len(nums)==0:
         return 0
     total=0
@@ -38,17 +38,17 @@
            self.assertEqual(sum13([1,2,13,2,1]), 4, 'sum13([1,2,13,2,1])')
            self.assertEqual(sum13([]), 0, 'sum13([])')
            self.assertEqual(sum13([1,2,13]), 3, 'sum13([1,2,13])')
-           self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,if nums[count] == 13:,if nums == 13:,45,14,True,0.4666666666666667,0.8571428571428571,True
-1,1,Pair A_op_1,W,sum13_acop,"Finish the function ``sum13(nums)`` to return the sum of the numbers in the list ``nums``, returning ``0`` for an empty list. Except the number 13 is very unlucky, so  it does not count and a number that comes immediately after a 13 also does not count.  For example, ``sum13([13,2])`` returns ``0`` , ``sum13([1, 13, 4, 2])``  returns ``3``, ``sum13([1, 2, 3])``  returns ``6``.",sum13_acop,59.0,"def sum13(nums):
+           self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,elif num == 13:,elif num = 13:,47,14,TRUE,0.407079646,0.857142857,TRUE
+1,Pair A_op_1,W,sum13_acop,"Finish the function ``sum13(nums)`` to return the sum of the numbers in the list ``nums``, returning ``0`` for an empty list. Except the number 13 is very unlucky, so  it does not count and a number that comes immediately after a 13 also does not count.  For example, ``sum13([13,2])`` returns ``0`` , ``sum13([1, 13, 4, 2])``  returns ``3``, ``sum13([1, 2, 3])``  returns ``6``.",sum13_acop,36,"def sum13(nums):
     total = 0
-    count = 0
-    while count < len(nums):
-        if nums[count] == 13:
-            count += 2
-            continue
-        total += nums[count]
-        count += 1
-    return total","def sum13(nums):
+    found_13 = False
+    for num in nums:
+        if found_13:
+            found_13 = False
+        elif num == 13:
+            found_13 = True
+        else:
+            total += num","def sum13(nums):
     if len(nums)==0:
         return 0
     total=0
@@ -78,212 +78,15 @@
            self.assertEqual(sum13([1,2,13,2,1]), 4, 'sum13([1,2,13,2,1])')
            self.assertEqual(sum13([]), 0, 'sum13([])')
            self.assertEqual(sum13([1,2,13]), 3, 'sum13([1,2,13])')
-           self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,if nums[count] == 13:,if nums == 13:,45,14,True,0.4666666666666667,0.8571428571428571,True
-2,2,Pair A_oc_2,W,sum67_acoc,"Finish the ``sum67`` function that takes a list and should return the total of the items in the list except for all the numbers between a 6 and 7 (6 should before 7, inclusive).   For example, ``sum67([1,2])`` should return ``3`` and ``sum67([2, 6, 8, 7, 2])`` should return ``4``, ``sum67([3, 6, 7])``  should return ``3``.",sum67_acoc,238.0,"def sum67(nums):
-    total = 0               
-    found_6 = False          
-    for num in nums:        
-        if found_6 and num == 7:
-            found_6 = False 
-        elif num == 6:
-            found_6 = True  
-        elif found_6:
-            continue        
-        else:
-            total += num    
-    return total","def sum67(nums):
-    total = 0 
-    index6 = -1
-    index7 = -1
-    found6 = False
-    found7 = False
-    if 6 in nums:
-        index6 = nums.index(6)
-    else:
-        found6 = True
-        
-    if 7 in nums:
-        index7 = nums.index(7)
-    else:
-        found7 = True
-    
-    if found6 and found7:
-        for i in range(len(nums)):
-            if i >= index6 and i<= index7:
-                break
-            else:
-                total +=nums[i]
-        return total
-    else:
-        return sum(nums)","def sum67(nums):
-    total = 0 
-    index6 = -1
-    index7 = -1
-    found6 = False
-    found7 = False
-    if 6 in nums:
-        index6 = nums.index(6)
-        found6 = True
-        
-    if 7 in nums:
-        index7 = nums.index(7)
-        found7 = True
-        
-    if found6 and found7:
-        for i in range(len(nums)):
-            if i >= index6 and i<= index7:
-                continue
-            elif i == index6 and index7<index6:
-                continue
-            else:
-                total +=nums[i]
-        return total
-    else:
-        return sum(nums)  ","class myTests(unittest.TestCase):
-
-       def testOne(self):
-           self.assertEqual(sum67([1,2]), 3, 'sum67([1,2])')
-           self.assertEqual(sum67([2, 6, 8, 7, 2]), 4, 'sum67([2, 6, 8, 7, 2])')
-           self.assertEqual(sum67([6, 2, 7]), 0, 'sum67([6, 2, 7])')
-           self.assertEqual(sum67([6, 2, 7, 5]), 5, 'sum67([6, 2, 7, 5])')
-           self.assertEqual(sum67([7, 2, 6]), 9, 'sum67([7, 2, 6])')
-           self.assertEqual(sum67([4, 6, 7]), 4, 'sum67([4, 6, 7])')
-           self.assertEqual(sum67([]), 0, 'sum67([])')",def sum67(nums):,,if found_6 and num == 7:,if found_6 and num = 7:,92,22,True,0.3894736842105263,0.9242424242424242,True
-3,3,Pair A_op_2,W,sum67_acop,"Finish the ``sum67`` function that takes a list and should return the total of the items in the list except for all the numbers between a 6 and 7 (6 should before 7, inclusive).   For example, ``sum67([1,2])`` should return ``3`` and ``sum67([2, 6, 8, 7, 2])`` should return ``4``, ``sum67([3, 6, 7])``  should return ``3``.",sum67_acop,238.0,"def sum67(nums):
-    total = 0               
-    found_6 = False          
-    for num in nums:        
-        if found_6 and num == 7:
-            found_6 = False 
-        elif num == 6:
-            found_6 = True  
-        elif found_6:
-            continue        
-        else:
-            total += num    
-    return total","def sum67(nums):
-    total = 0 
-    index6 = -1
-    index7 = -1
-    found6 = False
-    found7 = False
-    if 6 in nums:
-        index6 = nums.index(6)
-    else:
-        found6 = True
-        
-    if 7 in nums:
-        index7 = nums.index(7)
-    else:
-        found7 = True
-    
-    if found6 and found7:
-        for i in range(len(nums)):
-            if i >= index6 and i<= index7:
-                break
-            else:
-                total +=nums[i]
-        return total
-    else:
-        return sum(nums)","def sum67(nums):
-    total = 0 
-    index6 = -1
-    index7 = -1
-    found6 = False
-    found7 = False
-    if 6 in nums:
-        index6 = nums.index(6)
-        found6 = True
-        
-    if 7 in nums:
-        index7 = nums.index(7)
-        found7 = True
-        
-    if found6 and found7:
-        for i in range(len(nums)):
-            if i >= index6 and i<= index7:
-                continue
-            elif i == index6 and index7<index6:
-                continue
-            else:
-                total +=nums[i]
-        return total
-    else:
-        return sum(nums)  ","class myTests(unittest.TestCase):
-
-       def testOne(self):
-           self.assertEqual(sum67([1,2]), 3, 'sum67([1,2])')
-           self.assertEqual(sum67([2, 6, 8, 7, 2]), 4, 'sum67([2, 6, 8, 7, 2])')
-           self.assertEqual(sum67([6, 2, 7]), 0, 'sum67([6, 2, 7])')
-           self.assertEqual(sum67([6, 2, 7, 5]), 5, 'sum67([6, 2, 7, 5])')
-           self.assertEqual(sum67([7, 2, 6]), 9, 'sum67([7, 2, 6])')
-           self.assertEqual(sum67([4, 6, 7]), 4, 'sum67([4, 6, 7])')
-           self.assertEqual(sum67([]), 0, 'sum67([])')",def sum67(nums):,,if found_6 and num == 7:,if found_6 and num = 7:,92,22,True,0.3894736842105263,0.9242424242424242,True
-4,4,Pair B_oc_1,W,has_22_acoc,"Finish the function ``has22`` below to return ``True`` if there are at least two items in the list ``nums`` that are adjacent and both equal to 2, otherwise return ``False``. For example, return ``True`` for ``has22([1, 2, 2])`` and ``has22([2, 2])`` and ``False`` for ``has22([2, 1, 2])`` and ``has22([3,3,1])``.",has_22_acoc,40.0,"def has22(nums):
-    for i in range(len(nums)-1):
-        if nums[i]==2 and nums[i+1]==2:
-            return True
-    return False","def has22(nums):
-    i = 1
-    while (i < len(nums) - 1):
-        last_num = nums[i - 1]
-        if (nums[i] == 2 and last_num == 2):
-            return True
-    return False","def has22(nums):
-    i = 1
-    while (i < len(nums)):
-        last_num = nums[i - 1]
-        if (nums[i] == 2 and last_num == 2):
-            return True
-        i += 1
-    return False","class myTests(unittest.TestCase):
-
-       def testOne(self):
-           self.assertEqual(has22([1, 2, 2]), True, 'has22([1, 2, 2])')
-           self.assertEqual(has22([1, 2, 1, 2]), False, 'has22([1, 2, 1, 2])')
-           self.assertEqual(has22([2, 1, 2]), False, 'has22([2, 1, 2])')
-           self.assertEqual(has22([2, 2, 1]), True, 'has22([2, 2, 1])')
-           self.assertEqual(has22([3, 4, 2]), False, 'has22([3, 4, 2])')
-           self.assertEqual(has22([2]), False, 'has22([2])')
-           self.assertEqual(has22([]), False, 'has22([])')
-           self.assertEqual(has22([3, 3, 1]), False, 'has22([3, 3, 1])')
-           self.assertEqual(has22([1, 4, 4]), False, 'has22([1, 4, 4])')",def has22(nums):,,for i in range(len(nums) - 1):,"for i in range(1, len(nums) + 1):",21,5,True,0.7378640776699029,0.9473684210526315,True
-5,5,Pair B_op_1,W,has_22_acop,"Finish the function ``has22`` below to return ``True`` if there are at least two items in the list ``nums`` that are adjacent and both equal to 2, otherwise return ``False``. For example, return ``True`` for ``has22([1, 2, 2])`` and ``has22([2, 2])`` and ``False`` for ``has22([2, 1, 2])`` and ``has22([3,3,1])``.",has_22_acop,40.0,"def has22(nums):
-    for i in range(len(nums)-1):
-        if nums[i]==2 and nums[i+1]==2:
-            return True
-    return False","def has22(nums):
-    i = 1
-    while (i < len(nums) - 1):
-        last_num = nums[i - 1]
-        if (nums[i] == 2 and last_num == 2):
-            return True
-    return False","def has22(nums):
-    i = 1
-    while (i < len(nums)):
-        last_num = nums[i - 1]
-        if (nums[i] == 2 and last_num == 2):
-            return True
-        i += 1
-    return False","class myTests(unittest.TestCase):
-
-       def testOne(self):
-           self.assertEqual(has22([1, 2, 2]), True, 'has22([1, 2, 2])')
-           self.assertEqual(has22([1, 2, 1, 2]), False, 'has22([1, 2, 1, 2])')
-           self.assertEqual(has22([2, 1, 2]), False, 'has22([2, 1, 2])')
-           self.assertEqual(has22([2, 2, 1]), True, 'has22([2, 2, 1])')
-           self.assertEqual(has22([3, 4, 2]), False, 'has22([3, 4, 2])')
-           self.assertEqual(has22([2]), False, 'has22([2])')
-           self.assertEqual(has22([]), False, 'has22([])')
-           self.assertEqual(has22([3, 3, 1]), False, 'has22([3, 3, 1])')
-           self.assertEqual(has22([1, 4, 4]), False, 'has22([1, 4, 4])')",def has22(nums):,,for i in range(len(nums) - 1):,"for i in range(1, len(nums) + 1):",21,5,True,0.7378640776699029,0.9473684210526315,True
-6,6,Pair B_oc_2,W,is_ascending_acoc,"Finish a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acoc,170.0,"def is_ascending(nums):
+           self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,elif num == 13:,elif num = 13:,47,14,TRUE,0.407079646,0.857142857,TRUE
+2,Pair B_oc_2,W,is_ascending_acoc,"Finish a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acoc,117,"def is_ascending(nums):
     if len(nums) < 2:
-        return True 
-    for i in range(len(nums) - 1):
-        if nums[i] > nums[i + 1]:
-            return False
-    return True","def is_ascending(nums):
+        return True
+    else:
+        for i in range(len(nums)-1):
+            if nums[i] >= nums[i+1]:
+                return False
+        return True","def is_ascending(nums):
     if len(nums) <= 1:
         return True
     prev = nums[0]
@@ -313,14 +116,15 @@
                 self.assertEqual(is_ascending([1,4,2,3]),False,""is_ascending(1,4,2,3])"")
                 self.assertEqual(is_ascending([1,2,3,4]),True,""is_ascending([1,2,3,4])"")
                 self.assertEqual(is_ascending([1]),True,""is_ascending([1])"")
-                self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,,if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1]:,22,8,True,0.7413793103448276,0.9312977099236641,True
-7,7,Pair B_op_2,W,is_ascending_acop,"Finish a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acop,170.0,"def is_ascending(nums):
+                self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,,if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1]:,25,8,TRUE,0.739495798,0.93129771,TRUE
+3,Pair B_op_2,W,is_ascending_acop,"Finish a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acop,117,"def is_ascending(nums):
     if len(nums) < 2:
-        return True 
-    for i in range(len(nums) - 1):
-        if nums[i] > nums[i + 1]:
-            return False
-    return True","def is_ascending(nums):
+        return True
+    else:
+        for i in range(len(nums)-1):
+            if nums[i] >= nums[i+1]:
+                return False
+        return True","def is_ascending(nums):
     if len(nums) <= 1:
         return True
     prev = nums[0]
@@ -350,135 +154,8 @@
                 self.assertEqual(is_ascending([1,4,2,3]),False,""is_ascending(1,4,2,3])"")
                 self.assertEqual(is_ascending([1,2,3,4]),True,""is_ascending([1,2,3,4])"")
                 self.assertEqual(is_ascending([1]),True,""is_ascending([1])"")
-                self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,,if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1]:,22,8,True,0.7413793103448276,0.9312977099236641,True
-8,8,Pair C_oc_1,W,less_dict_acoc,"Finish the function ``less_dict`` below which takes a dictionary ``d`` and an integer ``cutoff`` and returns a new dictionary that contains only the key-value pairs where the value is less than the cutoff.  For example, ``less_dict({'a': 20, 'b': 10}, 15)`` returns ``{'b': 10}``, ``less_dict({'a': 30, 'b': 20}, 40)``  should return ``{'a': 30, 'b': 20}``, ``less_dict({'a': 20, 'b': 10}, 5)``  should return ``{}``.",less_dict_acoc,147.0,"def less_dict(d, cutoff):
-    new_dict = {}
-    for key, val in d.items():
-        if val < cutoff:
-            new_dict[key] = val
-    
-    return new_dict","def less_dict(d, cutoff):
-    new_d = {}
-    for keys in d:
-        if d[keys] > 15:
-            continue
-        new_d[keys] = d[keys]
-    return new_d","def less_dict(d, cutoff):
-    new_d = {}
-    for keys in d:
-        if d[keys] >= cutoff:
-            continue
-        new_d[keys] = d[keys]
-    return new_d","class myTests(unittest.TestCase):
-
-       def testOne(self):
-           self.assertEqual(less_dict({'a': 20, 'b': 10}, 15), {'b': 10}, ""less_dict({'a': 20, 'b': 10}, 15)"")
-           self.assertEqual(less_dict({'a': 20, 'b': 10}, 30), {'a': 20, 'b': 10} , ""less_dict({'a': 20, 'b': 10}, 30)"")
-           self.assertEqual(less_dict({'a': 20, 'b': 10}, 5), {}, ""less_dict({'a': 20, 'b': 10}, 5)"")
-           self.assertEqual(less_dict({'a': 20, 'b': 10, 'c': 25}, 20), {'b': 10}, ""less_dict({'a': 20, 'b': 10, 'c': 25}, 20)"")
-           self.assertEqual(less_dict({'a': 20, 'b': 10, 'c': 25}, 22), {'a': 20, 'b': 10}, ""less_dict({'a': 20, 'b': 10, 'c': 25}, 22)"")","def less_dict(d, cutoff):",,"for key, val in d.items():","for key, val in d():",25,2,True,0.6373626373626373,0.9565217391304348,True
-9,9,Pair C_op_1,W,less_dict_acop,"Finish the function ``less_dict`` below which takes a dictionary ``d`` and an integer ``cutoff`` and returns a new dictionary that contains only the key-value pairs where the value is less than the cutoff.  For example, ``less_dict({'a': 20, 'b': 10}, 15)`` returns ``{'b': 10}``, ``less_dict({'a': 30, 'b': 20}, 40)``  should return ``{'a': 30, 'b': 20}``, ``less_dict({'a': 20, 'b': 10}, 5)``  should return ``{}``.",less_dict_acop,147.0,"def less_dict(d, cutoff):
-    new_dict = {}
-    for key, val in d.items():
-        if val < cutoff:
-            new_dict[key] = val
-    
-    return new_dict","def less_dict(d, cutoff):
-    new_d = {}
-    for keys in d:
-        if d[keys] > 15:
-            continue
-        new_d[keys] = d[keys]
-    return new_d","def less_dict(d, cutoff):
-    new_d = {}
-    for keys in d:
-        if d[keys] >= cutoff:
-            continue
-        new_d[keys] = d[keys]
-    return new_d","class myTests(unittest.TestCase):
-
-       def testOne(self):
-           self.assertEqual(less_dict({'a': 20, 'b': 10}, 15), {'b': 10}, ""less_dict({'a': 20, 'b': 10}, 15)"")
-           self.assertEqual(less_dict({'a': 20, 'b': 10}, 30), {'a': 20, 'b': 10} , ""less_dict({'a': 20, 'b': 10}, 30)"")
-           self.assertEqual(less_dict({'a': 20, 'b': 10}, 5), {}, ""less_dict({'a': 20, 'b': 10}, 5)"")
-           self.assertEqual(less_dict({'a': 20, 'b': 10, 'c': 25}, 20), {'b': 10}, ""less_dict({'a': 20, 'b': 10, 'c': 25}, 20)"")
-           self.assertEqual(less_dict({'a': 20, 'b': 10, 'c': 25}, 22), {'a': 20, 'b': 10}, ""less_dict({'a': 20, 'b': 10, 'c': 25}, 22)"")","def less_dict(d, cutoff):",,"for key, val in d.items():","for key, val in d():",25,2,True,0.6373626373626373,0.9565217391304348,True
-10,10,Pair C_oc_2,W,greater_dict_acoc,"Finish the function ``greater_dict`` below which takes a dictionary d and an integer cutoff and returns a new dictionary that contains only the key-value pairs where the value is greater than the cutoff or the value is equal to the cutoff. For example, ``greater_dict({'a': 20, 'b': 10}, 15)`` returns ``{'a': 20}``, ``greater_dict({'a': 20, 'b': 10}, 30)`` should return  ``{}``, ``greater_dict({'a': 20, 'b': 5}, 5)`` should return ``{'a': 20, 'b':5}``.",greater_dict_acoc,171.0,"def greater_dict(d, cutoff):
-    result = {}
-    for key in d:
-        if d[key] >= cutoff:
-            result[key] = d[key]
-    return result","def greater_dict(d, cutoff):
-
-    greater = {key: value for key, value in dict.items() if value >= cutoff} #this will select items with value greater than the cutoff
-    return greater 
-","def greater_dict(d, cutoff):
-
-    greater = {key: value for key, value in d.items() if value >= cutoff} 
-    return greater ","class myTests(unittest.TestCase):
-
-       def testOne(self):
-           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 15), {'a': 20}, ""greater_dict({'a': 20, 'b': 10}, 15)"")
-           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 30), {}, ""greater_dict({'a': 20, 'b': 10}, 30)"")
-           self.assertEqual(greater_dict({'a': 20, 'b': 5}, 5), {'a': 20, 'b': 5}, ""greater_dict({'a': 20, 'b': 5}, 5)"")
-           self.assertEqual(greater_dict({'a': 20, 'b': 10, 'c': 25}, 15), {'a': 20, 'c': 25}, ""greater_dict({'a': 20, 'b': 10, 'c': 25}, 15)"")","def greater_dict(d, cutoff):",,for key in d:,for key in d.items():,35,1,True,0.5121951219512195,0.9333333333333333,True
-11,11,Pair C_op_2,W,greater_dict_acop,"Finish the function ``greater_dict`` below which takes a dictionary d and an integer cutoff and returns a new dictionary that contains only the key-value pairs where the value is greater than the cutoff or the value is equal to the cutoff. For example, ``greater_dict({'a': 20, 'b': 10}, 15)`` returns ``{'a': 20}``, ``greater_dict({'a': 20, 'b': 10}, 30)`` should return  ``{}``, ``greater_dict({'a': 20, 'b': 5}, 5)`` should return ``{'a': 20, 'b':5}``.",greater_dict_acop,171.0,"def greater_dict(d, cutoff):
-    result = {}
-    for key in d:
-        if d[key] >= cutoff:
-            result[key] = d[key]
-    return result","def greater_dict(d, cutoff):
-
-    greater = {key: value for key, value in dict.items() if value >= cutoff} #this will select items with value greater than the cutoff
-    return greater 
-","def greater_dict(d, cutoff):
-
-    greater = {key: value for key, value in d.items() if value >= cutoff} 
-    return greater ","class myTests(unittest.TestCase):
-
-       def testOne(self):
-           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 15), {'a': 20}, ""greater_dict({'a': 20, 'b': 10}, 15)"")
-           self.assertEqual(greater_dict({'a': 20, 'b': 10}, 30), {}, ""greater_dict({'a': 20, 'b': 10}, 30)"")
-           self.assertEqual(greater_dict({'a': 20, 'b': 5}, 5), {'a': 20, 'b': 5}, ""greater_dict({'a': 20, 'b': 5}, 5)"")
-           self.assertEqual(greater_dict({'a': 20, 'b': 10, 'c': 25}, 15), {'a': 20, 'c': 25}, ""greater_dict({'a': 20, 'b': 10, 'c': 25}, 15)"")","def greater_dict(d, cutoff):",,for key in d:,for key in d.items():,35,1,True,0.5121951219512195,0.9333333333333333,True
-12,12,Pair C,W,tuples_to_dict_acoc,"Finish the function make_dir below which takes a list of tuples tuple_list and returns a dictionary where the first item in each tuple is the key and the second is the value. The first items in each tuple of ``tuple_list`` are unique strings and the second items are integers. For example, make_dir([('gray', -3), ('blue', 2)]) returns {'gray': -3, 'blue': 2}.",tuples_to_dict_acoc,168.0,"def make_dir(tuple_list):
-    new_dict = {}
-    for key,value in tuple_list:
-        new_dict[key] = value
-    return new_dict","def make_dir(tuple_list):
-    d = {}
-    for i in range(len(tuple_list)):
-        d[tuple_list[0]] = d[tuple_list[1]]
-    return d","def make_dir(tuple_list):
-    d = {}
-    for i in range(len(tuple_list)):
-        d[tuple_list[i][0]] = tuple_list[i][1]
-    return d","class myTests(unittest.TestCase):
-
-    def testOne(self):
-        self.assertEqual(make_dir([('a', 0), ('b', 3), ('c', 2)]), {'a': 0, 'b': 3, 'c': 2}, ""make_dir([('a', 0), ('b', 3), ('c', 2)])"")
-        self.assertEqual(make_dir([('a', 5)]), {'a': 5}, ""make_dir([('a', 5)])"")
-        self.assertEqual(make_dir([('gray', -3), ('blue', 2)]), {'gray': -3, 'blue': 2}, ""make_dir([('gray', -3), ('blue', 2)])"")",def make_dir(tuple_list):,,d[item[0]] = item[1],d[item[0]] == item[1],25,8,True,0.6233766233766234,0.9032258064516129,True
-13,13,Pair C,W,tuples_to_dict_acop,"Finish the function make_dir below which takes a list of tuples tuple_list and returns a dictionary where the first item in each tuple is the key and the second is the value.  The first items in each tuple of ``tuple_list`` are unique strings and the second items are integers. For example, make_dir([('gray', -3), ('blue', 2)]) returns {'gray': -3, 'blue': 2}.
-",tuples_to_dict_acop,168.0,"def make_dir(tuple_list):
-    new_dict = {}
-    for key,value in tuple_list:
-        new_dict[key] = value
-    return new_dict","def make_dir(tuple_list):
-    d = {}
-    for i in range(len(tuple_list)):
-        d[tuple_list[0]] = d[tuple_list[1]]
-    return d","def make_dir(tuple_list):
-    d = {}
-    for i in range(len(tuple_list)):
-        d[tuple_list[i][0]] = tuple_list[i][1]
-    return d","class myTests(unittest.TestCase):
-
-    def testOne(self):
-        self.assertEqual(make_dir([('a', 0), ('b', 3), ('c', 2)]), {'a': 0, 'b': 3, 'c': 2}, ""make_dir([('a', 0), ('b', 3), ('c', 2)])"")
-        self.assertEqual(make_dir([('a', 5)]), {'a': 5}, ""make_dir([('a', 5)])"")
-        self.assertEqual(make_dir([('gray', -3), ('blue', 2)]), {'gray': -3, 'blue': 2}, ""make_dir([('gray', -3), ('blue', 2)])"")",def make_dir(tuple_list):,,d[item[0]] = item[1],d[item[0]] == item[1],25,8,True,0.6233766233766234,0.9032258064516129,True
-14,14,Intro-op,W,str-mixed-example-op,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-op,,"def phrase(person, thing):
+                self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,,if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1]:,25,8,TRUE,0.739495798,0.93129771,TRUE
+4,Intro-op,W,str-mixed-example-op,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-op,,"def phrase(person, thing):
     if (type(person) == str) and (type(thing) == str):
         person = person.capitalize()
         thing = thing.lower()
@@ -501,8 +178,8 @@
               self.assertEqual(phrase(""sam"", ""Likes to code""), ""Sam likes to code"", 'phrase(""sam"", "" Likes to code"")')
               self.assertEqual(phrase(""mary-anne"", ""likes to sing""), ""Mary-anne likes to sing"", 'phrase(""mary-anne"", "" likes to sing"")')
               self.assertEqual(phrase(""ANNA"", ""likes to dance""), ""Anna likes to dance"", 'phrase(""ANNA"", "" likes to dance"")')
-              self.assertEqual(phrase(1111, ""likes programming""), False, 'phrase(1111, "" likes programming"")')","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",Pass to CodeBERT,Pass to CodeBERT,True,0.896551724137931,0.896551724137931,True
-15,15,Intro-oc,W,str-mixed-example-oc,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-oc,,"def phrase(person, thing):
+              self.assertEqual(phrase(1111, ""likes programming""), False, 'phrase(1111, "" likes programming"")')","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",Pass to CodeBERT,Pass to CodeBERT,TRUE,0.896551724,0.896551724,TRUE
+5,Intro-oc,W,str-mixed-example-oc,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-oc,,"def phrase(person, thing):
     if (type(person) == str) and (type(thing) == str):
         person = person.capitalize()
         thing = thing.lower()
@@ -525,23 +202,35 @@
               self.assertEqual(phrase(""""sam"""", """"Likes to code""""), """"Sam likes to code"""", 'phrase(""""sam"""", """" Likes to code"""")')
               self.assertEqual(phrase(""""mary-anne"""", """"likes to sing""""), """"Mary-anne likes to sing"""", 'phrase(""""mary-anne"""", """" likes to sing"""")')
               self.assertEqual(phrase(""""ANNA"""", """"likes to dance""""), """"Anna likes to dance"""", 'phrase(""""ANNA"""", """" likes to dance"""")')
-              self.assertEqual(phrase(1111, """"likes programming""""), False, 'phrase(1111, """" likes programming"""")')","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",Pass to CodeBERT,Pass to CodeBERT,True,0.896551724137931,0.896551724137931,True
-16,16,Pair E,W,get_counts_dict_acop,"Finish the function below which takes a list of strings and returns a dictionary that has the number of times each unique string appears in the list.  For example, ``get_counts(['barb','barb','angel'])`` returns ``{'barb':2, 'angel':1}``.",get_counts_dict_acop,214.0,"def get_counts(s_list):
-    dic={}
-    for i in s_list:
-        if i not in dic:
-            dic[i]=1
+              self.assertEqual(phrase(1111, """"likes programming""""), False, 'phrase(1111, """" likes programming"""")')","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",Pass to CodeBERT,Pass to CodeBERT,TRUE,0.896551724,0.896551724,TRUE
+6,Pair E,W,get_counts_dict_acop,"Finish the function below which takes a list of strings and returns a dictionary that has the number of times each unique string appears in the list.  For example, ``get_counts(['barb','barb','angel'])`` returns ``{'barb':2, 'angel':1}``.",get_counts_dict_acop,150,"def get_counts(s_list):
+    dict = {}
+    for word in s_list:
+        if dict.get(word, 0) == 0:
+            dict[word] = 1
         else:
-            dic[i]+=1
-    return dic","def get_counts(s_list):
-    d = {}
-    for s in s_list:
-        d.get(s, 0) + 1
-    return d","def get_counts(s_list):
-    d = {}
-    for s in s_list:
-        d[s] = d.get(s, 0) + 1
-    return d","class myTests(unittest.TestCase):
+            dict[word] += 1
+    return dict","def get_counts(s_list):
+    
+    newlist = {}
+    for x in s_list:
+        print(x)
+        count = 0
+        if x not in newlist:
+            newlist[x] = 1
+        else:
+            
+            count = count + 1
+            newlist[x] = count","def get_counts(s_list):
+    newlist = {}
+    for x in s_list:
+        count = 0
+        if x not in newlist:
+            newlist[x] = 1
+        else:
+            count = newlist[x] + 1
+            newlist[x] = count
+    return newlist","class myTests(unittest.TestCase):
 
     def testOne(self):
            self.assertEqual(get_counts(['a','b','a']), {'a':2, 'b':1}, ""get_counts('a','b','a')"")
@@ -553,23 +242,35 @@
            self.assertEqual(get_counts(['a','c','b','c']), {'a':1, 'c': 2, 'b':1}, ""get_counts('a','c','b','c')"")
            self.assertEqual(get_counts(['b','c','b','c']), {'b':2, 'c': 2}, ""get_counts('b','c','b','c')"")
            self.assertEqual(get_counts(['b','c','b','b']), {'b':3, 'c': 1}, ""get_counts('b','c','b','b')"")
-           self.assertEqual(get_counts(['b','b','b','b']), {'b':4}, ""get_counts('b','b','b','b')"")",def get_counts(s_list):,,if i not in dic:,if i !=  dic:,29,5,True,0.5432098765432098,0.9315068493150684,True
-17,17,Pair E,W,get_counts_dict_acoc,"Finish the function below which takes a list of strings and returns a dictionary that has the number of times each unique string appears in the list.  For example, ``get_counts(['barb','barb','angel'])`` returns ``{'barb':2, 'angel':1}``.",get_counts_dict_acoc,214.0,"def get_counts(s_list):
-    dic={}
-    for i in s_list:
-        if i not in dic:
-            dic[i]=1
+           self.assertEqual(get_counts(['b','b','b','b']), {'b':4}, ""get_counts('b','b','b','b')"")",def get_counts(s_list):,,if i not in dic:,if i !=  dic:,32,11,TRUE,0.596491228,0.876033058,TRUE
+7,Pair E,W,get_counts_dict_acoc,"Finish the function below which takes a list of strings and returns a dictionary that has the number of times each unique string appears in the list.  For example, ``get_counts(['barb','barb','angel'])`` returns ``{'barb':2, 'angel':1}``.",get_counts_dict_acoc,150,"def get_counts(s_list):
+    dict = {}
+    for word in s_list:
+        if dict.get(word, 0) == 0:
+            dict[word] = 1
         else:
-            dic[i]+=1
-    return dic","def get_counts(s_list):
-    d = {}
-    for s in s_list:
-        d.get(s, 0) + 1
-    return d","def get_counts(s_list):
-    d = {}
-    for s in s_list:
-        d[s] = d.get(s, 0) + 1
-    return d","class myTests(unittest.TestCase):
+            dict[word] += 1
+    return dict","def get_counts(s_list):
+    
+    newlist = {}
+    for x in s_list:
+        print(x)
+        count = 0
+        if x not in newlist:
+            newlist[x] = 1
+        else:
+            
+            count = count + 1
+            newlist[x] = count","def get_counts(s_list):
+    newlist = {}
+    for x in s_list:
+        count = 0
+        if x not in newlist:
+            newlist[x] = 1
+        else:
+            count = newlist[x] + 1
+            newlist[x] = count
+    return newlist","class myTests(unittest.TestCase):
 
     def testOne(self):
            self.assertEqual(get_counts(['a','b','a']), {'a':2, 'b':1}, ""get_counts('a','b','a')"")
@@ -581,4 +282,78 @@
            self.assertEqual(get_counts(['a','c','b','c']), {'a':1, 'c': 2, 'b':1}, ""get_counts('a','c','b','c')"")
            self.assertEqual(get_counts(['b','c','b','c']), {'b':2, 'c': 2}, ""get_counts('b','c','b','c')"")
            self.assertEqual(get_counts(['b','c','b','b']), {'b':3, 'c': 1}, ""get_counts('b','c','b','b')"")
-           self.assertEqual(get_counts(['b','b','b','b']), {'b':4}, ""get_counts('b','b','b','b')"")",def get_counts(s_list):,,if i not in dic:,if i !=  dic:,29,5,True,0.5432098765432098,0.9315068493150684,True
+           self.assertEqual(get_counts(['b','b','b','b']), {'b':4}, ""get_counts('b','b','b','b')"")",def get_counts(s_list):,,if i not in dic:,if i !=  dic:,32,11,TRUE,0.596491228,0.876033058,TRUE
+8,Pair E_2,W,nested_dict_acop,"Finish a function, ``get_order_totals()``, that takes a list of tuples and returns a nested dictionary with the same information. Each tuple includes 3 values; the first is the person's name, the second is item name, and the third is the quantity. Note that there may be more than one tuple for the same person and item - your dictionary should total all the quantities for the same person and item. For example, passing in [('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)] should result in this dictionary: {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}}.",nested_dict_acop,24,"def get_order_totals(orders):
+    dict = {}
+    for i in orders:
+        if i[0] in dict:
+            if i[1] in dict[i[0]]:
+                dict[i[0]][i[1]] += i[2]
+            else:
+                dict[i[0]][i[1]] = i[2]
+        else:
+            temp = {}
+            temp[i[1]] = i[2]
+            dict[i[0]] = temp
+    return dict ","def get_order_totals(orders):
+    orders_dict = dict()
+    for order in orders:
+        food_dict = dict()
+        food_dict[order[1]] = 0
+        orders_dict[order[0]] = food_dict
+    for order in orders:
+        orders_dict[order[0]][order[1]]+= order[2]
+    return orders_dict","def get_order_totals(orders):
+    orders_dict = dict()
+    for order in orders:
+        food_dict = dict()
+        if order[0] not in orders_dict:
+            orders_dict[order[0]] = food_dict
+        orders_dict[order[0]][order[1]] = 0
+                
+    for order in orders:
+        orders_dict[order[0]][order[1]]+= order[2]
+    return orders_dict","class myTests(unittest.TestCase):
+
+    def testOne(self):
+                self.assertEqual(get_order_totals([('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)]), {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}})
+                self.assertEqual(get_order_totals([('person1', 'food1', 2), ('person2', 'food2', 2)]), {'person1': {'food1': 2}, 'person2': {'food2': 2}})
+                self.assertEqual(get_order_totals([('person1', 'food1', 1)]), {'person1': {'food1': 1}})
+                self.assertEqual(get_order_totals([('p1', 'f1', 2), ('p1', 'f1', 3), ('p2', 'f1', 4), ('p1', 'f2', 5), ('p2', 'f2', 2)])['p1']['f1'], 5)",def get_order_totals(orders):,,dict[i[0]][i[1]] += i[2],dict[i[0]]i[1] += i[2],82,20,TRUE,0.350515464,0.826347305,TRUE
+9,Pair E_2,W,nested_dict_acoc,"Finish a function, ``get_order_totals()``, that takes a list of tuples and returns a nested dictionary with the same information. Each tuple includes 3 values; the first is the person's name, the second is item name, and the third is the quantity. Note that there may be more than one tuple for the same person and item - your dictionary should total all the quantities for the same person and item. For example, passing in [('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)] should result in this dictionary: {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}}.",nested_dict_acoc,24,"def get_order_totals(orders):
+    dict = {}
+    for i in orders:
+        if i[0] in dict:
+            if i[1] in dict[i[0]]:
+                dict[i[0]][i[1]] += i[2]
+            else:
+                dict[i[0]][i[1]] = i[2]
+        else:
+            temp = {}
+            temp[i[1]] = i[2]
+            dict[i[0]] = temp
+    return dict ","def get_order_totals(orders):
+    orders_dict = dict()
+    for order in orders:
+        food_dict = dict()
+        food_dict[order[1]] = 0
+        orders_dict[order[0]] = food_dict
+    for order in orders:
+        orders_dict[order[0]][order[1]]+= order[2]
+    return orders_dict","def get_order_totals(orders):
+    orders_dict = dict()
+    for order in orders:
+        food_dict = dict()
+        if order[0] not in orders_dict:
+            orders_dict[order[0]] = food_dict
+        orders_dict[order[0]][order[1]] = 0
+                
+    for order in orders:
+        orders_dict[order[0]][order[1]]+= order[2]
+    return orders_dict","class myTests(unittest.TestCase):
+
+    def testOne(self):
+                self.assertEqual(get_order_totals([('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)]), {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}})
+                self.assertEqual(get_order_totals([('person1', 'food1', 2), ('person2', 'food2', 2)]), {'person1': {'food1': 2}, 'person2': {'food2': 2}})
+                self.assertEqual(get_order_totals([('person1', 'food1', 1)]), {'person1': {'food1': 1}})
+                self.assertEqual(get_order_totals([('p1', 'f1', 2), ('p1', 'f1', 3), ('p2', 'f1', 4), ('p1', 'f2', 5), ('p2', 'f2', 2)])['p1']['f1'], 5)",def get_order_totals(orders):,,dict[i[0]][i[1]] += i[2],dict[i[0]]i[1] += i[2],82,20,TRUE,0.350515464,0.826347305,TRUE

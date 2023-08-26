@@ -4,6 +4,7 @@ from collections import namedtuple
 from .get_parsons_code_distractors import *
 from .generate_parsons_blocks import *
 from .token_compare import *
+import random
 # compare the similarity between the student code and the fixed code
 
 #  It prints the difference between the two code snippets line by line using a loop. It also prints the similarity ratio.
@@ -97,13 +98,12 @@ def find_distractor(fixed_line, removed_lines):
     print("removed_lines",removed_lines)
     # check whether there is any line achieved a high similarity than the line of comparable location
     for student_line in removed_lines:
-        similarity = code_similarity_score(fixed_line, student_line)
+        similarity = code_similarity_score(student_line, fixed_line)
         if similarity > highest_similarity:
             highest_similarity = similarity
             distractor_line = student_line
-            
-    return highest_similarity, distractor_line
 
+    return highest_similarity, distractor_line
 
 
 def generate_unique_distractor_dict(distractor_dict):
@@ -123,6 +123,42 @@ def generate_unique_distractor_dict(distractor_dict):
 
     return result_distractor_dict
 
+def find_control_flow_lines(distractor_candidate_depot):
+    print("codelines", distractor_candidate_depot)
+    # each element in distractor_candidate_depot is like (location, length, actual code)
+    flow_keywords = ['if', 'else', 'elif', 'for', 'while', "==", "!=", "<", ">"]
+    flow_lines = []
+    
+    for element in distractor_candidate_depot:
+        for keyword in flow_keywords:
+            pattern = rf'\b{re.escape(keyword)}\b'
+            if re.search(pattern, element[2]):
+                flow_lines.append(element)
+                break
+    print("flow_lines", flow_lines)
+    return flow_lines
+
+
+def get_distractor_candidates(distractor_candidate_depot, candidate_num):
+    # each element in distractor_candidate_depot is like (location, length, actual code)
+    print("distractor_candidate_depot", distractor_candidate_depot)
+    distractor_candidates = []
+    control_flow_lines = find_control_flow_lines(distractor_candidate_depot)
+    # select all the lines from the code that contains control flow keywords
+    # if the find_control_flow_lines are more than candidate_num, randomly select candidate_num lines
+    if len(control_flow_lines) >= candidate_num:
+        distractor_candidates = random.sample(control_flow_lines, candidate_num)
+    # if there do have some control flow lines, but less than candidate_num, get all the control flow lines into distractor_candidates
+    # and add more lines from the top N longest lines
+    elif (len(control_flow_lines) < candidate_num) and (len(control_flow_lines) > 0):
+        distractor_candidates = control_flow_lines
+        distractor_candidates = distractor_candidates + sorted(distractor_candidate_depot, key=lambda x: x[1], reverse=True)[:candidate_num-len(control_flow_lines)]
+    else:
+        distractor_candidates = sorted(distractor_candidate_depot, key=lambda x: x[1], reverse=True)[:candidate_num]
+    return distractor_candidates
+
+
+
 # Decide which type of Parsons problem we will generate and generate the corresponding distractors
 def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_code, fixed_lines, removed_lines, unchanged_lines, total_similarity):
     #print(code_comparison_pairs, total_similarity)
@@ -131,7 +167,7 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_cod
     print("code_comparison_pairs\n", len(code_comparison_pairs), code_comparison_pairs, "total_similarity\n", total_similarity)
     if total_similarity < 0.30:
         return "Full", {}, []
-    else:
+    elif (total_similarity >= 0.30) & (total_similarity < 1):
         # if has 3 or more than 3 fixed lines (movable blocks)
         if len(code_comparison_pairs)>=3:
             # use students' own buggy code as resource to build distractors
@@ -177,22 +213,23 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_cod
 
             # pass to the LLM distractor generation station
             distractor_candidate_depot = [item for item in fixed_lines + unchanged_lines if item[2] not in distractor_keys]
-            print("distractor_candidate_depot", distractor_candidate_depot)
+            #print("distractor_candidate_depot", distractor_candidate_depot)
             candidate_num = 3 - len(distractors)
             
-            distractor_candidates = sorted(distractor_candidate_depot, key=lambda x: x[1], reverse=True)[:candidate_num]
+            distractor_candidates = get_distractor_candidates(distractor_candidate_depot, candidate_num)
 
             for distractor_candidate in distractor_candidates:
-                print("distractor_candidate", distractor_candidate)
+                #print("distractor_candidate", distractor_candidate)
                 #def build_distractor_prompt(question_line, correct_line, regeneration_message, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
                 distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_candidate[2],""), distractor_candidate[2],"")
                 # the keys should be tuple (location, length, code) instead of only the actual code
                 while distractor in distractors.values():
-                    print("regenerate a distractor", distractor)
+                    #print("regenerate a distractor", distractor)
                     distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_candidate[2],distractor), distractor_candidate[2],distractor)
                 
                 distractors[distractor_candidate] = distractor
         
             return "Partial_Own_Random", distractors, distractor_candidates
-
+    else:
+        return "Full", {}, []
 

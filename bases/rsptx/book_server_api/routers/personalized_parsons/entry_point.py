@@ -27,10 +27,8 @@ def personalized_help(student_code, problem_name):
     }
     return get_personalized_parsons_help(input_dict, df_question_bank)
 
-problem_name = "has_22_acop"
-student_code = "def has22(nums):\n    for i in range(len(nums)-1):\n        if nums[i]==2 and nums[i+1]==2:\n            return True\n    return "
-
-
+problem_name = "sum13_acoc"
+student_code = "def sum13(nums):\n    total = 0\n    found = False\n    for num in. nums:\n        if found:\n            found = False\n        elif num == 12:\n            found = True\n        else:\n            total += num\n    return total"
 personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
 
 # personalized_code_solution, personalized_Parsons_block = get_personalized_parsons_help(dict_buggy_code, df_question_bank)
