@@ -86,10 +86,11 @@ async def parsons_scaffolding(request: Request):
 
     personalized_code_solution = re.sub(r'<(?=\S)', '< ', personalized_code_solution)
     personalized_Parsons_block = re.sub(r'<(?=\S)', '< ', personalized_Parsons_block)
+    adaptive_text = '' if ('settled' in personalized_Parsons_block) else ' data-adaptive="true" '
 
     parsons_html = """
-        <pre  class="parsonsblocks" data-question_label="1"    data-noindent="true"  data-numbered="left"    style="visibility: hidden;">
-        """ + personalized_Parsons_block + """
+        <pre  class="parsonsblocks" data-question_label="1"    data-noindent="true"  data-numbered="left"  %s  style="visibility: hidden;">
+        """ % adaptive_text + personalized_Parsons_block + """
         </pre>
 """
 

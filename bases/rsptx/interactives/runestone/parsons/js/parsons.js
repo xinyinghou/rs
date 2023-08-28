@@ -256,9 +256,9 @@ export default class Parsons extends RunestoneBase {
         if (this.options.adaptive) {
             this.helpButton = document.createElement("button");
             $(this.helpButton).attr("class", "btn btn-primary");
-            this.helpButton.textContent = $.i18n("msg_parson_help");
+            this.helpButton.textContent = "Combine";
             this.helpButton.id = this.counterId + "-help";
-            this.helpButton.disabled = false; // bje
+            this.helpButton.disabled = true;
             this.parsonsControlDiv.appendChild(this.helpButton);
             this.helpButton.addEventListener("click", function (event) {
                 event.preventDefault();
@@ -1501,6 +1501,9 @@ export default class Parsons extends RunestoneBase {
             if (this.grade == "correct") {
                 this.hasSolved = true;
                 this.correct = true;
+                if (this.options.adaptive) {
+                    this.helpButton.disabled = true;
+                }
                 $(this.checkButton).prop("disabled", true);
                 localStorage.setItem(this.adaptiveId + "Solved", true);
                 this.recentAttempts = this.checkCount;
@@ -1530,7 +1533,10 @@ export default class Parsons extends RunestoneBase {
                     }
                     // if time to offer help
                     if (this.numDistinct == 3 && !this.gotHelp) {
-                        alert($.i18n("msg_parson_help_info"));
+                        // alert($.i18n("msg_parson_help_info"));
+                        if (this.options.adaptive) {
+                            this.helpButton.disabled = false;
+                        }
                     } // end if
                 } // end if can help
             } // end if not solved
@@ -2188,13 +2194,13 @@ export default class Parsons extends RunestoneBase {
             distractorToRemove !== undefined &&
             !distractorToRemove.inSourceArea()
         ) {
-            alert($.i18n("msg_parson_remove_incorrect"));
+            // alert($.i18n("msg_parson_remove_incorrect"));
             this.removeDistractor(distractorToRemove);
             this.logMove("removedDistractor-" + distractorToRemove.hash());
         } else {
             var numberOfBlocks = this.numberOfBlocks(false);
             if (numberOfBlocks > 3) {
-                alert($.i18n("msg_parson_will_combine"));
+                // alert($.i18n("msg_parson_will_combine"));
                 this.combineBlocks();
                 this.logMove("combinedBlocks");
             } else {
@@ -2203,7 +2209,10 @@ export default class Parsons extends RunestoneBase {
                            this.removeDistractor(distractorToRemove);
                            this.logMove("removedDistractor-" + distractorToRemove.hash());
                        } */
-                alert($.i18n("msg_parson_three_blocks_left"));
+                // alert($.i18n("msg_parson_three_blocks_left"));
+                if (this.options.adaptive) {
+                    this.helpButton.disabled = true;
+                }
                 this.canHelp = false;
             }
             //if (numberOfBlocks < 5) {
@@ -2222,7 +2231,7 @@ export default class Parsons extends RunestoneBase {
         //}
         // if less than 3 attempts
         if (this.numDistinct < 3) {
-            alert($.i18n("msg_parson_atleast_three_attempts"));
+            // alert($.i18n("msg_parson_atleast_three_attempts"));
         }
         // otherwise give help
         else {
