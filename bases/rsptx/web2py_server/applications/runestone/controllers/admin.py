@@ -105,6 +105,21 @@ WHICH_TO_GRADE_POSSIBLE_VALUES = dict(
     youtube=[],
 )
 
+ANSWER_TABLES = [
+    "mchoice_answers",
+    "clickablearea_answers",
+    "codelens_answers",
+    "dragndrop_answers",
+    "fitb_answers",
+    "parsons_answers",
+    "shortanswer_answers",
+    "microparsons_answers",
+    "lp_answers",
+    "shortanswer_answers",
+    "unittest_answers",
+    "webwork_answers",
+]
+
 
 @auth.requires_login()
 def index():
@@ -114,7 +129,12 @@ def index():
 @auth.requires_login()
 def doc():
     response.title = "Documentation"
-    return dict(course_id=auth.user.course_name, course=get_course_row(db.courses.ALL))
+    is_instructor = verifyInstructorStatus(auth.user.course_name, auth.user)
+    return dict(
+        course_id=auth.user.course_name,
+        course=get_course_row(db.courses.ALL),
+        is_instructor=is_instructor,
+    )
 
 
 @auth.requires(
@@ -151,6 +171,7 @@ def assignments():
 
     # See `models/db_ebook.py` for course_attributes table
     set_latex_preamble(course.base_course)
+    course_attrs = getCourseAttributesDict(course.id)
 
     return dict(
         coursename=auth.user.course_name,
@@ -162,6 +183,8 @@ def assignments():
         toc=_get_toc_and_questions(),  # <-- This Gets the readings and questions
         course=course,
         is_instructor=True,
+        ptx_js_version=course_attrs.get("ptx_js_version", "0.2"),
+        webwork_js_version=course_attrs.get("webwork_js_version", "2.17"),
     )
 
 
@@ -427,6 +450,7 @@ def practice():
             error_flashcard_creation_method=error_flashcard_creation_method,
             complete=no_error,
             course=course,
+            is_instructor=True,
         )
 
 
@@ -630,6 +654,15 @@ def admin():
         motd = open("applications/runestone/static/motd.html").read()
     except Exception:
         motd = "You can cusomize this mesage by editing /static/motd.html"
+    logger.debug(course_attrs)
+    if "groupsize" not in course_attrs:
+        course_attrs["groupsize"] = "3"
+    if "show_points" not in course_attrs:
+        course_attrs["show_points"] = False
+    else:
+        course_attrs["show_points"] = (
+            True if course_attrs["show_points"] == "true" else False
+        )
     return dict(
         startDate=date,
         coursename=auth.user.course_name,
@@ -675,9 +708,14 @@ def course_students():
         db.auth_user.id,
         orderby=db.auth_user.last_name | db.auth_user.first_name,
     )
+    instructors = db(db.course_instructor.course == auth.user.course_id).select()
+    iset = set()
+    for i in instructors:
+        iset.add(i.instructor)
+
     searchdict = OrderedDict()
     for row in cur_students:
-        if not verifyInstructorStatus(auth.user.course_id, row.id):
+        if row.id not in iset:
             name = row.first_name + " " + row.last_name
             username = row.username
             searchdict[str(username)] = name
@@ -697,6 +735,10 @@ def grading():
     assignmentids = {}
     assignment_deadlines = {}
     question_points = {}
+    instructors = db(db.course_instructor.course == auth.user.course_id).select()
+    iset = set()
+    for i in instructors:
+        iset.add(i.instructor)
 
     for row in assignments_query:
         assignmentids[row.name] = int(row.id)
@@ -739,7 +781,7 @@ def grading():
     # on the grading page load????
     searchdict = {}
     for row in cur_students:
-        isinstructor = verifyInstructorStatus(auth.user.course_id, row.user_id)
+        isinstructor = row.user_id in iset
         logger.debug(f"User {row.user_id} instructor status {isinstructor}")
         if not isinstructor:
             person = (
@@ -754,6 +796,10 @@ def grading():
             name = person.first_name + " " + person.last_name
             username = person.username
             searchdict[username] = name
+            sd_by_student = sorted(
+                searchdict.items(), key=lambda x: x[1].split()[-1].lower()
+            )
+            searchdict = OrderedDict(sd_by_student)
             logger.debug(f"Added {username} to searchdict")
 
     course = db(db.courses.id == auth.user.course_id).select().first()
@@ -770,6 +816,8 @@ def grading():
         for chapter_q in chapter_questions:
             q_list.append(chapter_q.name)
         chapter_labels[row.chapter_label] = q_list
+
+    course_attrs = getCourseAttributesDict(course.id)
 
     set_latex_preamble(base_course)
     return dict(
@@ -789,6 +837,8 @@ def grading():
         assignment_deadlines=json.dumps(assignment_deadlines),
         question_points=json.dumps(question_points),
         is_instructor=True,
+        ptx_js_version=course_attrs.get("ptx_js_version", "0.2"),
+        webwork_js_version=course_attrs.get("webwork_js_version", "2.17"),
         course=course,
     )
 
@@ -815,15 +865,6 @@ def removeStudents():
     baseCourseID = (
         db(db.courses.course_name == baseCourseName).select(db.courses.id)[0].id
     )
-    answer_tables = [
-        "mchoice_answers",
-        "clickablearea_answers",
-        "codelens_answers",
-        "dragndrop_answers",
-        "fitb_answers",
-        "parsons_answers",
-        "shortanswer_answers",
-    ]
 
     if not isinstance(request.vars["studentList"], str):
         # Multiple ids selected
@@ -877,7 +918,7 @@ def removeStudents():
                 (db.useinfo.sid == sid)
                 & (db.useinfo.course_id == auth.user.course_name)
             ).update(course_id=baseCourseName)
-            for tbl in answer_tables:
+            for tbl in ANSWER_TABLES:
                 db(
                     (db[tbl].sid == sid)
                     & (db[tbl].course_name == auth.user.course_name)
@@ -963,6 +1004,10 @@ def deletecourse():
             # remove the rows from useinfo
             infoset = db(db.useinfo.course_id == course_name)
             infoset.delete()
+            # remove the rows from xxx_answers
+            for tbl in ANSWER_TABLES + ["timed_exam"]:
+                ansset = db(db[tbl].course_name == course_name)
+                ansset.delete()
             db(db.courses.id == courseid).delete()
             try:
                 session.clear()
@@ -2142,8 +2187,8 @@ def save_assignment():
         due = datetime.datetime.utcnow() + datetime.timedelta(7)
     try:
         total = _set_assignment_max_points(assignment_id)
+        # do not update the course in case the user switched courses in another tab
         db(db.assignments.id == assignment_id).update(
-            course=auth.user.course_id,
             description=request.vars["description"],
             points=total,
             duedate=due,
@@ -2507,6 +2552,7 @@ def copy_assignment():
             assignments = db(
                 (db.assignments.course == db.courses.id)
                 & (db.courses.course_name == request.vars["course"])
+                & (db.assignments.from_source == "F")
             ).select()
             for a in assignments:
                 print("A = {}".format(a))
@@ -2542,6 +2588,12 @@ def _copy_one_assignment(course, oldid):
             description=old_assignment.description,
             points=old_assignment.points,
             threshold_pct=old_assignment.threshold_pct,
+            is_timed=old_assignment.is_timed,
+            is_peer=old_assignment.is_peer,
+            time_limit=old_assignment.time_limit,
+            from_source=old_assignment.from_source,
+            nofeedback=old_assignment.nofeedback,
+            nopause=old_assignment.nopause,
         )
     except Exception as e:
         return f"failed: {str(e)}"
@@ -2643,6 +2695,22 @@ def update_course():
                 course_id=thecourse.id,
                 attr="enable_compare_me",
                 value=request.vars.enable_compare_me,
+            )
+        if "show_points" in request.vars:
+            db.course_attributes.update_or_insert(
+                (db.course_attributes.course_id == thecourse.id)
+                & (db.course_attributes.attr == "show_points"),
+                course_id=thecourse.id,
+                attr="show_points",
+                value=request.vars.show_points,
+            )
+        if "groupsize" in request.vars:
+            db.course_attributes.update_or_insert(
+                (db.course_attributes.course_id == thecourse.id)
+                & (db.course_attributes.attr == "groupsize"),
+                course_id=thecourse.id,
+                attr="groupsize",
+                value=request.vars.groupsize,
             )
         return json.dumps(dict(status="success"))
 

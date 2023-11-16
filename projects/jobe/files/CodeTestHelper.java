@@ -2,6 +2,8 @@ import java.io.*;
 import java.lang.reflect.*;
 
 import java.util.Arrays;
+import java.util.Formatter;
+import java.util.Objects;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -10,7 +12,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+import static org.junit.Assert.assertTrue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +39,9 @@ import javax.tools.ToolProvider;
  * @author Kate McDonnell
  * @version 3.0.2
  * @since 2023-07-12
- * 
+ *
+ * @update 3.1.0 - Peter added a new set of `expect` methods.
+ * @update 3.0.3 - Peter added a codeDigestChanged method.
  * @update 3.0.2 - Kate fixed the bug that main method only running once created
  * @update 3.0.1 - Kate added code so main method only runs once
  * @update 2.0.2 - Peter Seibel updated to allow for "throws exception" in main
@@ -135,7 +142,7 @@ public class CodeTestHelper {
      * This method will return the final results of all tests so that they can be
      * printed to the screen. It then resets the final results so that the list does
      * not continually grow between different tests.
-     * 
+     *
      * @return String list of final results in proper format
      */
     public static String getFinalResults() {
@@ -154,7 +161,7 @@ public class CodeTestHelper {
      * This method generates the proper results for the test and then performs the
      * test by comparing the expected and actual strings. Non-string variables
      * should be made Strings before calling this method, using "" + num.
-     * 
+     *
      * @param expected This is the String with the output we expect to get from the
      *                 test
      * @param actual   This is the String with the actual output from the test
@@ -227,7 +234,7 @@ public class CodeTestHelper {
      * This method assumes that you know whether the test passes or fails, allowing
      * you to have expected and actual be different. This is helpful for testing a
      * condtion where expected and actual might not be the same.
-     * 
+     *
      * @param expected This is the String with the output we expect to get from the
      *                 test
      * @param actual   This is the String with the actual output from the test
@@ -237,8 +244,6 @@ public class CodeTestHelper {
     public boolean getResults(String expected, String actual, String msg, boolean pass) {
         String output = formatOutput(expected, actual, msg, pass);
         results += output + "\n";
-        // System.out.println(output);
-
         return pass;
     }
 
@@ -246,7 +251,7 @@ public class CodeTestHelper {
      * This method generates the proper results for the test and then performs the
      * test by comparing the expected and actual double values, within a margin of
      * error of 0.005, so |expected - actual| < 0.005
-     * 
+     *
      * @param expected This is the double with the output we expect to get from the
      *                 test
      * @param actual   This is the double with the actual output from the test
@@ -262,7 +267,7 @@ public class CodeTestHelper {
      * This method generates the proper results for the test and then performs the
      * test by comparing the expected and actual double values, within a given
      * margin of error.
-     * 
+     *
      * @param expected This is the double with the output we expect to get from the
      *                 test
      * @param actual   This is the double with the actual output from the test
@@ -281,6 +286,40 @@ public class CodeTestHelper {
 
         return passed;
     }
+
+
+    // New style assertions. Because JUnit doesn't report any information when
+    // tests pass we need to always append to results and then call JUnit's
+    // assertTrue method because the Runestone test runner *does* use the count
+    // of passes and attempts that is recorded by JUnit based on calls to
+    // assertions methods. Thus if you call any other JUnit assertions it will
+    // mess up the count that Runestone prints under the table of results.
+
+    public void expect(String expected, String got, String label) {
+        recordResult(expected, got, label, Objects.equals(expected, got));
+    }
+
+    public void expectExact(double expected, double got, String label) {
+        recordResult(String.valueOf(expected), String.valueOf(got), label, expected == got);
+    }
+
+    public void expect(double expected, double got, String label) {
+        recordResult(String.valueOf(expected), String.valueOf(got), label, Math.abs(expected - got) < 0.005);
+    }
+
+    public void expect(int expected, int got, String label) {
+        recordResult(String.valueOf(expected), String.valueOf(got), label, expected == got);
+    }
+
+    public void expect(boolean expected, boolean got, String label) {
+        recordResult(String.valueOf(expected), String.valueOf(got), label, expected == got);
+    }
+
+    private void recordResult(String expected, String got, String label, boolean passed) {
+        results += formatOutput(expected, got, label, passed) + "\n";
+        assertTrue(passed);
+    }
+
 
     private String formatOutput(String expected, String actual, String msg, boolean passed) {
         String output = "";
@@ -316,7 +355,7 @@ public class CodeTestHelper {
      * This method attempts to run a given method in a given class and returns the
      * output if it succeeds - only works for methods with String[] args parameter
      * at the moment ????
-     * 
+     *
      * @param String name of the class where the method is written
      * @param String name of the method
      * @return String output of method - whatever has been printed to the console or
@@ -335,7 +374,7 @@ public class CodeTestHelper {
      * specified arguments and returns the output if it succeeds - only works for
      * methods with String[] args parameter at the moment ???? - is designed to
      * return the output when any method has been called
-     * 
+     *
      * @param String name of the class where the method is written
      * @param String name of the method
      * @return String output of method - whatever has been printed to the console or
@@ -466,7 +505,7 @@ public class CodeTestHelper {
      * private String getString(String type, Method m, Object o, Object[] args) { if
      * (type.equals("int[]")) { int[] results = {};//(int[])m.invoke(o, args);
      * return Arrays.toString(results); }
-     * 
+     *
      * return ""+m.invoke(o, args); }
      */
     private String getInstanceMethodOutput(Method m, Object[] args)// throws IOException
@@ -511,7 +550,7 @@ public class CodeTestHelper {
      * This method prints the list of getter and setter methods in the class.
      * Awesome Tutorial for Getters and Setters -
      * http://tutorials.jenkov.com/java-reflection/getters-setters.html
-     * 
+     *
      * @param String name of the class where the methods are written
      * @return Nothing
      */
@@ -548,7 +587,7 @@ public class CodeTestHelper {
      * This method checks that the desired instance variables exist, based on name
      * and type. Awesome Tutorial -
      * http://tutorials.jenkov.com/java-reflection/private-fields-and-methods.html
-     * 
+     *
      * @param String array of <<type name>> pairs, such as {"int num", "double avg"}
      * @return "pass" if they match, and an error message with information if they
      *         do not
@@ -595,7 +634,7 @@ public class CodeTestHelper {
      * This method counts how many private and public instance variables are
      * included in the class. Awesome Tutorial -
      * http://tutorials.jenkov.com/java-reflection/private-fields-and-methods.html
-     * 
+     *
      * @param String name of the class
      * @return String the number of private and/or public instance variables
      */
@@ -631,7 +670,7 @@ public class CodeTestHelper {
      * This method checks that instance variables of the desired type exist, without
      * worrying about names. Awesome Tutorial -
      * http://tutorials.jenkov.com/java-reflection/private-fields-and-methods.html
-     * 
+     *
      * @param String array of <<type>> values, such as {"int", "double"} in the
      *               desired order
      * @return "pass" if they match, and an error message with information if they
@@ -682,7 +721,7 @@ public class CodeTestHelper {
      * This method checks that the desired instance variables exist, based on name
      * and type. Awesome Tutorial -
      * http://tutorials.jenkov.com/java-reflection/private-fields-and-methods.html
-     * 
+     *
      * @param String array of <<type name>> pairs, such as {"int num", "double avg"}
      * @return "pass" if they match, and an error message with information if they
      *         do not
@@ -1333,7 +1372,7 @@ public class CodeTestHelper {
         return code;
     }
 
-    public String removeComments(String code) {
+    public static String removeComments(String code) {
         int startBlock = code.indexOf("/*");
         int endBlock = -1;
         while (startBlock >= 0) {
@@ -1450,6 +1489,53 @@ public class CodeTestHelper {
         }
 
         return false;
+    }
+
+
+    /*
+     * Another way to detect changes in source code. Use the utility program
+     * CodeDigest to get the digest of the original code and then in the test
+     * use something like:
+     *
+     *  boolean passed = codeDigestChanged("1f92cb0f45abe66d191d9dcd05840c552a488109");
+     *
+     * This is at least more concise than including the original code as a
+     * string and gives us the chance to automate finding places where the
+     * original code no longer hashes to the hash we are looking for in unit
+     * test.
+     */
+    public boolean codeDigestChanged(String originalDigest) {
+        try {
+            String msg = "Checking that code has been changed";
+            String digest = codeDigest(getCode());
+            boolean passed = !digest.equals(originalDigest);
+            results += formatOutput("true", "" + passed, msg, passed);
+            results += "\n";
+            return passed;
+        } catch (NoSuchAlgorithmException nsae) {
+            String msg = "Test could not be completed";
+            results += formatOutput("true", "false", msg, false);
+            results += "\n";
+            return false;
+        }
+    }
+
+    /*
+     * Compute the code digest: a SHA1 hash of a normalized string.
+     */
+    public static String codeDigest(String input) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        String normalized = removeComments(input.replaceAll("\\s+", " ").trim());
+        byte[] bytes = normalized.getBytes(StandardCharsets.UTF_8);
+        return byteArrayToHexString(md.digest(bytes));
+    }
+
+    private static String byteArrayToHexString(byte[] bytes) {
+        Formatter formatter = new Formatter();
+        for (byte b : bytes) {
+            formatter.format("%02x", b);
+        }
+        return formatter.toString();
     }
 
     /*

@@ -29,7 +29,9 @@
 
             <!-- Jquery plugin uses the caption of a table to name the downloaded file -->
             <caption style="display:none;">{{=course.course_name}}_Gradebook</caption>
-
+            <!-- Note that each td gets the class that corresponds to the assignment name.  
+            This lets us filter out the tds when searching by assignment The search function is
+            then actually pretty simple in hiding and showing matching classes. -->
             <thead style="cursor: pointer;">
                 <tr id="head">
                     <td id="leaveAlone0" class="roguecol">FName</td>
@@ -50,8 +52,8 @@
                     <td class="roguecol"> </td>
                     <td class="roguecol"> </td>
                     <td class="roguecol"> </td>
-                    {{for date in duedates:}}
-                    <td class="roguecol">{{=date}}</td>
+                    {{for d in range(len(duedates)):}}
+                    <td class="{{=assignments[d]['name']}}">{{=duedates[d]}}</td>
                     {{pass}}
                 </tr>
                 <tr style="background-color: lightgray" id="tpointsid">
@@ -60,8 +62,8 @@
                     <td class="roguecol"> </td>
                     <td class="roguecol"> </td>
                     <td class="roguecol"> </td>
-                    {{for p in totalpoints:}}
-                    <td class="roguecol">{{=p}}</td>
+                    {{for p in range(len(totalpoints)):}}
+                    <td class="{{=assignments[p]['name']}}">{{=totalpoints[p]}}</td>
                     {{pass}}
                 </tr>
                 <tr style="background-color: lightgray" id="classaverage">
@@ -86,9 +88,16 @@
                 <tr class="search">
                     {{for item in range(len(gradetable[row])):}}
                     {{if item > 4 and gradetable[row][item] != 'n/a' and 'e' not in gradetable[row][item]:}}
+                    {{pts = float(gradetable[row][item])/100*int(totalpoints[item-5]) }}
                     <td class="{{=assignments[item-5]['name']}}"><a
                             href="questiongrades?sid={{=gradetable[row][2]}}&assignment_id={{=assignments[item-5]['id']}}"
-                            style="color:blue;">{{=gradetable[row][item]}}%</a></td>
+                            style="color:blue;">
+                            {{ if "show_points" in globals() and show_points == "true": }}
+                            {{=pts}}
+                            {{ else: }}
+                            {{=gradetable[row][item]}}%
+                            {{ pass }}
+                            </a></td>
                     {{elif item > 4 and gradetable[row][item] != 'n/a':}}
                     <td class="{{=assignments[item-5]['name']}}"> {{=gradetable[row][item]}} </td>
                     {{elif item <= 4:}} <td class="roguecol">{{= urllib.parse.unquote(gradetable[row][item])}}</td>
@@ -103,6 +112,7 @@
         </table>
     </div>
 </div>
+<p>Note: You can have the gradebook show either points or the percentage by changing the option in the course settings panel</p>
 <div class="row"></div>
 <div>
     <h2>Timed Exam Analysis</h2>

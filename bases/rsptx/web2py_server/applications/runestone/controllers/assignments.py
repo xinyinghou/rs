@@ -607,14 +607,16 @@ def doAssignment():
         response.flash = (
             "Access Token Created - If this re-occurs check your cookie settings"
         )
-
+    redirect(
+        "/assignment/student/doAssignment?assignment_id=" + request.vars.assignment_id
+    )
     course = db(db.courses.id == auth.user.course_id).select(**SELECT_CACHE).first()
     assignment_id = request.vars.assignment_id
     if not assignment_id or assignment_id.isdigit() == False:  # noqa: E712
         logger.error("BAD ASSIGNMENT = %s assignment %s", course, assignment_id)
         session.flash = "Bad Assignment ID"
         return redirect(URL("assignments", "chooseAssignment"))
-
+    course_attrs = getCourseAttributesDict(course.id)
     logger.debug("COURSE = %s assignment %s", course, assignment_id)
     # Web2Py documentation for querying databases is really helpful here.
     assignment = (
@@ -908,6 +910,8 @@ def doAssignment():
         is_submit=grade.is_submit,
         is_graded=is_graded,
         enforce_pastdue=enforce_pastdue,
+        ptx_js_version=course_attrs.get("ptx_js_version", "0.2"),
+        webwork_js_version=course_attrs.get("webwork_js_version", "2.17"),
     )
 
 
@@ -918,6 +922,7 @@ def chooseAssignment():
         logger.error(f"Missing Access Token: {auth.user.username} adding one Now")
         create_rs_token()
 
+    redirect("/assignment/student/chooseAssignment")
     timezoneoffset = session.timezoneoffset if "timezoneoffset" in session else None
     if not timezoneoffset and "RS_info" in request.cookies:
         parsed_js = json.loads(request.cookies["RS_info"].value)

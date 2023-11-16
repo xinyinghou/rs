@@ -33,7 +33,7 @@ from sqlalchemy import create_engine
 
 # Local App
 # ---------
-from rsptx.forms import LibraryForm, DatashopForm
+from rsptx.forms import LibraryForm, DatashopForm, DatashopInstForm
 from rsptx.author_server_api.worker import (
     build_runestone_book,
     clone_runestone_book,
@@ -50,6 +50,7 @@ from rsptx.db.crud import (
     fetch_instructor_courses,
     fetch_books_by_author,
     fetch_course,
+    fetch_course_by_id,
     fetch_library_book,
     update_library_book,
     create_course,
@@ -122,6 +123,7 @@ auth_manager.useRequest(app)
 async def home(request: Request, user=Depends(auth_manager)):
     print(f"{request.state.user} OR user = {user}")
 
+    course = await fetch_course(user.course_name)
     if user:
         if not await verify_author(user):
             return RedirectResponse(url="/notauthorized")
@@ -136,7 +138,12 @@ async def home(request: Request, user=Depends(auth_manager)):
 
     return templates.TemplateResponse(
         "author/home.html",
-        context={"request": request, "name": name, "book_list": book_list},
+        context={
+            "request": request,
+            "name": name,
+            "book_list": book_list,
+            "course": course,
+        },
     )
 
 
@@ -144,7 +151,7 @@ async def home(request: Request, user=Depends(auth_manager)):
 async def logfiles(request: Request, user=Depends(auth_manager)):
     if await is_instructor(request):
 
-        lf_path = pathlib.Path("logfiles", user.username)
+        lf_path = pathlib.Path("downloads", "logfiles", user.username)
         logger.debug(f"WORKING DIR = {lf_path}")
         if lf_path.exists():
             ready_files = {
@@ -157,13 +164,14 @@ async def logfiles(request: Request, user=Depends(auth_manager)):
             }
         else:
             ready_files = []
+        course = await fetch_course(user.course_name)
         logger.debug(f"{ready_files=}")
         return templates.TemplateResponse(
             "author/logfiles.html",
             context=dict(
                 request=request,
                 ready_files=ready_files,
-                course_name=user.course_name,
+                course=course,
                 username=user.username,
             ),
         )
@@ -173,13 +181,13 @@ async def logfiles(request: Request, user=Depends(auth_manager)):
 
 @app.get("/author/getfile/{fname}")
 async def getfile(request: Request, fname: str, user=Depends(auth_manager)):
-    file_path = pathlib.Path("logfiles", user.username, fname)
+    file_path = pathlib.Path("downloads", "logfiles", user.username, fname)
     return FileResponse(file_path)
 
 
 @app.get("/author/getdatashop/{fname}")
 async def _getdshop(request: Request, fname: str, user=Depends(auth_manager)):
-    file_path = pathlib.Path("datashop", user.username, fname)
+    file_path = pathlib.Path("downloads", "datashop", user.username, fname)
     return FileResponse(file_path)
 
 
@@ -230,7 +238,9 @@ async def dump_assignments(request: Request, course: str, user=Depends(auth_mana
     """,
         eng,
     )
-    all_aq_pairs.to_csv(f"{course}_assignments.csv", index=False)
+    all_aq_pairs.to_csv(
+        f"downloads/logfiles/{user.username}/{course}_assignments.csv", index=False
+    )
 
     return JSONResponse({"detail": "success"})
 
@@ -244,6 +254,7 @@ async def impact(request: Request, book: str, user=Depends(auth_manager)):
     else:
         return RedirectResponse(url="/notauthorized")
 
+    course = await fetch_course(user.course_name)
     info = await fetch_library_book(book)
     resGraph = get_enrollment_graph(book)
     courseGraph = get_course_graph(book)
@@ -257,6 +268,7 @@ async def impact(request: Request, book: str, user=Depends(auth_manager)):
             "chapterData": chapterHM,
             "courseData": courseGraph,
             "title": info.title,
+            "course": course,
         },
     )
 
@@ -302,9 +314,10 @@ def get_model_dict(model):
 
 @app.get("/author/editlibrary/{book}")
 @app.post("/author/editlibrary/{book}")
-async def editlib(request: Request, book: str):
+async def editlib(request: Request, book: str, user=Depends(auth_manager)):
     # Get the book and populate the form with current data
     book_data = await fetch_library_book(book)
+    course = await fetch_course(user.course_name)
 
     # this will either create the form with data from the submitted form or
     # from the kwargs passed if there is not form data.  So we can prepopulate
@@ -317,7 +330,8 @@ async def editlib(request: Request, book: str):
         await update_library_book(book_data.id, form.data)
         return RedirectResponse(url="/author/", status_code=status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(
-        "author/editlibrary.html", context=dict(request=request, form=form, book=book)
+        "author/editlibrary.html",
+        context=dict(request=request, form=form, book=book, course=course),
     )
 
 
@@ -325,16 +339,22 @@ async def editlib(request: Request, book: str):
 @app.post("/author/anonymize_data/{book}")
 async def anondata(request: Request, book: str, user=Depends(auth_manager)):
     # Get the book and populate the form with current data
-    if not await verify_author(user):
-        return RedirectResponse(url="/notauthorized")
+    is_author = await verify_author(user)
+    is_inst = await is_instructor(request)
+
+    if not (is_author or is_inst):
+        return RedirectResponse(url="/author/notauthorized")
 
     # Create a list of courses taught by this user to validate courses they
     # can dump directly.
+    course = await fetch_course(user.course_name)
     courses = await fetch_instructor_courses(user.id)
-    class_list = [c.id for c in courses]
-    class_list = [str(x) for x in class_list]
+    class_list = []
+    for c in courses:
+        the_course = await fetch_course_by_id(c.course)
+        class_list.append(the_course.course_name)
 
-    lf_path = pathlib.Path("datashop", user.username)
+    lf_path = pathlib.Path("downloads", "datashop", user.username)
     logger.debug(f"WORKING DIR = {lf_path}")
     if lf_path.exists():
         ready_files = [x for x in lf_path.iterdir()]
@@ -344,13 +364,22 @@ async def anondata(request: Request, book: str, user=Depends(auth_manager)):
     # this will either create the form with data from the submitted form or
     # from the kwargs passed if there is not form data.  So we can prepopulate
     #
-    form = await DatashopForm.from_formdata(
-        request, basecourse=book, clist=",".join(class_list)
-    )
+    if is_author:
+        form = await DatashopForm.from_formdata(
+            request, basecourse=book, clist=",".join(class_list)
+        )
+
+    elif is_inst:
+        form = await DatashopInstForm.from_formdata(
+            request,
+            basecourse=book,
+            clist=",".join(class_list),
+            specific_course=course.course_name,
+        )
+        form.specific_course.choices = class_list
     if request.method == "POST" and await form.validate():
         print(f"Got {form.authors.data}")
         print(f"FORM data = {form.data}")
-
         # return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(
         "author/anonymize_data.html",
@@ -360,6 +389,9 @@ async def anondata(request: Request, book: str, user=Depends(auth_manager)):
             book=book,
             ready_files=ready_files,
             kind="datashop",
+            course=course,
+            is_author=is_author,
+            is_instructor=is_inst,
         ),
     )
 
@@ -458,7 +490,7 @@ async def dump_code(payload=Body(...), user=Depends(auth_manager)):
 @app.get("/author/dlsAvailable/{kind}", status_code=201)
 async def check_downloads(request: Request, kind: str, user=Depends(auth_manager)):
     # kind will be either logfiles or datashop
-    lf_path = pathlib.Path("logfiles", user.username)
+    lf_path = pathlib.Path("downloads", "logfiles", user.username)
     logger.debug(f"WORKING DIR = {lf_path}")
     if lf_path.exists():
         ready_files = [x.name for x in lf_path.iterdir()]

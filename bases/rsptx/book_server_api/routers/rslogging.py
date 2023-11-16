@@ -74,6 +74,7 @@ from rsptx.validation.schemas import (
     TimezoneRequest,
 )
 from rsptx.auth.session import auth_manager
+from rsptx.practice.core import potentially_change_flashcard
 
 # Routing
 # =======
@@ -186,7 +187,11 @@ def set_tz_offset(
     :return: JSONResponse
     """
     if RS_info:
-        values = json.loads(RS_info)
+        try:
+            values = json.loads(RS_info)
+        except json.decoder.JSONDecodeError:
+            values = {}
+            rslogger.error(f"Error decoding RS_info cookie: {RS_info}")
     else:
         values = {}
     values["tz_offset"] = tzreq.timezoneoffset
@@ -326,6 +331,7 @@ async def updatelastpage(
         # if it is a PreTeXt book then the subchapter is a unique id with the whole book
         # we can look it up from the chapter and subchapter tables.
         if request_data.is_ptx_book:
+            rslogger.debug(f"PreTeXt book {request_data.last_page_url}")
             course_row = await fetch_course(user.course_name)
             chapter = await fetch_chapter_for_subchapter(
                 subchapter, course_row.base_course
@@ -333,7 +339,7 @@ async def updatelastpage(
             rslogger.debug(
                 f"Got Chapter {chapter} for {subchapter} in {course_row.base_course}"
             )
-            lpd["last_page_chapter"] = chapter
+            lpd["last_page_chapter"] = chapter or ""
         else:
             lpd["last_page_chapter"] = parts[-2]
 
@@ -351,8 +357,7 @@ async def updatelastpage(
         rslogger.debug("Not Authorized for update last page")
         raise HTTPException(401)
 
-    # If practice is self paced then when a student marks a page as complete
-    # we need to add flashcards.
+    # If practice is self paced, we may need to add or delete a flashcard for the subchapter as topic.
 
     practice_settings = await fetch_course_practice(user.course_name)
     if RS_info:
@@ -362,49 +367,50 @@ async def updatelastpage(
     else:
         tz_offset = 0
 
-    if practice_settings and practice_settings.flashcard_creation_method == 0:
-        await add_flashcard(request_data, lpd, user, tz_offset)
+    if practice_settings:
+        if request_data.markingComplete:
+            if practice_settings.flashcard_creation_method == 0:
+                # self-paced flashcard creation based on marking a page as complete
+                rslogger.debug(
+                    f"self-paced flashcard creation based on marking a page as complete\n{request_data=}"
+                )
+                course = await fetch_course(user.course_name)
+                await potentially_change_flashcard(
+                    course.base_course,
+                    lpd["last_page_chapter"],
+                    lpd["last_page_subchapter"],
+                    user,
+                    tz_offset,
+                    add=True,
+                )
 
-    return make_json_response(detail="Success")
-
-
-async def add_flashcard(
-    request_data: LastPageDataIncoming,
-    lpd: dict,
-    user: AuthUserValidator,
-    tz_offset: float,
-) -> None:
-
-    rslogger.debug("Updating Practice Questions")
-    # Since each authenticated user has only one active course, we retrieve the course this way.
-    course = await fetch_course(user.course_name)
-
-    # We only retrieve questions to be used in flashcards if they are marked for practice purpose.
-    questions = await fetch_qualified_questions(
-        course.base_course, lpd["last_page_chapter"], lpd["last_page_subchapter"]
-    )
-    if len(questions) > 0:
-        now = datetime.utcnow()
-        now_local = now - timedelta(hours=tz_offset)
-        existing_flashcards = await fetch_one_user_topic_practice(
-            user,
-            lpd["last_page_chapter"],
-            lpd["last_page_subchapter"],
-            questions[0].name,
-        )
-        # There is at least one qualified question in this subchapter, so insert a flashcard for the subchapter.
-        if request_data.completion_flag == 1 and existing_flashcards is None:
-            await create_user_topic_practice(
-                user,
+        elif request_data.markingIncomplete:
+            if practice_settings.flashcard_creation_method == 0:
+                course = await fetch_course(user.course_name)
+                rslogger.debug(
+                    f"self-paced flashcard deletion based on marking a page as incomplete\n{request_data=}"
+                )
+                await potentially_change_flashcard(
+                    course.base_course,
+                    lpd["last_page_chapter"],
+                    lpd["last_page_subchapter"],
+                    user,
+                    tz_offset,
+                    remove=True,
+                )
+        elif request_data.pageLoad and practice_settings.flashcard_creation_method == 3:
+            # self-paced flashcard creation based on loading a page
+            course = await fetch_course(user.course_name)
+            await potentially_change_flashcard(
+                course.base_course,
                 lpd["last_page_chapter"],
                 lpd["last_page_subchapter"],
-                questions[0].name,
-                now_local,
-                now,
+                user,
                 tz_offset,
+                add=True,
             )
-        if request_data.completion_flag == 0 and existing_flashcards is not None:
-            await delete_one_user_topic_practice(existing_flashcards.id)
+
+    return make_json_response(detail="Success")
 
 
 # _getCompletionStatus
@@ -421,6 +427,12 @@ async def getCompletionStatus(request: Request, lastPageUrl: str, isPtxBook: boo
             )
         else:
             last_page_chapter = lastPageUrl.split("/")[-2]
+        if last_page_chapter is None:
+            rslogger.error(f"Unparseable page: {lastPageUrl}")
+            return make_json_response(
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Unparseable page: {lastPageUrl}",
+            )
         result = await fetch_user_sub_chapter_progress(
             request.state.user, last_page_chapter, last_page_subchapter
         )

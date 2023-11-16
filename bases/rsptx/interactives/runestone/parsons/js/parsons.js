@@ -491,7 +491,10 @@ export default class Parsons extends RunestoneBase {
         var replaceElement;
         if (isHidden) {
             replaceElement = document.createElement("div");
+            replaceElement.classList.add("runestone-sphinx");
             $(this.outerDiv).replaceWith(replaceElement);
+            // add runestone-sphinx class so the css rules for parsons will apply
+            $(this.outerDiv).addClass("runestone-sphinx");
             document.body.appendChild(this.outerDiv);
         }
         if (this.options.prettifyLanguage !== "") {
@@ -535,12 +538,20 @@ export default class Parsons extends RunestoneBase {
             areaWidth = Math.max(areaWidth, item.outerWidth(true));
             item.width(areaWidth - 22);
             var addition = 3.8;
-            if (item.outerHeight(true) != 38)
-                addition = (3.1 * (item.outerHeight(true) - 38)) / 21;
-            areaHeight += item.outerHeight(true) + height_add * addition;
+            let outerH = item.outerHeight(true);
+            if (outerH != 38) {
+                addition = (3.1 * (outerH - 38)) / 21;
+            }
+            areaHeight += outerH + height_add * addition;
         }.bind(this);
         for (i = 0; i < blocks.length; i++) {
             await maxFunction($(blocks[i].view));
+        }
+        // sometimes we have a problem with hidden elements not getting the right height
+        // just make sure that we have a reasonable height. There must be a better way to
+        // do this.
+        if (this.isTimed && areaHeight < blocks.length * 38) {
+            areaHeight = blocks.length * 50;
         }
         this.areaWidth = areaWidth;
         if (this.options.numbered != undefined) {
@@ -722,6 +733,13 @@ export default class Parsons extends RunestoneBase {
         // Start the interface
         if (this.needsReinitialization !== true) {
             this.initializeInteractivity();
+            // This is a bit of a hack to get the blocks to be in the right place
+            // when the page loads.  It is needed because the blocks are not
+            // visible when the page loads, so the size is off.  This forces
+            // a realignment.
+            if (this.isTimed && !this.assessmentTaken) {
+                this.resetView();
+            }
         }
     }
     // Return what is stored in local storage
@@ -2204,7 +2222,7 @@ export default class Parsons extends RunestoneBase {
                 this.combineBlocks();
                 this.logMove("combinedBlocks");
             } else {
-            /*else if(this.numberOfBlocks(true) > 3 && distractorToRemove !==  undefined) {
+                /*else if(this.numberOfBlocks(true) > 3 && distractorToRemove !==  undefined) {
                            alert("Will remove an incorrect code block from source area");
                            this.removeDistractor(distractorToRemove);
                            this.logMove("removedDistractor-" + distractorToRemove.hash());
@@ -2725,8 +2743,10 @@ export default class Parsons extends RunestoneBase {
         }
         delete this.blocks;
         this.blockIndex = 0;
-        for (let i = 0; i < this.pairedDivs.length; i++) {
-            $(this.pairedDivs[i]).detach();
+        if (this.pairedDivs) {
+            for (let i = 0; i < this.pairedDivs.length; i++) {
+                $(this.pairedDivs[i]).detach();
+            }
         }
         $(this.sourceArea).attr("style", "");
         $(this.answerArea).removeClass();

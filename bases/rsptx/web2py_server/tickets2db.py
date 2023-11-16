@@ -71,19 +71,29 @@ while 1:
         except:
             path = ""
             query_string = ""
-        newtb = traceback.insert().values(
-            traceback=traceback_str,
-            timestamp=datetime.datetime.utcnow(),
-            err_message=ticket_data["output"],
-            hostname="web2py",
-            path=path,
-            query_string=query_string,
-            hash=hashlib.md5(traceback_str.encode("utf8")).hexdigest(),
-        )
-        sess.execute(newtb)
-        sess.commit()
+        try:
+            newtb = traceback.insert().values(
+                traceback=traceback_str,
+                timestamp=datetime.datetime.utcnow(),
+                err_message=ticket_data["output"],
+                hostname="web2py",
+                path=path,
+                query_string=query_string,
+                hash=hashlib.md5(traceback_str.encode("utf8")).hexdigest(),
+            )
+            sess.execute(newtb)
+        except Exception as e:
+            print(f"Error processing {file}")
+            print(f"could not insert traceback {e}")
+        try:
+            sess.commit()
+        except:
+            print("could not commit traceback")
+            continue
         try:
             shutil.move(filename, tickets_path)
+            # change the permissions of filename to wxr-xr-x
+            os.chmod(os.path.join(tickets_path, filename), 0o766)
         except:
             print("could not move", filename, "to", tickets_path)
 

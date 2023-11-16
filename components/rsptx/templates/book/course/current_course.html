@@ -1,0 +1,98 @@
+{% extends "_base.html" %}
+{% block title %}
+My Course
+{% endblock %}
+{% block css %}
+
+<link href="/staticAssets/index.css" rel="stylesheet" media="screen" />
+<link href="/staticAssets/course.css" rel="stylesheet" media="screen" />
+{% endblock %}
+
+{% block backTo %}
+textbook
+{% endblock %}
+
+{% block navitems %}
+{% if course_list|length > 1 %}
+<li class="nav-item">
+  <span class="nav-link">
+    Change course:
+    <select id="course_chooser" onchange="change_course()">
+      {% for c in course_list: %}
+      <option {% if c.course_name == course.course_name %}selected{% endif %} value="{{c.course_name}}">
+        {{c.course_name}}
+      </option>
+      {% endfor %}
+    </select>
+  </span>
+</li>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="course_page">
+  <div>
+    <h2>{{course.course_name}}</h2>
+    {% if course_description %}
+    <p>{{course_description}}</p>
+    {% endif %}
+    <p><b>School:</b> {{institution}}</p>
+    <p><b>Student:</b> {{user.first_name}} {{user.last_name}} (<a href="/runestone/default/user/logout">Not you?</a>)</p>
+    <h2>Instructors</h2>
+    <ul>
+      {% for instructor in instructor_list: %}
+      <li>
+        {{instructor.first_name}} {{instructor.last_name}} (<a href="mailto:{{instructor.email}}">{{instructor.email}}</a>)
+      </li>
+      {% endfor %}
+    </ul>
+</div>
+<div>
+<h2>Textbooks</h2>
+<ul>
+    {% for book in book_list: %}
+    <li><a href="/ns/books/published/{{course.course_name}}/{{book.main_page}}">{{book.title}}</a>
+    {% if lastPageUrl %}
+     (<a href="{{lastPageUrl}}">Last Page</a>)
+    {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+
+</div>
+<div class="assignment_chooser">
+  {% include 'assignment/student/assignment_block.html'%}
+</div>
+
+{% if is_instructor %}
+<div class="instructor_menu">
+<h2>Instructor Links</h2>
+<div class="nav flex-column" id="v-pills-tab"  aria-orientation="vertical">
+  <a class="nav-link" id="v-pills-home-tab"  href="/runestone/dashboard"  aria-controls="v-pills-home" aria-selected="true">Student Progress</a>
+  <a class="nav-link" id="v-pills-gradebook-tab"  href="/runestone/dashboard/grades"  aria-controls="v-pills-home" aria-selected="true">Gradebook</a>  
+  <a class="nav-link" id="v-pills-profile-tab"  href="/runestone/admin/admin"  aria-controls="v-pills-profile" aria-selected="false">Class Administration</a>  
+  <a class="nav-link" id="v-pills-grading-tab" href="/runestone/admin/grading"  aria-controls="v-pills-profile" aria-selected="false">Grading</a>
+  <a class="nav-link" id="v-pills-messages-tab"  href="/runestone/admin/assignments"  aria-controls="v-pills-messages" aria-selected="false">Manage Assignments</a>
+  <a class="nav-link" id="v-pills-settings-tab" href="/runestone/admin/practice" aria-controls="v-pills-settings" aria-selected="false">Manage Practice</a>
+</div>
+
+</div>
+{% endif %}
+
+<script>
+async function change_course(course_name) {
+    let new_course = document.getElementById("course_chooser").value
+    let request = new Request(`/ns/course/changeCourse/${new_course}`, {
+        method: "GET",
+    });
+    await fetch(request);
+    window.location.href = "/ns/course/index"
+}
+</script>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="/staticAssets/assignment/student.js"></script>
+{% endblock %}

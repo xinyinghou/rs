@@ -1616,6 +1616,10 @@ async function updateReading(
         alert("No assignment selected");
         return;
     }
+    if (document.forms["assignment-form"].assign_is_peer.checked) {
+        alert("Peer assignments cannot have readings");
+        return;
+    }
     let res = await $.ajax({
         url: "add__or_update_assignment_question",
         data: {
@@ -1959,8 +1963,8 @@ async function renderRunestoneComponent(componentSrc, whereDiv, moreOpts) {
     );
     jQuery(`#${whereDiv}`).html(componentSrc);
 
-    if (typeof edList === "undefined") {
-        edList = {};
+    if (typeof window.componentMap === "undefined") {
+        window.componentMap = {};
     }
 
     let componentKind = $($(`#${whereDiv} [data-component]`)[0]).data("component");
@@ -1992,7 +1996,9 @@ async function renderRunestoneComponent(componentSrc, whereDiv, moreOpts) {
     }
 
     if (typeof component_factory === "undefined") {
-        alert("Error:  Missing the component factory!  Clear your browser cache.");
+        alert(
+            "Error:  Missing the component factory!  probably a webpack version mismatch"
+        );
     } else {
         if (!component_factory[componentKind] && !jQuery(`#${whereDiv}`).html()) {
             jQuery(`#${whereDiv}`).html(
@@ -2001,11 +2007,12 @@ async function renderRunestoneComponent(componentSrc, whereDiv, moreOpts) {
         } else {
             try {
                 let res = component_factory[componentKind](opt);
+                res.multiGrader = moreOpts.multiGrader;
                 if (componentKind === "activecode") {
                     if (moreOpts.multiGrader) {
-                        edList[`${moreOpts.gradingContainer} ${res.divid}`] = res;
+                        window.componentMap[`${moreOpts.gradingContainer} ${res.divid}`] = res;
                     } else {
-                        edList[res.divid] = res;
+                        window.componentMap[res.divid] = res;
                     }
                 }
             } catch (e) {
@@ -2396,7 +2403,8 @@ function updateCourse(widget, attr) {
     if (
         attr == "downloads_enabled" ||
         attr == "allow_pairs" ||
-        attr == "enable_compare_me"
+        attr == "enable_compare_me" ||
+        attr == "show_points"
     ) {
         data[attr] = widget.checked;
     }

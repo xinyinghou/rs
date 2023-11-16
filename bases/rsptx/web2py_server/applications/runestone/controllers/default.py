@@ -191,7 +191,7 @@ def index():
 
     course = (
         db(db.courses.id == auth.user.course_id)
-        .select(db.courses.course_name, db.courses.base_course)
+        .select(db.courses.course_name, db.courses.base_course, db.courses.is_supporter)
         .first()
     )
 
@@ -217,14 +217,17 @@ def index():
             db_check.append(row)
         if not db_check:
             # The user hasn't been enrolled in this course yet. Check the price for the course.
+            db.user_courses.insert(user_id=auth.user.id, course_id=auth.user.course_id)
+            db(db.auth_user.id == auth.user.id).update(active="T")
             price = _course_price(auth.user.course_id)
             # If the price is non-zero, then require a payment. Otherwise, ask for a donation.
             if price > 0:
                 redirect(URL("payment"))
+            elif course.is_supporter:
+                # If the course is a supporter course, then skip the  donation page
+                redirect("/ns/course/index")
             else:
                 session.request_donation = True
-            db.user_courses.insert(user_id=auth.user.id, course_id=auth.user.course_id)
-            db(db.auth_user.id == auth.user.id).update(active="T")
         try:
             logger.debug(
                 f"INDEX - checking for progress table for {course.base_course}"
@@ -284,8 +287,10 @@ def index():
         num_courses = db(db.user_courses.user_id == auth.user.id).count()
         # Don't redirect when there's only one course for testing. Since the static files don't exist, this produces a server error ``invalid file``.
         if num_courses == 1 and os.environ.get("WEB2PY_CONFIG") != "test":
+            redirect("/ns/course/index")
+        elif course.course_name == course.base_course:
             redirect(get_course_url("index.html"))
-        redirect(URL(c="default", f="courses"))
+        redirect("/ns/course/index")
 
 
 def error():
@@ -381,8 +386,9 @@ def coursechooser():
                 """,
                     (auth.user.id, auth.user.course_name),
                 )
-
-        redirect(get_course_url("index.html"))
+        if request.args[0] == res.base_course:
+            redirect(get_course_url("index.html"))
+        redirect("/ns/course/index")
     else:
         redirect(
             "/%s/default/user/profile?_next=/%s/default/index"

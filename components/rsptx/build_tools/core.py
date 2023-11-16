@@ -12,7 +12,7 @@
 #
 # Standard library
 # ----------------
-
+import pdb
 import datetime
 import os
 import re
@@ -30,13 +30,14 @@ from sqlalchemy.exc import IntegrityError
 
 # import xml.etree.ElementTree as ET
 
-from sqlalchemy import create_engine, Table, MetaData, and_
+from sqlalchemy import create_engine, Table, MetaData, and_, update
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import text
 
 # todo: use our logger
 from rsptx.logging import rslogger
 from runestone.server import get_dburl
+from rsptx.db.models import Library, LibraryValidator
 
 rslogger.setLevel("WARNING")
 
@@ -306,22 +307,35 @@ def update_library(
 
     click.echo(f"{title} : {subtitle}")
 
+    Session = sessionmaker()
+    eng.connect()
+    Session.configure(bind=eng)
+    sess = Session()
+
     try:
         res = eng.execute(f"select * from library where basecourse = '{course}'")
     except:
         click.echo("Missing library table?  You may need to run an alembic migration.")
         return False
-
+    # using the Model rather than raw sql ensures that everything is properly escaped
     build_time = datetime.datetime.utcnow()
     click.echo(f"BUILD time is {build_time}")
     if res.rowcount == 0:
-        eng.execute(
-            f"""insert into library
-        (title, subtitle, description, shelf_section, basecourse,
-            build_system, main_page, last_build, for_classes, is_visible )
-        values('{title}', '{subtitle}', '{description}', '{shelf}', '{course}',
-        '{build_system}', '{main_page}', '{build_time}', 'F', 'T') """
+        l = LibraryValidator(
+            title=title,
+            subtitle=subtitle,
+            description=description,
+            shelf_section=shelf,
+            basecourse=course,
+            build_system=build_system,
+            main_page=main_page,
+            last_build=build_time,
+            for_classes="F",
+            is_visible="T",
         )
+        new_book = Library(**l.dict())
+        with Session.begin() as s:
+            s.add(new_book)
     else:
         # If any values are missing or null do not override them here.
         #
@@ -335,18 +349,21 @@ def update_library(
         if not shelf:
             shelf = res.shelf_section or "Misc"
         click.echo("Updating library")
-        eng.execute(
-            f"""update library set
-            title = '{title}',
-            subtitle = '{subtitle}',
-            description = '{description}',
-            shelf_section = '{shelf}',
-            build_system = '{build_system}',
-            main_page = '{main_page}',
-            last_build = '{build_time}'
-        where basecourse = '{course}'
-        """
+        stmt = (
+            update(Library)
+            .where(Library.basecourse == course)
+            .values(
+                title=title,
+                subtitle=subtitle,
+                description=description,
+                shelf_section=shelf,
+                build_system=build_system,
+                main_page=main_page,
+                last_build=build_time,
+            )
         )
+        with Session.begin() as session:
+            session.execute(stmt)
     return True
 
 
@@ -454,6 +471,8 @@ def manifest_data_to_db(course_name, manifest_path):
     )
 
     rslogger.info("Populating the database with Chapter information")
+    ext_img_patt = re.compile(r"""src="external""")
+    gen_img_patt = re.compile(r"""src="generated""")
 
     tree = ET.parse(manifest_path)
     root = tree.getroot()
@@ -593,6 +612,24 @@ def manifest_data_to_db(course_name, manifest_path):
                     practice = "T"
                 if el and "practice" in el.attrib:
                     practice = "T"
+                autograde = ""
+                if "====" in dbtext:
+                    extraCode = dbtext.partition("====")[2]  # text after ====
+                    # keywords for sql, py, cpp, java respectively
+                    for utKeyword in ["assert", "unittest", "TEST_CASE", "junit"]:
+                        if utKeyword in extraCode:
+                            autograde = "unittest"
+                            break
+                # chapter and subchapter are elements
+                # fix image urls in dbtext to be relative to the book
+                dbtext = ext_img_patt.sub(
+                    f"""src="/ns/books/published/{course_name}/external""", dbtext
+                )
+                dbtext = gen_img_patt.sub(
+                    f"""src="/ns/books/published/{course_name}/generated""", dbtext
+                )
+                sbc = subchapter.find("./id").text
+                cpt = chapter.find("./id").text
                 valudict = dict(
                     base_course=course_name,
                     name=idchild,
@@ -600,9 +637,11 @@ def manifest_data_to_db(course_name, manifest_path):
                     is_private="F",
                     question_type=qtype,
                     htmlsrc=dbtext,
+                    autograde=autograde,
                     from_source="T",
-                    subchapter=subchapter.find("./id").text,
-                    chapter=chapter.find("./id").text,
+                    chapter=cpt,
+                    subchapter=sbc,
+                    topic=f"{cpt}/{sbc}",
                     qnumber=qlabel,
                     optional=optional,
                     practice=practice,
@@ -631,6 +670,8 @@ def manifest_data_to_db(course_name, manifest_path):
                 if qtype == "datafile":
                     if "data-isimage" in el.attrib:
                         file_contents = el.attrib["src"]
+                        if file_contents.startswith("data:"):
+                            file_contents = file_contents.split("base64,")[1]
                     else:
                         file_contents = el.text
                     if "data-filename" in el.attrib:
@@ -663,15 +704,40 @@ def manifest_data_to_db(course_name, manifest_path):
 
     latex = root.find("./latex-macros")
     rslogger.info("Setting attributes for this base course")
+    ww_meta = root.find("./webwork-version")
+    if ww_meta is not None:
+        ww_major = ww_meta.attrib["major"]
+        ww_minor = ww_meta.attrib["minor"]
+    else:
+        ww_major = None
+        ww_minor = None
 
     res = sess.execute(
         f"select * from courses where course_name ='{course_name}'"
     ).first()
     cid = res["id"]
 
-    # Right now these are the only two attributes we store in the table, if this
-    # changes we will need to be more careful about what we delete
-    sess.execute(course_attributes.delete().where(course_attributes.c.course_id == cid))
+    # Only delete latex_macros and markup_system if they are present. Leave other attributes alone.
+    to_delete = ["latex_macros", "markup_system"]
+    if ww_major:
+        to_delete.append("webwork_js_version")
+        to_delete.append("ptx_js_version")
+    sess.execute(
+        course_attributes.delete().where(
+            and_(
+                course_attributes.c.course_id == cid,
+                course_attributes.c.attr.in_(to_delete),
+            )
+        )
+    )
+    if ww_major:
+        ins = course_attributes.insert().values(
+            course_id=cid, attr="webwork_js_version", value=f"{ww_major}.{ww_minor}"
+        )
+        ins = course_attributes.insert().values(
+            course_id=cid, attr="ptx_js_version", value="0.3"
+        )
+
     ins = course_attributes.insert().values(
         course_id=cid, attr="latex_macros", value=latex.text
     )

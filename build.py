@@ -13,6 +13,7 @@ import sys
 from shutil import copyfile
 import yaml
 import toml
+import pdb
 
 # use python-dotenv >= 0.21.0
 from dotenv import load_dotenv
@@ -43,12 +44,42 @@ if "--help" in sys.argv:
     console.print(
         """Usage: build.py [--verbose] [--help] [--all] [--push]
         --all build all containers, including author and worker
-        --push push all containers to docker hub
-        --one <container> build just one container, e.g. --one author
+        --push push all containers to a container registry
+        --one <service> build just one container, e.g. --one author
         --restart restart the container(s) after building
+
+        If something in the build does not work or you have questions about setup or environment
+        variables or installation, please check out our developer documentation.  
+        https://runestone-monorepo.readthedocs.io/en/latest/developing.html
         """
     )
     exit(0)
+
+# read the version from pyproject.toml
+with open("pyproject.toml") as f:
+    pyproject = toml.load(f)
+    version = pyproject["tool"]["poetry"]["version"]
+
+if "--push" in sys.argv:
+    try:
+        with open(".last_version") as f:
+            last_version = f.read().strip()
+    except FileNotFoundError:
+        with open(".last_version", "w") as f:
+            f.write(version)
+            last_version = version
+
+    if last_version == version:
+        update_version = input(
+            f"Do you want to update the version number ({version}) in pyproject.toml?"
+        )
+        if update_version.lower() in ["y", "yes"]:
+            new_version = input("Enter the new version number: ")
+            subprocess.run(
+                ["poetry", "version", new_version], capture_output=True, check=True
+            )
+            console.out("Version updated, don't forget to commit the change.")
+            version = new_version
 
 res = subprocess.run("docker info", shell=True, capture_output=True)
 if res.returncode != 0:
@@ -121,10 +152,14 @@ if finish:
     )
     exit(1)
 
-ym = yaml.safe_load(open("docker-compose.yml"))
+ym = yaml.load(open("docker-compose.yml"), yaml.FullLoader)
 if "--all" in sys.argv or "--one" in sys.argv:
-    am = yaml.safe_load(open("author.compose.yml"))
-    ym["services"].update(am["services"])
+    am = yaml.load(open("author.compose.yml"), yaml.FullLoader)
+    # .update replaces the key from the first dict with the key from the second dict
+    # since nginx is in both files we will lose most of the nginx stuff from the docker-compose.yml
+    # file unless we update the other way around.
+    am["services"].update(ym["services"])
+    ym = am
 
 # remove the redis service from the list since we don't customize it
 del ym["services"]["redis"]
@@ -170,12 +205,41 @@ progress_wheel.counter = 0
 
 def generate_wheel_table(status: dict) -> Table:
     table = Table(title="Build Python Wheels")
-    table.add_column("Service", justify="right", style="grey62", no_wrap=True)
+    table.add_column("Wheel", justify="right", style="grey62", no_wrap=True)
     table.add_column("Built", style="magenta")
     for service in status:
         table.add_row(f"[black]{service}[/black]", status[service])
     return table
 
+
+if "--install" in sys.argv:
+    for proj in ym["services"].keys():
+        if (
+            "build" not in ym["services"][proj]
+            or ym["services"][proj]["build"]["context"] == "./"
+        ):
+            continue
+        projdir = ym["services"][proj]["build"]["context"]
+        if os.path.isdir(projdir):
+            with pushd(projdir):
+                if os.path.isfile("pyproject.toml"):
+                    console.print(f"Installing {proj}")
+                    res = subprocess.run(
+                        ["poetry", "install", "--with=dev"], capture_output=True
+                    )
+                    if res.returncode == 0:
+                        console.print(f"Installed {proj}")
+                    else:
+                        console.print(f"Failed to install {proj}")
+                        if VERBOSE:
+                            console.print(res.stderr.decode(stdout_err_encoding))
+                        else:
+                            with open("build.log", "a") as f:
+                                f.write(res.stderr.decode(stdout_err_encoding))
+                else:
+                    console.print(f"Skipping {proj} as it has no pyproject.toml")
+                    continue
+    sys.exit(0)
 
 # Build wheels
 # ------------
@@ -183,7 +247,10 @@ status = {}
 with Live(generate_wheel_table(status), refresh_per_second=4) as lt:
     status = {}
     for proj in ym["services"].keys():
-        if "build" not in ym["services"][proj]:
+        if (
+            "build" not in ym["services"][proj]
+            or ym["services"][proj]["build"]["context"] == "./"
+        ):
             status[proj] = "[blue]Skipped[/blue]"
             lt.update(generate_wheel_table(status))
             continue
@@ -234,6 +301,7 @@ with Live(generate_table(status), refresh_per_second=4) as lt:
     for service in ym["services"]:
         status[service] = "[grey62]building...[/grey62]"
         lt.update(generate_table(status))
+        # to use a different wheel without editing Dockerfile use --build-arg wheel="wheelname"
         command_list = [
             "docker",
             "compose",
@@ -266,10 +334,6 @@ with Live(generate_table(status), refresh_per_second=4) as lt:
             )
             exit(1)
 
-# read the version from pyproject.toml
-with open("pyproject.toml") as f:
-    pyproject = toml.load(f)
-    version = pyproject["tool"]["poetry"]["version"]
 
 # Now if the --push flag was given, push the images to Docker Hub
 # For this next part to work you need to be logged in to a docker hub account or the
@@ -288,8 +352,10 @@ if "--push" in sys.argv:
             # and we want to push both the latest and the version tagged images
             # but it is low cost as we only push the layers that are not already
             # on the server.
-            ret2 = subprocess.run(["docker", "push", image], check=True)
-            ret3 = subprocess.run(["docker", "push", f"{image}:v{version}"], check=True)
+            ret2 = subprocess.run(["docker", "push", "--quiet", image], check=True)
+            ret3 = subprocess.run(
+                ["docker", "push", "--quiet", f"{image}:v{version}"], check=True
+            )
 
             if ret1.returncode + ret2.returncode + ret3.returncode == 0:
                 console.print(f"{image} pushed successfully")
@@ -299,6 +365,8 @@ if "--push" in sys.argv:
                 exit(1)
 
     console.print("Docker images pushed successfully", style="green")
+    with open(".last_version", "w") as f:
+        f.write(version)
 
 
 if "--restart" in sys.argv:

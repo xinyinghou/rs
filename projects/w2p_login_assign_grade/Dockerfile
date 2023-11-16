@@ -1,6 +1,8 @@
 # pull official base image
 FROM python:3.10-bullseye
 
+LABEL org.opencontainers.image.source https://github.com/RunestoneInteractive/rs
+
 # This is the name of the wheel that we build using `poetry build-project`
 ARG wheel=w2p_login_assign_grade-7.0.0-py3-none-any.whl
 
@@ -32,4 +34,6 @@ COPY entrypoint.sh /usr/src/app/entrypoint.sh
 RUN pip install --no-cache-dir --upgrade /usr/src/app/$wheel
 RUN chown -R www-data:www-data /usr/local/lib/python3.10/site-packages/rsptx/web2py_server
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "rsptx.web2py_server.wsgihandler:application"]
+# The default entrypoint is essentially /bin/bash
+# The CMD is the default command which is passed as an argument to the entrypoint!
+#CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "rsptx.web2py_server.wsgihandler:application"]

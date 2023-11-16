@@ -36,7 +36,7 @@ from fastapi import APIRouter, Cookie, Request, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from jinja2.exceptions import TemplateNotFound
-from pydantic import constr
+from pydantic import StringConstraints
 
 # Local application imports
 # -------------------------
@@ -57,6 +57,7 @@ from rsptx.db.models import UseinfoValidation
 from rsptx.auth.session import is_instructor
 from ..localconfig import local_settings
 from rsptx.templates import template_folder
+from typing_extensions import Annotated
 
 # .. _APIRouter config:
 #
@@ -183,8 +184,8 @@ async def get_jlite(course: str, filepath: str):
 )
 async def serve_page(
     request: Request,
-    course_name: constr(max_length=512),  # type: ignore
-    pagepath: constr(max_length=512),  # type: ignore
+    course_name: Annotated[str, StringConstraints(max_length=512)],  # type: ignore
+    pagepath: Annotated[str, StringConstraints(max_length=512)],  # type: ignore
     RS_info: Optional[str] = Cookie(None),
     mode: Optional[str] = None,
 ):
@@ -270,7 +271,7 @@ async def serve_page(
             course_row.base_course,
             "published",
             course_row.base_course,
-        )
+        ),
     )
     course_attrs = await fetch_all_course_attributes(course_row.id)
     # course_attrs will always return a dictionary, even if an empty one.
@@ -290,6 +291,7 @@ async def serve_page(
         templates.env.comment_start_string = "@@#"
         templates.env.comment_end_string = "#@@"
         templates.env.globals.update({"URL": URL})
+    # rslogger.debug(f"template cache size {templates.env.cache_size}")
 
     # enable compare me can be set per course if its not set provide a default of true
     if "enable_compare_me" not in course_attrs:
@@ -349,7 +351,7 @@ async def serve_page(
         and course_row.base_course != "mobilecsp"
         and course_row.courselevel != "high"
         and course_row.course_name != course_row.base_course
-        and "supporter" not in course_attrs
+        and not course_row.is_supporter
     ):
         show_rs_banner = True
     elif course_row.course_name == course_row.base_course and random.random() <= 0.3:
@@ -403,6 +405,7 @@ async def serve_page(
         show_rs_banner=show_rs_banner,
         show_ethical_ad=serve_ad,
         worker_name=worker_name,
+        appname="runestone",  # for peer+ links
         **course_attrs,
     )
     # See `templates <https://fastapi.tiangolo.com/advanced/templates/>`_.
@@ -444,6 +447,8 @@ async def library(request: Request, response_class=HTMLResponse):
     books = sorted(books, key=lambda x: students.get(x.basecourse, 0), reverse=True)
     sections = set()
     for book in books:
+        if book.shelf_section is None:
+            book.shelf_section = "Misc"
         if book.shelf_section not in sections:
             sections.add(book.shelf_section)
 
@@ -458,7 +463,10 @@ async def library(request: Request, response_class=HTMLResponse):
         instructor_status = False
     templates = Jinja2Templates(directory=f"{template_folder}")
     sorted_sections = list(sections)
-    sorted_sections.sort()
+    try:
+        sorted_sections.sort()
+    except Exception as e:
+        rslogger.error(f"Error sorting sections: {e}")
     return templates.TemplateResponse(
         "book/index.html",
         {

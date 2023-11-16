@@ -52,12 +52,10 @@ if not request.env.web2py_runtime_gae:
         # WEB2PY_MIGRATE is either "Yes", "No", "Fake", or missing
         db = DAL(
             settings.database_uri,
-            pool_size=10,
+            pool_size=5,
             fake_migrate_all=(os.environ.get("WEB2PY_MIGRATE", "Yes") == "Fake"),
             migrate=False,
-            migrate_enabled=(
-                os.environ.get("WEB2PY_MIGRATE", "Yes") in ["Yes", "Fake"]
-            ),
+            migrate_enabled=(os.environ.get("WEB2PY_MIGRATE", "No") in ["Yes", "Fake"]),
         )
     session.connect(
         request,
@@ -165,6 +163,7 @@ db.define_table(
     Field("downloads_enabled", type="boolean", default=False),
     Field("courselevel", type="string"),
     Field("new_server", type="boolean", default=False),
+    Field("is_supporter", type="boolean", default=False),
     migrate=bookserver_owned("courses"),
 )
 
@@ -485,7 +484,7 @@ Your username is: %(username)s </p>
 <p>If you have any trouble with this automated system you can also ask your instructor
 and they can help you retrieve your username or reset your password.  If you are
 an instructor, you can  (as a last resort) contact Runestone by creating an issue
-on  <a href="https://github.com/RunestoneInteractive/RunestoneServer/issues">Github</a>.</p>
+on  <a href="https://github.com/RunestoneInteractive/rs/issues">Github</a>.</p>
 
 <p>This message was generated automatically and comes from an unmonitored email address.  If you reply to this message a human will not see it.  Use the github link above if you need help from a real person.</p>
 
@@ -502,7 +501,7 @@ Hello, <br>
 <p>If you have any trouble with the link you can also ask your instructor
 and they can help you retrieve your username or reset your password.  If you are
 an instructor, you can  (as a last resort) contact Runestone by creating an issue
-on <a href="https://github.com/RunestoneInteractive/RunestoneServer/issues">Github</a>.</p>
+on <a href="https://github.com/RunestoneInteractive/rs/issues">Github</a>.</p>
 
 <p>This message was generated automatically and comes from an unmonitored email address.  If you reply to this message a human will not see it.  Use the github link above if you need help from a real person.</p>
 
@@ -534,6 +533,14 @@ def check_for_donate_or_build(field_dict, id_of_insert):
 
 if "auth_user" in db:
     db.auth_user._after_insert.append(check_for_donate_or_build)
+
+# workaround for the dual authorization system.... The database should rule,
+# but sometimes the auth object from the session is not in sync with the db
+if auth.user:
+    user = db(db.auth_user.id == auth.user.id).select().first()
+    if user and user.course_id != auth.user.course_id:
+        auth.user.update(course_name=user.course_name)
+        auth.user.update(course_id=user.course_id)
 
 
 def admin_logger(logger):

@@ -18,11 +18,12 @@ from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 # Local application imports
 # -------------------------
 from .routers import student
+from .routers import instructor
 from rsptx.auth.session import auth_manager
 from rsptx.configuration import settings
 from rsptx.db.async_session import init_models, term_models
@@ -56,6 +57,7 @@ app.mount(
 
 
 app.include_router(student.router)
+app.include_router(instructor.router)
 
 # DRY: this is the same as in book_server_api and other servers
 # load a common set of middleware/exception handlers.

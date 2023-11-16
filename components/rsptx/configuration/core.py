@@ -1,10 +1,12 @@
-# ********************************************
-# |docname| - Configuring Runestone BookServer
-# ********************************************
-# Many thing about Runestone BookServer are configurable. This is the place to change
-# the configuration for most things.  **Private** things should be configured in the
-# environment so they are not accidentally committed to Github.
-# Defaults provided here may be overridden by environment variables `Per <https://fastapi.tiangolo.com/advanced/settings/>`_.
+"""
+Configuring Runestone Servers
+=============================
+
+Many things about Runestone servers are configurable. This is the place to change
+the configuration for most things.  **Private** things should be configured in the
+environment so they are not accidentally committed to Github.
+Defaults provided here may be overridden by environment variables `Per <https://fastapi.tiangolo.com/advanced/settings/>`_.
+"""
 #
 #
 # Imports
@@ -18,13 +20,10 @@ from functools import lru_cache
 import os
 from pathlib import Path
 
-# Third-party imports
-# -------------------
-from pydantic import BaseSettings
-
 # Local application imports
 # -------------------------
 from rsptx.logging import rslogger
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Settings
 # ========
@@ -44,17 +43,19 @@ class DatabaseType(Enum):
 
 
 class Settings(BaseSettings):
-    # Pydantic provides a wonderful utility to handle settings.  The beauty of it
-    # is that you can specify variables with or without default values, and Pydantic
-    # will check your environment variables in a case-insensitive way. So that
-    # if you have ``PROD_DBURL``` set in the environment it will be set as the value
-    # for ``prod_dburl``` in settings.
-    # This is a really nice way to keep from
-    # committing any data you want to keep private.
+    """
+    Pydantic provides a wonderful utility to handle settings.  The beauty of it
+    is that you can specify variables with or without default values, and Pydantic
+    will check your environment variables in a case-insensitive way. So that
+    if you have ``PROD_DBURL``` set in the environment it will be set as the value
+    for ``prod_dburl``` in settings.
+    This is a really nice way to keep from
+    committing any data you want to keep private.
+    """
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="allow"
+    )
 
     google_ga: str = ""
 
@@ -66,7 +67,8 @@ class Settings(BaseSettings):
     book_path: Path = runestone_path / "books"
 
     # The path to store error logs.
-    error_path: Path = Path.home() / "Runestone/errors"
+    error_path: Path = Path(os.environ.get("BOOK_PATH", "/usr/books")) / "tickets"
+    rslogger.info(f"Error path is {error_path}")
 
     # Define the mode of operation for the webserver, taken from ``BookServerConfig```. This looks a bit odd, since the string value will be parsed by Pydantic into a Config.
     #
@@ -122,10 +124,10 @@ class Settings(BaseSettings):
             raise RuntimeError(f"Unknown database type; URL is {dburl}.")
 
     # Setting db_echo to True makes for a LOT of sqlalchemy output - it gives you the SQL for every query!
-    db_echo = False
+    db_echo: bool = False
 
     # The docker-compose.yml file will set the REDIS_URI environment variable
-    redis_uri = "redis://localhost:6379/0"
+    redis_uri: str = "redis://localhost:6379/0"
 
     # Select normal mode or a high-stakes assessment mode (for administering a examination). In this mode, answers to supported question types are not shown.
     is_exam: bool = False
@@ -148,6 +150,14 @@ class Settings(BaseSettings):
     # This is the private key web2py uses for hashing passwords.
     @property
     def web2py_private_key(self) -> str:
+        """Get the web2py private key.
+        Prefer to get it from the environment.  This allows us to avoid introducing a secret
+        into the codebase, and it also avoids the need to mount a volume to the container to
+        store the key in a file.
+
+        :return: The web2py private key.
+        :rtype: str
+        """
         # Put the cache here; above the def, it produces ``TypeError: unhashable type: 'Settings'``.
         @lru_cache
         def read_key():
@@ -174,10 +184,10 @@ class Settings(BaseSettings):
 
     # needed for using Spaces / AWS S3 for file uploads
     # see
-    spaces_key = "key"
-    spaces_secret = "secret"
-    region = "nyc3"  # this is the DO data center or AWS region
-    bucket = "runestonefiles"
+    spaces_key: str = "key"
+    spaces_secret: str = "secret"
+    region: str = "nyc3"  # this is the DO data center or AWS region
+    bucket: str = "runestonefiles"
 
     log_level: str = "DEBUG"
 

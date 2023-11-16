@@ -8,12 +8,15 @@ services:
   jobe:
     build: 
       context: ./projects/jobe
-    image: registry.digitalocean.com/runestone-registry/rs-jobe
-
+    #image: registry.digitalocean.com/runestone-registry/rs-jobe
+    image: ghcr.io/runestoneinteractive/rs-jobe
+    restart: always
+    
   book:
     build: 
       context: ./projects/book_server
-    image: registry.digitalocean.com/runestone-registry/rs-book
+    #image: registry.digitalocean.com/runestone-registry/rs-book
+    image: ghcr.io/runestoneinteractive/rs-book
     extra_hosts:
       - host.docker.internal:host-gateway
     ports:
@@ -44,7 +47,8 @@ services:
       - UVICORN_TIMEOUT=60
       - LOGIN_URL="/runestone/default/user"
       - WORKER_NAME=${HOSTNAME}
-      
+      - LOAD_BALANCER_HOST=${LOAD_BALANCER_HOST}
+
     links:
       - redis
       - jobe
@@ -52,7 +56,8 @@ services:
   runestone:
       build: 
         context: ./projects/w2p_login_assign_grade
-      image: registry.digitalocean.com/runestone-registry/rs-runestone
+      #image: registry.digitalocean.com/runestone-registry/rs-runestone
+      image: ghcr.io/runestoneinteractive/rs-runestone
       extra_hosts:
         - host.docker.internal:host-gateway
       ports:
@@ -78,6 +83,8 @@ services:
         - LOAD_BALANCER_HOST=${LOAD_BALANCER_HOST}
         - JWT_SECRET=${JWT_SECRET}
         - WEB2PY_PRIVATE_KEY=${WEB2PY_PRIVATE_KEY}
+        - ACADEMY_MODE=True
+        - USE_MASTER_AUTHOR=${USE_MASTER_AUTHOR:-False}
         - EMAIL_SENDER="smtp.gmail.com:587"
         - EMAIL_SERVER=${EMAIL_SERVER}
         - EMAIL_LOGIN=${EMAIL_LOGIN}
@@ -91,7 +98,8 @@ services:
   assignment:
     build: 
       context: ./projects/assignment_server
-    image: registry.digitalocean.com/runestone-registry/rs-assignment
+    #image: registry.digitalocean.com/runestone-registry/rs-assignment
+    image: ghcr.io/runestoneinteractive/rs-assignment
     extra_hosts:
       - host.docker.internal:host-gateway
     ports:
@@ -113,6 +121,13 @@ services:
       - DBURL=${DC_DBURL:-$DBURL}
       - DOCKER_COMPOSE=1
       - JWT_SECRET=${JWT_SECRET}
+      - UVICORN_WORKERS=3
+      - UVICORN_USER=www-data
+      - UVICORN_GROUP=www-data
+      - UVICORN_MAX_REQUESTS=5000
+      - UVICORN_MAX_REQUESTS_JITTER=30
+      - UVICORN_TIMEOUT=60
+
     links:
       - redis
       - jobe
@@ -124,7 +139,8 @@ services:
     build: 
       context: ./
       dockerfile: projects/nginx/Dockerfile
-    image: registry.digitalocean.com/runestone-registry/rs-nginx
+    #image: registry.digitalocean.com/runestone-registry/rs-nginx
+    image: ghcr.io/runestoneinteractive/rs-nginx
     restart: always
     ports:
       # ports are specified host:container
@@ -141,3 +157,23 @@ services:
       - book
       - assignment
 
+  # create an image/container to run rsmanage inside the composed services 
+  # docker compose run rsmanage rsmanage --help
+  rsmanage:
+    build: 
+      context: ./projects/rsmanage
+    #image: registry.digitalocean.com/runestone-registry/rs-rsmanage
+    image: ghcr.io/runestoneinteractive/rs-rsmanage
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ${BOOK_PATH}:/usr/books
+
+    environment:
+      - BOOK_PATH=/usr/books
+      - SERVER_CONFIG=${SERVER_CONFIG}
+      - RUNESTONE_HOST=${RUNESTONE_HOST}
+      - RUNESTONE_PATH=/usr/src/app
+      - REDIS_URI=redis://${REDIS_HOST}:6379/0
+      - DEV_DBURL=${DC_DEV_DBURL:-$DEV_DBURL}
+      - DBURL=${DC_DBURL:-$DBURL}

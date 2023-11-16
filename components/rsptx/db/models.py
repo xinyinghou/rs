@@ -32,7 +32,7 @@ from typing import Dict, Type
 
 # Third-party imports
 # -------------------
-from pydantic import validator
+from pydantic import field_validator
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -381,6 +381,7 @@ class Courses(Base, IdMixin):
     # This is (hopefully) a temporary field to indicate that this book
     # should be served by the new bookserver
     new_server = Column(Web2PyBoolean, default=True)
+    is_supporter = Column(Web2PyBoolean)
 
 
 CoursesValidator = sqlalchemy_to_pydantic(Courses)
@@ -411,7 +412,8 @@ BaseAuthUserValidator = sqlalchemy_to_pydantic(AuthUser)
 
 
 class AuthUserValidator(BaseAuthUserValidator):  # type: ignore
-    @validator("username")
+    @field_validator("username")
+    @classmethod
     def username_clear_of_css_characters(cls, v):
         if re.search(r"""[!"#$%&'()*+,./@:;<=>?[\]^`{|}~ ]""", v):
             pass
@@ -812,7 +814,7 @@ class TraceBack(Base, IdMixin):
     traceback = Column(Text, nullable=False)
     timestamp = Column(DateTime)
     err_message = Column(String(512))
-    path = Column(String(256))
+    path = Column(String(1024))
     query_string = Column(String(512))
     post_body = Column(String(1024))
     hash = Column(String(128))

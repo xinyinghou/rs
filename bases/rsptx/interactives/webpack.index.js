@@ -34,8 +34,6 @@ import "bootstrap/dist/js/bootstrap.js";
 //import "bootstrap/dist/css/bootstrap.css";
 import "./ptxrs-bootstrap.less";
 import "./runestone/common/project_template/_templates/plugin_layouts/sphinx_bootstrap/static/bootstrap-sphinx.js";
-// comment out for overhaul
-//import "./runestone/common/css/runestone-custom-sphinx-bootstrap.css";
 
 // Misc
 import "./runestone/common/js/bookfuncs.js";
@@ -93,7 +91,7 @@ const module_map = {
 
 const module_map_cache = {};
 const QUEUE_FLUSH_TIME_MS = 10;
-const queue = []
+const queue = [];
 let queueLastFlush = 0;
 /**
  * Queue imports that are requested within `QUEUE_FLUSH_TIME_MS` of each other.
@@ -103,8 +101,11 @@ let queueLastFlush = 0;
 function queueImport(component_name) {
     let resolve = null;
     let reject = null;
-    const retPromise = new Promise((r, rej) => {resolve = r; reject = rej})
-    const item = {component_name, resolve, reject};
+    const retPromise = new Promise((r, rej) => {
+        resolve = r;
+        reject = rej;
+    });
+    const item = { component_name, resolve, reject };
     queue.push(item);
     window.setTimeout(flushQueue, QUEUE_FLUSH_TIME_MS + 1);
 
@@ -112,7 +113,7 @@ function queueImport(component_name) {
 }
 async function flushQueue() {
     if (queue.length === 0) {
-        return
+        return;
     }
     if (Date.now() - queueLastFlush < QUEUE_FLUSH_TIME_MS) {
         window.setTimeout(flushQueue, QUEUE_FLUSH_TIME_MS + 1);
@@ -124,17 +125,20 @@ async function flushQueue() {
     queueLastFlush = Date.now();
     const toFlush = [...queue];
     queue.length = 0;
-    console.log("Webpack is starting the loading process for the following Runestone modules", toFlush.map(item => item.component_name));
+    console.log(
+        "Webpack is starting the loading process for the following Runestone modules",
+        toFlush.map((item) => item.component_name)
+    );
     const flushedPromise = toFlush.map(async (item) => {
         try {
             await module_map[item.component_name]();
             return item;
-        } catch(e) {
+        } catch (e) {
             item.reject(e);
         }
-    })
+    });
     const flushed = await Promise.all(flushedPromise);
-    flushed.forEach(item => item.resolve());
+    flushed.forEach((item) => item.resolve());
 }
 
 // .. _dynamic import machinery:
@@ -178,6 +182,10 @@ export function runestone_auto_import() {
     });
 }
 
+pre_login_complete_promise.then(() => {
+    console.log("Runestone pre-login complete");
+});
+
 // Load component JS when the document is ready.
 $(document).ready(runestone_auto_import);
 
@@ -218,6 +226,18 @@ __webpack_public_path__ = script_src.substring(
     0,
     script_src.lastIndexOf("/") + 1
 );
+
+// SPLICE Events
+window.addEventListener("message", (event) => {
+    if (event.data.subject == "SPLICE.reportScoreAndState") {
+        console.log(event.data.score);
+        console.log(event.data.state);
+    } else if (event.data.subject == "SPLICE.sendEvent") {
+        console.log(event.data.location);
+        console.log(event.data.name);
+        console.log(event.data.data);
+    }
+});
 
 // Manual exports
 // ==============

@@ -2,6 +2,7 @@ import { ActiveCode } from "./activecode.js";
 import MD5 from "./md5.js";
 import JUnitTestParser from "./extractUnitResults.js";
 import "../../codelens/js/pytutor-embed.bundle.js";
+import { base64encode } from "byte-base64";
 
 export default class LiveCode extends ActiveCode {
     constructor(opts) {
@@ -355,7 +356,7 @@ export default class LiveCode extends ActiveCode {
                 }
                 break;
             case 13: // time limit
-                $(odiv).html(result.stdout.replace(/\n/g, "<br>"));
+                $(odiv).html(escapeHtml(result.stdout.replace(/\n/g, "<br>")));
                 this.addJobeErrorMessage(
                     $.i18n("msg_activecode_time_limit_exc")
                 );
@@ -396,7 +397,7 @@ export default class LiveCode extends ActiveCode {
         eContainer.id = this.divid + "_errinfo";
         eContainer.appendChild(errHead[0]);
         var errText = eContainer.appendChild(document.createElement("pre"));
-        errText.innerHTML = err;
+        errText.innerHTML = escapeHtml(err);
     }
     /**
      * Checks to see if file is on server
@@ -451,7 +452,7 @@ export default class LiveCode extends ActiveCode {
         var extensions = ["jar", "zip", "png", "jpg", "jpeg"];
         var contentsb64;
         if (extensions.indexOf(extension) === -1) {
-            contentsb64 = btoa(contents);
+            contentsb64 = base64encode(contents);
         } else {
             contentsb64 = contents;
         }
@@ -658,5 +659,15 @@ function unescapeHtml(safe) {
             .replace(/&gt;/g, ">")
             .replace(/&quot;/g, '"')
             .replace(/&#x27;/g, "'");
+    }
+}
+function escapeHtml(str) {
+    if (str) {
+	return str
+	    .replace(/&/g, '&amp;')
+	    .replace(/</g, '&lt;')
+	    .replace(/>/g, '&gt;')
+	    .replace(/'/g, '&#x27;')
+	    .replace(/"/g, '&quot;');
     }
 }

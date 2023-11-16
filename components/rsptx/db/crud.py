@@ -397,6 +397,25 @@ async def fetch_course(course_name: str) -> CoursesValidator:
         return CoursesValidator.from_orm(course)
 
 
+async def fetch_course_by_id(course_id: int) -> CoursesValidator:
+    """
+    Fetches a course by its id.
+
+    :param course_name: The id of the course to be fetched.
+    :type course_name: int
+    :return: A CoursesValidator instance representing the fetched course.
+    :rtype: CoursesValidator
+    """
+    query = select(Courses).where(Courses.id == course_id)
+    async with async_session() as session:
+        res = await session.execute(query)
+        # When selecting ORM entries it is useful to use the ``scalars`` method
+        # This modifies the result so that you are getting the ORM object
+        # instead of a Row object. `See <https://docs.sqlalchemy.org/en/14/orm/queryguide.html#selecting-orm-entities-and-attributes>`_
+        course = res.scalars().one_or_none()
+        return CoursesValidator.from_orm(course)
+
+
 async def fetch_base_course(base_course: str) -> CoursesValidator:
     """
     Fetches a base course by its name.
@@ -1218,22 +1237,31 @@ async def update_selected_question(sid: str, selector_id: str, selected_id: str)
 
 # write a function that fetches all Assignment objects given a course name
 async def fetch_assignments(
-    course_name: str, is_peer: Optional[bool] = False
+    course_name: str,
+    is_peer: Optional[bool] = False,
+    is_visible: Optional[bool] = False,
 ) -> List[AssignmentValidator]:
     """
     Fetch all Assignment objects for the given course name.
     If is_peer is True then only select asssigments for peer isntruction.
+    If is_visible is True then only fetch visible assignments.
 
     :param course_name: str, the course name
     :param is_peer: bool, whether or not the assignment is a peer assignment
     :return: List[AssignmentValidator], a list of AssignmentValidator objects
     """
 
+    if is_visible:
+        vclause = Assignment.visible == is_visible
+    else:
+        vclause = None
+
     query = select(Assignment).where(
         and_(
             Assignment.course == Courses.id,
             Courses.course_name == course_name,
             Assignment.is_peer == is_peer,
+            vclause,
         )
     )
 
@@ -1241,6 +1269,24 @@ async def fetch_assignments(
         res = await session.execute(query)
         rslogger.debug(f"{res=}")
         return [AssignmentValidator.from_orm(a) for a in res.scalars()]
+
+
+# write a function that fetches all Assignment objects given a course name
+async def fetch_one_assignment(assignment_id: int) -> AssignmentValidator:
+    """
+    Fetch one Assignment object
+
+    :param assignment_id: int, the assignment id
+
+    :return: AssignmentValidator
+    """
+
+    query = select(Assignment).where(Assignment.id == assignment_id)
+
+    async with async_session() as session:
+        res = await session.execute(query)
+        rslogger.debug(f"{res=}")
+        return AssignmentValidator.from_orm(res.scalars().first())
 
 
 async def fetch_all_assignment_stats(
@@ -1433,6 +1479,34 @@ async def fetch_assignment_question(
         res = await session.execute(query)
         rslogger.debug(f"{res=}")
         return AssignmentQuestionValidator.from_orm(res.scalars().first())
+
+
+import pdb
+
+
+async def fetch_assignment_questions(
+    assignment_id: int,
+) -> List[Tuple[Question, AssignmentQuestion]]:
+    """
+    Retrieve the AssignmentQuestion entry for the given assignment_name and question_name.
+
+    :param assignment_name: str, the name of the assignment
+    :param question_name: str, the name (div_id) of the question
+    :return: AssignmentQuestionValidator, the AssignmentQuestionValidator object
+    """
+    query = (
+        select(Question, AssignmentQuestion)
+        .join(Question, AssignmentQuestion.question_id == Question.id)
+        .where(AssignmentQuestion.assignment_id == assignment_id)
+        .order_by(AssignmentQuestion.sorting_priority)
+    )
+
+    async with async_session() as session:
+        res = await session.execute(query)
+        rslogger.debug(f"{res=}")
+        # we cannot return res.scalars() because we want both objects in the row.
+        # and the scalars() method onnly returns the first object in the row.
+        return res
 
 
 async def fetch_question_grade(sid: str, course_name: str, qid: str):
@@ -1691,7 +1765,7 @@ async def fetch_library_book(book):
         return ret
 
 
-async def update_library_book(bookid, vals):
+async def update_library_book(bookid: int, vals: dict):
     """
     Update the Library entry with the given bookid and values.
 
@@ -1774,16 +1848,15 @@ async def fetch_one_user_topic_practice(
     user: AuthUserValidator,
     last_page_chapter: str,
     last_page_subchapter: str,
-    qname: str,
 ) -> UserTopicPracticeValidator:
     """
-    The user_topic_practice table contains information about each question (flashcard)
+    The user_topic_practice table contains information about each topic (flashcard)
     that a student is eligible to see for a given topic in a course.
-    A particular question should ony be in the table once per student.  This row also contains
+    A particular topic should ony be in the table once per student.  This row also contains
     information about scheduling and correctness to help the practice algorithm select the
     best question to show a student.
 
-    Retrieve a single UserTopicPractice entry for the given user, chapter, subchapter, and question.
+    Retrieve a single UserTopicPractice entry for the given user, chapter, and subchapter (i.e., topic).
 
     :param user: AuthUserValidator, the AuthUserValidator object
     :param last_page_chapter: str, the label of the chapter
@@ -1796,7 +1869,6 @@ async def fetch_one_user_topic_practice(
         & (UserTopicPractice.course_name == user.course_name)
         & (UserTopicPractice.chapter_label == last_page_chapter)
         & (UserTopicPractice.sub_chapter_label == last_page_subchapter)
-        & (UserTopicPractice.question_name == qname)
     )
     async with async_session() as session:
         res = await session.execute(query)
@@ -1805,18 +1877,18 @@ async def fetch_one_user_topic_practice(
         return UserTopicPracticeValidator.from_orm(utp)
 
 
-async def delete_one_user_topic_practice(qid: int) -> None:
+async def delete_one_user_topic_practice(dbid: int) -> None:
     """
     Delete a single UserTopicPractice entry for the given id.
 
-    Used by ad hoc question selection.  If a student un-marks a page as completed then if there
-    is a question from the page it will be removed from the set of possible flashcards a student
+    Used by self-paced topic selection.  If a student un-marks a page as completed then if there
+    is a card from the page it will be removed from the set of possible flashcards a student
     can see.
 
     :param qid: int, the id of the UserTopicPractice entry
     :return: None
     """
-    query = delete(UserTopicPractice).where(UserTopicPractice.id == qid)
+    query = delete(UserTopicPractice).where(UserTopicPractice.id == dbid)
     async with async_session.begin() as session:
         await session.execute(query)
 
@@ -1836,7 +1908,7 @@ async def create_user_topic_practice(
     :param user: AuthUserValidator, the AuthUserValidator object
     :param last_page_chapter: str, the label of the chapter
     :param last_page_subchapter: str, the label of the subchapter
-    :param qname: str, the name of the question
+    :param qname: str, the name of the question to be assigned first when the topic is presented; will be rotated
     :param now_local: datetime.datetime, the current local datetime
     :param now: datetime.datetime, the current utc datetime
     :param tz_offset: float, the timezone offset

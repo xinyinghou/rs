@@ -253,15 +253,12 @@
     color:transparent;
 }
 
-.parsons code {
-    display: inline-block;
+/* .parsons code {
+    display: inline-block; */
+.parsons .sortable-code code {
     clear: both;
     float: left;
     background-color: transparent;
-}
-
-.parsons-text code {
-    float: none;
 }
 
 .parsons .block p {
