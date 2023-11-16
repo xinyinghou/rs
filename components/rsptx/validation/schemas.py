@@ -16,7 +16,15 @@ from typing import Container, Optional, Type, Dict, Tuple, Any, Union
 
 # Third-party imports
 # -------------------
-from pydantic import field_validator, StringConstraints, ConfigDict, BaseModel, BaseConfig, create_model, Field
+from pydantic import (
+    field_validator,
+    StringConstraints,
+    ConfigDict,
+    BaseModel,
+    BaseConfig,
+    create_model,
+    Field,
+)
 from humps import camelize  # type: ignore
 from typing_extensions import Annotated
 
@@ -32,6 +40,7 @@ class BaseModelNone(BaseModel):
     @classmethod
     def from_orm(cls, obj):
         return None if obj is None else super().from_orm(obj)
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -49,7 +58,6 @@ def sqlalchemy_to_pydantic(
     # SQLAlchemy fields to exclude from the resulting schema, provided as a sequence of field names. Ignore the id field by default.
     exclude: Container[str] = tuple(),
 ):
-
     # If provided an ORM model, get the underlying Table object.
     db_model = getattr(db_model, "__table__", db_model)
 
@@ -63,7 +71,9 @@ def sqlalchemy_to_pydantic(
         # Determine the Python type of the column.
         python_type = column.type.python_type
         if python_type == str and hasattr(column.type, "length"):
-            python_type = Annotated[str, StringConstraints(max_length=column.type.length)]
+            python_type = Annotated[
+                str, StringConstraints(max_length=column.type.length)
+            ]
 
         # Determine if the column can be null, meaning it's optional from a Pydantic perspective. Make the id column optional, since it won't be present when inserting values to the database.
         if column.nullable or name == "id":
@@ -104,7 +114,7 @@ class LogItemIncoming(BaseModelNone):
     correct: Optional[Union[bool, int]] = None
     percent: Optional[float] = None
     clientLoginStatus: Optional[bool] = None
-    timezoneoffset: Optional[int] = None
+    timezoneoffset: Optional[float] = None
     timestamp: Optional[datetime] = None
     chapter: Optional[str] = None
     subchapter: Optional[str] = None
@@ -130,34 +140,22 @@ class AssessmentRequest(BaseModelNone):
     deadline: datetime = Field(default_factory=datetime.utcnow)
     # TODO[pydantic]: The following keys were removed: `json_encoders`.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(json_encoders={
-        datetime: lambda v: v.isoformat(),
-    })
+    model_config = ConfigDict(
+        json_encoders={
+            datetime: lambda v: v.isoformat(),
+        }
+    )
 
     @field_validator("deadline", mode="before")
     @classmethod
     def time_validate(cls, v):
-        # return datetime.fromisoformat(v)
-        return isoparse(v)
-
-    # @validator("deadline")
-    # def str_to_datetime(cls, value: str) -> datetime:
-    #     # TODO: this code probably doesn't work.
-    #     try:
-    #         deadline = parse(canonicalize_tz(value))
-    #         # TODO: session isn't defined. Here's a temporary fix
-    #         # tzoff = session.timezoneoffset if session.timezoneoffset else 0
-    #         tzoff = 0
-    #         deadline = deadline + timedelta(hours=float(tzoff))
-    #         deadline = deadline.replace(tzinfo=None)
-    #     except Exception:
-    #         # TODO: can this enclose just the parse code? Or can an error be raised in other cases?
-    #         raise ValueError(f"Bad Timezone - {value}")
-    #     return deadline
+        if v:
+            return isoparse(v)
+        return isoparse(datetime.isoformat(datetime.utcnow()))
 
 
 class TimezoneRequest(BaseModelNone):
-    timezoneoffset: int
+    timezoneoffset: float
 
 
 class LogRunIncoming(BaseModelNone):
@@ -167,7 +165,7 @@ class LogRunIncoming(BaseModelNone):
     to_save: bool
     course: str
     clientLoginStatus: bool
-    timezoneoffset: int
+    timezoneoffset: float
     language: str
     prefix: Optional[str] = None
     suffix: Optional[str] = None

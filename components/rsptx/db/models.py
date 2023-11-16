@@ -94,6 +94,7 @@ class Web2PyBoolean(types.TypeDecorator):
 # Schema Definition
 # =================
 
+
 # Provide a container to store information about each type of Runestone Component. While a namedtuple would be better, this can't be used since the fields aren't modifiable after creation; see the comment on `init_graders <init_graders>`.
 class RunestoneComponentDict:
     def __init__(self, model: Type[Base], validator: Type[BaseModelNone]):
@@ -235,7 +236,7 @@ class DragndropAnswers(Base, CorrectAnswerMixin):
     __tablename__ = "dragndrop_answers"
     # See answer_. TODO: what is the format?
     answer = Column(String(512), nullable=False)
-    min_height = Column(String(512), nullable=False)
+    min_height = Column(Integer, nullable=False)
     __table_args__ = (Index("idx_div_sid_course_dd", "sid", "div_id", "course_name"),)
 
 
@@ -649,6 +650,7 @@ class Grade(Base, IdMixin):
 
 
 GradeValidator = sqlalchemy_to_pydantic(Grade)
+
 
 # Book Structure Tables
 # ---------------------

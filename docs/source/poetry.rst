@@ -1,6 +1,8 @@
 Poetry and Polylith
 =======================================
 
+Make sure you have Python installed.  We use 3.10 in production and 3.11 in development.  We have not tested with 3.12 yet.  Earlier versions of python are not supported or recommended.
+
 Runestone uses `Poetry <https://python-poetry.org/docs/>`__ to manage Python dependencies.
 You should begin by following the instructions to `install
 poetry <https://python-poetry.org/docs/>`__.
@@ -17,7 +19,7 @@ your copy of poetry. Do the following from a command prompt:
 
    The ``poetry-dotenv-plugin`` causes ``poetry`` to import variables from the ``.env`` file.
    This will make your Runestone installation much more self contained. That is a good thing.
-   
+
    However, plugins in ``poetry`` are global, not per-project. So if you
    have other ``poetry`` projects with ``.env`` files that you don't want automatically
    used, you may want to not use ``poetry-dotenv-plugin``. In that case, you will need to
@@ -58,10 +60,10 @@ this up to date.
 
 The **projects** listed across the top of the table define the artifacts
 - Docker images or applications, they could be a web application or a
-command line application or other software systems. 
-The **bases** - contains the public facing API for a project. 
-The **components** contain code that supports one or more 
-projects/bases. You can see which projects use which base and 
+command line application or other software systems.
+The **bases** - contains the public facing API for a project.
+The **components** contain code that supports one or more
+projects/bases. You can see which projects use which base and
 which components by the check marks in the table.
 
 The goal is to put as much code as possible into the components in a way
@@ -105,7 +107,17 @@ and many other aspects of the Runestone system. It is mostly useful for
 people running large scale servers.
 
 **jobe** The jobe server is a custom job runner for compiling and
-running C, C++, and Java programs.
+running C, C++, and Java programs.  JOBE is not a python project, so
+there is no need to build a wheel for it. However it is a critical part
+of the system and you will need to build the docker image.
 
 **nginx** The nginx project uses nginx as the traffic director to route
 requests across the various servers that comprise the Runestone system.
+Nginx is not a python project, so there is no need to build a wheel for it.
+However it is a critical part of the system and you will need to build
+the docker image.
+
+**redis** Redis is a key value store that is used for caching and messaging.
+It is not a python project, and we use it like it is, so there is no need
+to build either a docker image or a wheel for it, we simply pull the latest
+from dockerhub.

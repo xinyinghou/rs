@@ -34,7 +34,7 @@ license = "GPL"
 name = "runestone"
 readme = "README.rst"
 repository = "https://github.com/RunestoneInteractive/rs"
-version = "7.1.9"
+version = "7.2.6"
 
 # See https://python-poetry.org/docs/pyproject/#include-and-exclude.
 include = [
@@ -124,6 +124,7 @@ dateutils = "^0.6.12"
 pyhumps = "^3.8.0"
 pydal = "^20230521.1"
 pydantic-settings = "^2.0.3"
+jupyterlite-sphinx = "^0.9.3"
 [tool.poetry.dev-dependencies]
 selenium = ">=2.53.6, <4.0.0"
 pyvirtualdisplay = "~3"
