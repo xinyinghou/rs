@@ -1,14 +1,17 @@
+import os
 import openai
 import re
+from dotenv import dotenv_values
+import time
 
-openai.api_key = ""
-#openai.organization = "org-YEK3YQ7BAM9Ag39zqbbXyRnS"
+#Load environment file for secrets.
+secrets = dotenv_values(".env")  
 
 system_message = """
-Fix the provided Python [user-code] based on the provided [task-description] and [sample-solution] and generate [fixed-code]. 
-The [fixed-code] should follow the existing solving strategy and solution path in [user-code], use the same type of [control_structures], use the same variable names as [user-code] and requires the least amount of edits from the [user-code].
-For example, the [user-code] uses [control_structures], the [fixed-code] should also these [control_structures].
+Fix the provided Python [user-code] based on the provided [task-description] and [sample-solution] and generate the [fixed-code]. 
 The [fixed-code] should pass the provided [unittest-code] and be more similar to the [user-code] than the [sample-solution].
+When possible, the [fixed-code] should follow the existing solving strategy and solution path in [user-code], use the same type of [control_structures], use the same variable names as [user-code] and requires the least amount of edits from the [user-code].
+For example, the [user-code] uses [control_structures], the [fixed-code] should also use these [control_structures] when establishing the solution.
 The [fixed-code] should follow the Python style guide.
 [task-description]: '{question_description}'
 [end-task-description]
@@ -20,6 +23,7 @@ The [fixed-code] should follow the Python style guide.
 [end-unittest-code]
 
 [control-structures]: '{control_structures}'
+[end-control-structures]
 """
 
 # user message here is the example student answer
@@ -82,26 +86,73 @@ def build_code_prompt(question_line, buggy_code, system_message=system_message,u
     #print("prompt_messages here: \n", prompt_messages)
     return prompt_messages
 
-def get_fixed_code(prompt_messages):
+# Global variables
+api_key_list_str = secrets["LST_OPENAI_API_KEY"]
+api_key_list = api_key_list_str.split(',')
+api_key_list = [api_key.strip() for api_key in api_key_list]
+print("api_key_list: ", api_key_list)
+current_index = 0
+request_count = 0
+reset_time = time.time() + 60  # Set initial reset time to one minute from now
+
+def current_time():
+    return time.time()
+
+def get_actual_fixed_code(prompt_messages):
+    current_api_key = api_key_list[current_index]
+    print(f"Making API request with key: {current_api_key}-{current_index}")
+
     completion = openai.ChatCompletion.create(
-            model = "gpt-4",
+            api_key = current_api_key,
+            organization = secrets['OPENAI_organization'],
+            api_base= secrets['openai_api_base'],
+            api_type = secrets['openai_api_type'],
+            api_version = secrets['API_VERSION'],
+            engine = secrets['model'],
+            temperature=0,  # Adjust this value to control randomness
             messages = prompt_messages,
             stop = ["[end-fixed-code]"],
+            top_p=0.95,
+            frequency_penalty=0,
+            presence_penalty=0,
         )
     fixed_code = completion["choices"][0]["message"]["content"]
-    #print("fixed_code here: \n", fixed_code)
+    
     return fixed_code
+
+def get_fixed_code(prompt_messages):
+    global current_index, request_count, reset_time
+
+    if current_time() >= reset_time:
+        # Reset counters if one minute has passed
+        request_count = 0
+        reset_time = current_time() + 60
+
+    if request_count == 30:
+        # Switch to the next API key in the list
+        current_index = (current_index + 1) % len(api_key_list)
+        request_count = 0
+        
+    # Make the API request using the current_api_key
+    fixed_code_response = get_actual_fixed_code(prompt_messages)
+
+    # Update counters
+    request_count += 1
+    print(f"Request count of the key: {request_count}")
+
+    return fixed_code_response
+
 
 def get_fixed_code_repeat(prompt_messages, old_fixed_code, situation):
     attachment = f"""
-    The [old-fixed-code] is not {situation} to the [user-code]. Again, please try to generate a [fixed-code] that is more similar to the [user-code] than the [sample-solution] above.
+    This [old-fixed-code] is not {situation} to the [user-code]. Again, please try to generate a [fixed-code] that is {situation} to the [user-code]. You can use [sample-solution] as a reference when generating the [fixed-code].
     [old-fixed-code]: '{old_fixed_code}'
     [end-old-fixed-code]
     """
     prompt_messages[0]["content"] = prompt_messages[0]["content"] + attachment
     #print("prompt_messages[0]", prompt_messages[0]["content"])
     completion = openai.ChatCompletion.create(
-            model = "gpt-4",
+            model = "gpt-4-1106-preview",
             messages = prompt_messages,
             stop = ["[end-fixed-code]"],
         )

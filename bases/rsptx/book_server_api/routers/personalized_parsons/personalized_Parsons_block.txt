@@ -1,19 +1,13 @@
-    def less_dict(d, cutoff):
+    def total_first_half(nums):
 ---
-        d2 = {} 
-        for key, val in d.items(): 
+    def total_first_half: #paired
 ---
-        d2 = {} 
-        for k in dict: #paired
+        total = 0 
+        for num in nums[:len(nums)//2]:
 ---
-        d2 = {} #settled
+        total = 0 
+        for num in nums[len(nums)//2:] #paired
 ---
-            if val < cutoff: 
+            total += num #settled
 ---
-            if (d[k] < cutoff): #paired
----
-                d2[key] = val 
----
-                d2[k] == cutoff #paired
----
-        return d2 #settled
+        return total #settled

@@ -1,9 +1,9 @@
 import difflib
 import pandas as pd
 from collections import namedtuple
-from .get_parsons_code_distractors import *
-from .generate_parsons_blocks import *
-from .token_compare import *
+from get_parsons_code_distractors import *
+from generate_parsons_blocks import *
+from token_compare import *
 import random
 # compare the similarity between the student code and the fixed code
 
@@ -95,11 +95,11 @@ def find_distractor(fixed_line, removed_lines):
     removed_lines = [tup[2] for tup in removed_lines]
     highest_similarity = 0.7
     distractor_line = False
-    print("removed_lines",removed_lines)
+    #print("removed_lines",removed_lines)
     # check whether there is any line achieved a high similarity than the line of comparable location
     for student_line in removed_lines:
         similarity = code_similarity_score(student_line, fixed_line)
-        if similarity > highest_similarity:
+        if (similarity > highest_similarity) & (similarity < 0.99) & (student_line.strip() != fixed_line.strip()):
             highest_similarity = similarity
             distractor_line = student_line
 
@@ -155,7 +155,9 @@ def get_distractor_candidates(distractor_candidate_depot, candidate_num):
         distractor_candidates = distractor_candidates + sorted(distractor_candidate_depot, key=lambda x: x[1], reverse=True)[:candidate_num-len(control_flow_lines)]
     else:
         distractor_candidates = sorted(distractor_candidate_depot, key=lambda x: x[1], reverse=True)[:candidate_num]
+    
     return distractor_candidates
+
 
 
 
@@ -165,9 +167,10 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_cod
     distractors = {}
     distractor_candidates = []
     print("code_comparison_pairs\n", len(code_comparison_pairs), code_comparison_pairs, "total_similarity\n", total_similarity)
-    if total_similarity < 0.30:
+    if (total_similarity < 0.30) or (total_similarity == 1.0) or (unchanged_lines == 0):
+        print("total_similarity < 0.30 or == 1")
         return "Full", {}, []
-    elif (total_similarity >= 0.30) & (total_similarity < 1):
+    else:
         # if has 3 or more than 3 fixed lines (movable blocks)
         if len(code_comparison_pairs)>=3:
             # use students' own buggy code as resource to build distractors
@@ -204,6 +207,10 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_cod
             else:
                 distractors = {}
 
+
+            # CLASSROOM STUDY: REMOVE the LLM Distractor Generation
+            """
+
             # given that we need to provide at least three distractors for them
             # check whether need to generate distractors from the top N longest lines
             if len(distractors) > 0:
@@ -211,7 +218,6 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_cod
             else:
                 distractor_keys = []
 
-            # pass to the LLM distractor generation station
             distractor_candidate_depot = [item for item in fixed_lines + unchanged_lines if item[2] not in distractor_keys]
             #print("distractor_candidate_depot", distractor_candidate_depot)
             candidate_num = 3 - len(distractors)
@@ -228,8 +234,15 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_cod
                     distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_candidate[2],distractor), distractor_candidate[2],distractor)
                 
                 distractors[distractor_candidate] = distractor
-        
+            """
+            for key, value in distractors.copy().items():
+                try:
+                    if key[2].strip() == value[2].strip():
+                        distractors.pop(key)
+                except:
+                    if key[2].strip() == value.strip():
+                        distractors.pop(key)
+            
             return "Partial_Own_Random", distractors, distractor_candidates
-    else:
-        return "Full", {}, []
+
 

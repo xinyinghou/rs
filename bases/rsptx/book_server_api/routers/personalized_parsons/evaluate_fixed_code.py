@@ -6,6 +6,7 @@ from fuzzywuzzy import fuzz
 from types import ModuleType
 import difflib
 import signal
+from personalize_common_solution import * 
 
 class NullOutput:
     def write(self, _):
@@ -184,6 +185,7 @@ def unittest_evaluation(fixed_code, starting_code, default_test_code, unittest_c
         fixed_code = remove_default_testline(fixed_code, default_test_code)
         fixed_code = remove_empty_lines(fixed_code)
         fixed_code = remove_explanation_lines(fixed_code)
+        fixed_code = change_variable_names(fixed_code, map_variable_names(buggy_code, fixed_code))
         #print("cleaned_fixed_code\n", fixed_code)
     except Exception as e:
         return f"No enough code-{e}", fixed_code

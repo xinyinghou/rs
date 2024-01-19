@@ -2,7 +2,7 @@ import openai
 import re
 import time
 
-openai.api_key = ""
+openai.api_key = "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"
 #openai.organization = "org-YEK3YQ7BAM9Ag39zqbbXyRnS"
 
 system_message = """Generate a one-line [distractor] from [correct-line] based on the provided [task-description] and [sample-solution]. 
@@ -57,7 +57,7 @@ def build_distractor_prompt(question_line, correct_line, old_distractor, system_
 
 def request_distractor_from_openai(prompt_messages):
     completion = openai.ChatCompletion.create(
-            model = "gpt-4",
+            model = "gpt-4-1106-preview",
             messages = prompt_messages,
             stop = ["[end-distractor]"],
         )
@@ -77,13 +77,13 @@ def get_personalized_distractor(prompt_messages, correct_line, distractor, attem
         attempt += 1
         distractor = request_distractor_from_openai(prompt_messages)
         if (distractor.count('\n') == 0) & (distractor != "") & (distractor != correct_line):
-            return line_indentation + distractor.strip()
+            return distractor
 
     return ""
 
 
 def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_tuple):
-    print("distractor_tuple", distractor_tuple)
+    #print("distractor_tuple", distractor_tuple)
     # each distractor is like (corresponding_fixed_line, distractor)
     # (7, 18, '     def __str__(self):\n') location, length, actual code
     # for each element in unchanged_lines, add #settled to the end of the line
@@ -95,22 +95,21 @@ def generate_code_with_distrator(unchanged_lines, fixed_lines, distractor_tuple)
     line_indentation = fixed_line_code[:len(fixed_line_code) - len(fixed_line_code.lstrip())]
     distractor_line = distractor_tuple[1]
     # if distractor_dict[key_fixed_line] has a value, then remove the corresponding distractor_dict[key_fixed_line] from the fixed_lines
-    print("other_lines",other_lines, "key_fixed_line", key_fixed_line)
+    #print("other_lines",other_lines, "key_fixed_line", key_fixed_line)
     for i, other_line in enumerate(other_lines):
         if key_fixed_line[2] == other_line[2]:
-            print("pop", key_fixed_line, other_line[2])
+            #print("pop", key_fixed_line, other_line[2])
             other_lines.pop(i)
         else:
             continue
-    print("after-pop", other_lines)
-    blocks = other_lines + [(key_fixed_line[0]+0.5, key_fixed_line[0], distractor_line)]
-    
+    #print("after-pop", other_lines)
+    blocks = other_lines + [(key_fixed_line[0]+0.5, key_fixed_line[0], line_indentation + distractor_line.strip())]
     # Sort the blocks by their starting line number
     blocks = sorted(blocks, key=lambda x: x[0])
-
+    
     # Extract the last element of each tuple and store them in a string
     actual_code_blocks = [t[-1] for t in blocks]
     code_with_distrator = '\n'.join(actual_code_blocks)
 
-    print("code_with_single_distrator", code_with_distrator)
+    #print("code_with_single_distrator", code_with_distrator)
     return code_with_distrator
