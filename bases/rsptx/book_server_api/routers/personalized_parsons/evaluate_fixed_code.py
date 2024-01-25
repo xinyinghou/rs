@@ -178,7 +178,7 @@ def remove_explanation_lines(code):
     cleaned_code = '\n'.join(cleaned_lines)
     return cleaned_code
 
-def unittest_evaluation(fixed_code, starting_code, default_test_code, unittest_case):
+def unittest_evaluation(buggy_code, fixed_code, starting_code, default_test_code, unittest_case):
     try:
         fixed_code.split('\n')
         fixed_code = extract_code_line(fixed_code)

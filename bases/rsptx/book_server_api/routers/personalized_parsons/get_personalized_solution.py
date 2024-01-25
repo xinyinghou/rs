@@ -1,11 +1,26 @@
 import os
-import openai
+from openai import AzureOpenAI
 import re
+from dotenv import load_dotenv
 from dotenv import dotenv_values
 import time
+import sqlite3
+import random
+from store_solution_cache import *
+from datetime import datetime
+import sys
 
+#Sets the current working directory to be the same as the file.
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# request rate limit:
+request_rate_limit = 40
 #Load environment file for secrets.
-secrets = dotenv_values(".env")  
+try:
+    if load_dotenv('.env') is False:
+        raise TypeError
+except TypeError:
+    print('Unable to load .env file.')
+    quit() 
 
 system_message = """
 Fix the provided Python [user-code] based on the provided [task-description] and [sample-solution] and generate the [fixed-code]. 
@@ -86,77 +101,194 @@ def build_code_prompt(question_line, buggy_code, system_message=system_message,u
     #print("prompt_messages here: \n", prompt_messages)
     return prompt_messages
 
+
+def initialize_database(api_keys, db_path):
+    if not os.path.exists(db_path):
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE api_key_counts (
+                    api_key TEXT PRIMARY KEY,
+                    remaining_requests INTEGER,
+                    total_count INTEGER,
+                    last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            for key in api_keys:
+                cursor.execute('''
+                    INSERT INTO api_key_counts (api_key, remaining_requests, total_count) VALUES (?, ?, 0)
+                ''', (key,request_rate_limit,))
+            conn.commit()
+
+def get_current_key(db_path):
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT api_key FROM api_key_counts ORDER BY last_update DESC LIMIT 1
+        ''')
+        result = cursor.fetchone()
+
+        if result:
+            return result[0]
+        else:
+            return None  # Return None if no key is found
+
 # Global variables
-api_key_list_str = secrets["LST_OPENAI_API_KEY"]
+api_key_list_str = dotenv_values(".env")['LST_OPENAI_API_KEY']
 api_key_list = api_key_list_str.split(',')
 api_key_list = [api_key.strip() for api_key in api_key_list]
-print("api_key_list: ", api_key_list)
-current_index = 0
-request_count = 0
-reset_time = time.time() + 60  # Set initial reset time to one minute from now
 
-def current_time():
-    return time.time()
+print("api_key_list", api_key_list)
 
-def get_actual_fixed_code(prompt_messages):
-    current_api_key = api_key_list[current_index]
-    print(f"Making API request with key: {current_api_key}-{current_index}")
+def switch_api_key(api_keys, db_path):
+    current_key = get_current_key(db_path)
 
-    completion = openai.ChatCompletion.create(
-            api_key = current_api_key,
-            organization = secrets['OPENAI_organization'],
-            api_base= secrets['openai_api_base'],
-            api_type = secrets['openai_api_type'],
-            api_version = secrets['API_VERSION'],
-            engine = secrets['model'],
-            temperature=0,  # Adjust this value to control randomness
-            messages = prompt_messages,
-            stop = ["[end-fixed-code]"],
-            top_p=0.95,
-            frequency_penalty=0,
-            presence_penalty=0,
-        )
-    fixed_code = completion["choices"][0]["message"]["content"]
-    
-    return fixed_code
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
 
-def get_fixed_code(prompt_messages):
-    global current_index, request_count, reset_time
+        # Reset request counts at the beginning of each minute - can be done using OpenAI's rate limit headers
+        cursor.execute('''
+            UPDATE api_key_counts SET remaining_requests = ? WHERE strftime('%s', 'now') - strftime('%s', last_update) > 60
+        ''', (request_rate_limit,))
 
-    if current_time() >= reset_time:
-        # Reset counters if one minute has passed
-        request_count = 0
-        reset_time = current_time() + 60
+        # # Check the request count for the current key
+        # cursor.execute('''
+        #     SELECT remaining_requests, total_count FROM api_key_counts WHERE api_key = ?
+        # ''', (current_key,))
+        # result = cursor.fetchone()
 
-    if request_count == 30:
-        # Switch to the next API key in the list
-        current_index = (current_index + 1) % len(api_key_list)
-        request_count = 0
+        # if result:
+        #     current_remaining_requests, total_count = result
+        #     if current_remaining_requests > 0:
+        #         # Current key's request count is still less than 30, keep using it
+        #         return current_key, current_remaining_requests, total_count
+
+        # Current key's request count has reached the limit, switch to the key with the least count
+        # cursor.execute('''
+        #     SELECT api_key, remaining_requests, total_count
+        #     FROM api_key_counts
+        #     WHERE remaining_requests < ?
+        #     ORDER BY remaining_requests DESC
+        #     LIMIT 1
+        # ''', (40,))
+        # result = cursor.fetchone()
+        # if result:
+        cursor.execute('''
+            SELECT api_key, remaining_requests, total_count
+            FROM api_key_counts
+            WHERE remaining_requests > 0
+            ORDER BY remaining_requests DESC
+            LIMIT 1
+        ''')
+        result = cursor.fetchone()
+        if result:
+            new_key, remaining_requests, total_count = result
+            return new_key, remaining_requests, total_count
+        else:
+            print("All keys reached the request limit. Waiting for reset.")
+            return None, None, None  # Return None if no key is available
         
-    # Make the API request using the current_api_key
-    fixed_code_response = get_actual_fixed_code(prompt_messages)
+def get_actual_fixed_code(prompt_messages, current_api_key, attempt_type, situation, old_fixed_code):
+    if attempt_type == "new":
+        prompt_messages = prompt_messages
+    elif attempt_type == "repeat":
+        attachment = f"""
+        This [old-fixed-code] is not {situation} to the [user-code]. Again, please try to generate a [fixed-code] that is {situation} to the [user-code]. You can use [sample-solution] as a reference when generating the [fixed-code].
+        [old-fixed-code]: '{old_fixed_code}'
+        [end-old-fixed-code]
+        """
+        prompt_messages[0]["content"] = prompt_messages[0]["content"] + attachment
 
-    # Update counters
-    request_count += 1
-    print(f"Request count of the key: {request_count}")
+    # client = OpenAI(
+    #     api_key = current_api_key
+    # )
+    client = AzureOpenAI(
+        api_key=current_api_key,  
+        api_version=os.environ['API_VERSION'],
+        azure_endpoint = os.environ['openai_api_base'],
+        organization = os.environ['OPENAI_organization']
+    )
+    raw_completion_response = client.chat.completions.with_raw_response.create(
+        model = os.environ['model'],
+        temperature=0,  # Adjust this value to control randomness
+        messages = prompt_messages,
+        stop = ["[end-fixed-code]"],
+        top_p=0.95,
+        frequency_penalty=0,
+        presence_penalty=0,
+        seed=1234,
+    )
+    response_headers = raw_completion_response.headers
+    completion = raw_completion_response.parse()
+    #print("response_headers", response_headers, "completion", completion)
+    # x-ratelimit-remaining-requests, x-ratelimit-reset-requests
+    remaining_requests = response_headers['x-ratelimit-remaining-requests']
+    fixed_code = completion.choices[0].message.content
+    print("remaining_requests", remaining_requests, "fixed_code", fixed_code)
+    #reset_requests = response_headers['x-ratelimit-reset-requests']
+    #print("remaining_requests", remaining_requests, "reset_requests", reset_requests)
+    
+    return fixed_code, remaining_requests
 
+def get_min_reset_time(db_path="request_counts.db"):
+    # Query the database to retrieve reset times for all keys
+    try:
+        with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT MIN(reset_requests) FROM api_key_counts')
+                min_reset_time = cursor.fetchone()[0]
+    except:
+        min_reset_time = None
+
+    if min_reset_time:
+        min_reset_time = datetime.strptime(min_reset_time, '%Y-%m-%d %H:%M:%S')
+        return min_reset_time
+    else:
+        # If no reset time found, return a default value
+        return datetime.now()
+    
+
+def get_fixed_code(df_question_line, buggy_code, attempt_type, situation, old_fixed_code, api_keys=api_key_list, db_path="request_counts.db"):
+    # first check if the buggy code is in the cache
+    if get_solution(buggy_code) != None:
+        return get_solution(buggy_code)
+
+    prompt_messages = build_code_prompt(df_question_line, buggy_code)
+    
+    print("Creating database if it does not exist.")
+    initialize_database(api_keys, db_path)
+    new_key, remaining_requests, total_count = switch_api_key(api_keys, db_path)
+
+    if new_key is not None:
+        print(f"Switched to API Key: {new_key}")
+        # Make the API request using the current_api_key
+        fixed_code_response, remaining_requests = get_actual_fixed_code(prompt_messages, new_key, attempt_type, situation, old_fixed_code)
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE api_key_counts
+                SET remaining_requests = ?,
+                    total_count = total_count + 1,
+                    last_update = CURRENT_TIMESTAMP
+                WHERE api_key = ?
+            ''', (remaining_requests, new_key))
+            conn.commit()
+
+        print(f"Making API request with Key: {new_key}-Request Count: {remaining_requests}")
+    else:
+        print("No API key available.")
+        # Sleep until the minimum reset time of all keys
+        # Calculate the time until the next reset
+        current_time = datetime.now()
+        min_reset_time = get_min_reset_time()
+        time_until_reset = max(2, (min_reset_time - current_time).total_seconds())
+        print(f"Sleeping for {time_until_reset} seconds.")
+        time.sleep(time_until_reset)
+        # Retry the API request after the sleep
+        get_fixed_code(df_question_line, buggy_code, attempt_type, situation, old_fixed_code, api_keys=api_key_list, db_path="request_counts.db")
+        
     return fixed_code_response
 
 
-def get_fixed_code_repeat(prompt_messages, old_fixed_code, situation):
-    attachment = f"""
-    This [old-fixed-code] is not {situation} to the [user-code]. Again, please try to generate a [fixed-code] that is {situation} to the [user-code]. You can use [sample-solution] as a reference when generating the [fixed-code].
-    [old-fixed-code]: '{old_fixed_code}'
-    [end-old-fixed-code]
-    """
-    prompt_messages[0]["content"] = prompt_messages[0]["content"] + attachment
-    #print("prompt_messages[0]", prompt_messages[0]["content"])
-    completion = openai.ChatCompletion.create(
-            model = "gpt-4-1106-preview",
-            messages = prompt_messages,
-            stop = ["[end-fixed-code]"],
-        )
-    fixed_code = completion["choices"][0]["message"]["content"]
-    #print("fixed_code here: \n", fixed_code)
-    return fixed_code
 

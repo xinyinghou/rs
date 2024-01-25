@@ -1,0 +1,350 @@
+,pair,type,question,w_question_description,Problem Name,Cluster,Example_student_solution,Example_buggy_code,Example_fixed_code,Unittest_Code,Default_Starting_Code,Default_Test_Code,Example_paired_distractor_correct,Example_paired_distractor_wrong,Edit_Distance_common,Edit_Distance_personalized,Edit_personalized_few,Similarity_common,Similarity_personalized,Similarity_personalized_high
+0,Pair A_oc_1,W,sum13_acoc,"Finish the function ``sum13(nums)`` to return the sum of the numbers in the list ``nums``, returning ``0`` for an empty list. Except the number 13 is very unlucky, so  it does not count and a number that comes immediately after a 13 also does not count.  For example, ``sum13([13,2])`` returns ``0`` , ``sum13([1, 13, 4, 2])``  returns ``3``, ``sum13([1, 2, 3])``  returns ``6``.",sum13_acoc,36,"def sum13(nums):
+    total = 0
+    found_13 = False
+    for num in nums:
+        if found_13:
+            found_13 = False
+        elif num == 13:
+            found_13 = True
+        else:
+            total += num
+    return total","def sum13(nums):
+    if len(nums)==0:
+        return 0
+    total=0
+    for num in range(len(nums)):
+        total+=num
+        if num==13:
+            continue
+        if nums[num-1]==13:
+            continue
+    return total","def sum13(nums):
+    if len(nums)==0:
+        return 0
+    total=0
+    for num in range(len(nums)):
+        if nums[num]==13:
+            continue
+        if num>=1 and nums[num-1]==13:
+            continue
+        total+=nums[num]
+    return total","class myTests(unittest.TestCase):
+
+       def testOne(self):
+           self.assertEqual(sum13([13,1]), 0, 'sum13([13,1])')
+           self.assertEqual(sum13([1,13]), 1, 'sum13([1,13])')
+           self.assertEqual(sum13([1,2,2,1]), 6, 'sum13([1,2,2,1])')
+           self.assertEqual(sum13([1,1]), 2, 'sum13([1,1])')
+           self.assertEqual(sum13([1,2,13,2,1]), 4, 'sum13([1,2,13,2,1])')
+           self.assertEqual(sum13([]), 0, 'sum13([])')
+           self.assertEqual(sum13([1,2,13]), 3, 'sum13([1,2,13])')
+           self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,elif num == 13:,elif num = 13:,47,14,TRUE,0.407079646,0.857142857,TRUE
+1,Pair A_op_1,W,sum13_acop,"Finish the function ``sum13(nums)`` to return the sum of the numbers in the list ``nums``, returning ``0`` for an empty list. Except the number 13 is very unlucky, so  it does not count and a number that comes immediately after a 13 also does not count.  For example, ``sum13([13,2])`` returns ``0`` , ``sum13([1, 13, 4, 2])``  returns ``3``, ``sum13([1, 2, 3])``  returns ``6``.",sum13_acop,36,"def sum13(nums):
+    total = 0
+    found_13 = False
+    for num in nums:
+        if found_13:
+            found_13 = False
+        elif num == 13:
+            found_13 = True
+        else:
+            total += num
+    return total","def sum13(nums):
+    if len(nums)==0:
+        return 0
+    total=0
+    for num in range(len(nums)):
+        total+=num
+        if num==13:
+            continue
+        if nums[num-1]==13:
+            continue
+    return total","def sum13(nums):
+    if len(nums)==0:
+        return 0
+    total=0
+    for num in range(len(nums)):
+        if nums[num]==13:
+            continue
+        if num>=1 and nums[num-1]==13:
+            continue
+        total+=nums[num]
+    return total","class myTests(unittest.TestCase):
+
+       def testOne(self):
+           self.assertEqual(sum13([13,1]), 0, 'sum13([13,1])')
+           self.assertEqual(sum13([1,13]), 1, 'sum13([1,13])')
+           self.assertEqual(sum13([1,2,2,1]), 6, 'sum13([1,2,2,1])')
+           self.assertEqual(sum13([1,1]), 2, 'sum13([1,1])')
+           self.assertEqual(sum13([1,2,13,2,1]), 4, 'sum13([1,2,13,2,1])')
+           self.assertEqual(sum13([]), 0, 'sum13([])')
+           self.assertEqual(sum13([1,2,13]), 3, 'sum13([1,2,13])')
+           self.assertEqual(sum13([13,1,13]),0, 'sum13([13,1,13])')",def sum13(nums):,,elif num == 13:,elif num = 13:,47,14,TRUE,0.407079646,0.857142857,TRUE
+2,Pair B_oc_2,W,is_ascending_acoc,"Finish a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acoc,117,"def is_ascending(nums):
+    if (len(nums) < 2):
+        return True
+    for i in range(len(nums) - 1):
+        if (nums[i] > nums[i+1]):
+            return False
+    return True        ","def is_ascending(nums):
+    sorted = nums.sort()
+    if sorted == nums:
+        return True
+    else:
+        return False","def is_ascending(nums):
+    sorted_nums = sorted(nums)
+    if len(nums) < 2:
+        return True
+    if sorted_nums == nums:
+        return True
+    else:
+        return False","class myTests(unittest.TestCase):
+
+            def testOne(self):
+                self.assertEqual(is_ascending([1,2,3]),True,""is_ascending([1,2,3])"")
+                self.assertEqual(is_ascending([3, 3, 2, 1]),False,""is_ascending([3,3,2,1])"")
+                self.assertEqual(is_ascending([3,1,2]),False,""is_ascending([3,1,2])"")
+                self.assertEqual(is_ascending([2,3,1]),False,""is_ascending([2,3,1])"")
+                self.assertEqual(is_ascending([1,2,4,3]),False,""is_ascending([1,2,4,3])"")
+                self.assertEqual(is_ascending([1,2,3,0]),False,""is_ascending([1,2,3,0])"")
+                self.assertEqual(is_ascending([4,1,2,3]),False,""is_ascending(4,1,2,3])"")
+                self.assertEqual(is_ascending([1,4,2,3]),False,""is_ascending(1,4,2,3])"")
+                self.assertEqual(is_ascending([1,2,3,4]),True,""is_ascending([1,2,3,4])"")
+                self.assertEqual(is_ascending([1]),True,""is_ascending([1])"")
+                self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,,if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1:,25,8,TRUE,0.739495798,0.93129771,TRUE
+3,Pair B_op_2,W,is_ascending_acop,"Finish a function ``is_ascending(nums)`` that returns ``True`` if the numbers in the list ``nums`` are sorted in ascending order and ``False`` otherwise. If the list ``nums`` has less than two numbers in it return ``True``.  For example, ``is_ascending([1, 2, 3])`` should return ``True``, ``is_ascending([1])`` should also return ``True``,  ``is_ascending([3, 3, 2, 1])`` should return ``False``, ``is_ascending([1, 3, 2])``  should return ``False``.",is_ascending_acop,117,"def is_ascending(nums):
+    if (len(nums) < 2):
+        return True
+    for i in range(len(nums) - 1):
+        if (nums[i] > nums[i+1]):
+            return False
+    return True        ","def is_ascending(nums):
+    sorted = nums.sort()
+    if sorted == nums:
+        return True
+    else:
+        return False","def is_ascending(nums):
+    sorted_nums = sorted(nums)
+    if len(nums) < 2:
+        return True
+    if sorted_nums == nums:
+        return True
+    return False","class myTests(unittest.TestCase):
+
+            def testOne(self):
+                self.assertEqual(is_ascending([1,2,3]),True,""is_ascending([1,2,3])"")
+                self.assertEqual(is_ascending([3, 3, 2, 1]),False,""is_ascending([3,3,2,1])"")
+                self.assertEqual(is_ascending([3,1,2]),False,""is_ascending([3,1,2])"")
+                self.assertEqual(is_ascending([2,3,1]),False,""is_ascending([2,3,1])"")
+                self.assertEqual(is_ascending([1,2,4,3]),False,""is_ascending([1,2,4,3])"")
+                self.assertEqual(is_ascending([1,2,3,0]),False,""is_ascending([1,2,3,0])"")
+                self.assertEqual(is_ascending([4,1,2,3]),False,""is_ascending(4,1,2,3])"")
+                self.assertEqual(is_ascending([1,4,2,3]),False,""is_ascending(1,4,2,3])"")
+                self.assertEqual(is_ascending([1,2,3,4]),True,""is_ascending([1,2,3,4])"")
+                self.assertEqual(is_ascending([1]),True,""is_ascending([1])"")
+                self.assertEqual(is_ascending([]),True,""is_ascending([])"")",def is_ascending(nums):,,if nums[i] > nums[i + 1]:,if nums[i] >= nums[i + 1:,25,8,TRUE,0.739495798,0.93129771,TRUE
+4,Intro-op,W,str-mixed-example-op,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-op,,"def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","def phrase(person, thing):
+    if (type(person) == str) or (type(thing) = str):
+        person = person.capitalize()
+        thing = thing.lowercase
+        return person  + thing
+    else:
+        return ""False""","def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","class myTests(unittest.TestCase):
+        def testOne(self):
+              self.assertEqual(phrase(""sam"", ""Likes to code""), ""Sam likes to code"", 'phrase(""sam"", "" Likes to code"")')
+              self.assertEqual(phrase(""mary-anne"", ""likes to sing""), ""Mary-anne likes to sing"", 'phrase(""mary-anne"", "" likes to sing"")')
+              self.assertEqual(phrase(""ANNA"", ""likes to dance""), ""Anna likes to dance"", 'phrase(""ANNA"", "" likes to dance"")')
+              self.assertEqual(phrase(1111, ""likes programming""), False, 'phrase(1111, "" likes programming"")')","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",Pass to CodeBERT,Pass to CodeBERT,TRUE,0.896551724,0.896551724,TRUE
+5,Intro-oc,W,str-mixed-example-oc,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-oc,,"def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","def phrase(person, thing):
+    if (type(person) == str) or (type(thing) = str):
+        person = person.capitalize()
+        thing = thing.lowercase
+        return person  + thing
+    else:
+        return ""False""","def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","class myTests(unittest.TestCase):
+        def testOne(self):
+              self.assertEqual(phrase(""""sam"""", """"Likes to code""""), """"Sam likes to code"""", 'phrase(""""sam"""", """" Likes to code"""")')
+              self.assertEqual(phrase(""""mary-anne"""", """"likes to sing""""), """"Mary-anne likes to sing"""", 'phrase(""""mary-anne"""", """" likes to sing"""")')
+              self.assertEqual(phrase(""""ANNA"""", """"likes to dance""""), """"Anna likes to dance"""", 'phrase(""""ANNA"""", """" likes to dance"""")')
+              self.assertEqual(phrase(1111, """"likes programming""""), False, 'phrase(1111, """" likes programming"""")')","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",Pass to CodeBERT,Pass to CodeBERT,TRUE,0.896551724,0.896551724,TRUE
+6,Pair E,W,get_counts_dict_acop,"Finish the function below which takes a list of strings and returns a dictionary that has the number of times each unique string appears in the list.  For example, ``get_counts(['b','b','b','b','a'])`` returns ``{'b': 4, 'a': 1}``, ``get_counts(['b','b','b','a','a'])``  returns ``{'a': 2, 'b': 3}``, ``get_counts(['b','b','a','a'])`` returns ``{'b': 2, 'a': 2}``.",get_counts_dict_acop,150,"def get_counts(s_list):
+    dict = {}
+    for word in s_list:
+        if dict.get(word, 0) == 0:
+            dict[word] = 1
+        else:
+            dict[word] += 1
+    return dict","def get_counts(s_list):
+    
+    newlist = {}
+    for x in s_list:
+        print(x)
+        count = 0
+        if x not in newlist:
+            newlist[x] = 1
+        else:
+            
+            count = count + 1
+            newlist[x] = count","def get_counts(s_list):
+    newlist = {}
+    for x in s_list:
+        count = 0
+        if x not in newlist:
+            newlist[x] = 1
+        else:
+            count = newlist[x] + 1
+            newlist[x] = count
+    return newlist","class myTests(unittest.TestCase):
+
+    def testOne(self):
+           self.assertEqual(get_counts(['a','b','a']), {'a':2, 'b':1}, ""get_counts('a','b','a')"")
+           self.assertEqual(get_counts([]), {}, ""get_counts([])"")
+           self.assertEqual(get_counts(['a','a','a']), {'a':3}, ""get_counts('a','a','a')"")
+           self.assertEqual(get_counts(['b','a','a']), {'b':1, 'a':2}, ""get_counts('b','a','a')"")
+           self.assertEqual(get_counts(['a','a','b']), {'a':2, 'b':1}, ""get_counts('a','a','b')"")
+           self.assertEqual(get_counts(['a','c','b']), {'a':1, 'c': 1, 'b':1}, ""get_counts('a','c','b')"")
+           self.assertEqual(get_counts(['a','c','b','c']), {'a':1, 'c': 2, 'b':1}, ""get_counts('a','c','b','c')"")
+           self.assertEqual(get_counts(['b','c','b','c']), {'b':2, 'c': 2}, ""get_counts('b','c','b','c')"")
+           self.assertEqual(get_counts(['b','c','b','b']), {'b':3, 'c': 1}, ""get_counts('b','c','b','b')"")
+           self.assertEqual(get_counts(['b','b','b','b']), {'b':4}, ""get_counts('b','b','b','b')"")",def get_counts(s_list):,,if i not in dic:,if i !=  dic:,32,11,TRUE,0.596491228,0.876033058,TRUE
+7,Pair E,W,get_counts_dict_acoc,"Finish the function below which takes a list of strings and returns a dictionary that has the number of times each unique string appears in the list.  For example, ``get_counts(['b','b','b','b','a'])`` returns ``{'b': 4, 'a': 1}``, ``get_counts(['b','b','b','a','a'])``  returns ``{'a': 2, 'b': 3}``, ``get_counts(['b','b','a','a'])`` returns ``{'b': 2, 'a': 2}``.",get_counts_dict_acoc,150,"def get_counts(s_list):
+    dict = {}
+    for word in s_list:
+        if dict.get(word, 0) == 0:
+            dict[word] = 1
+        else:
+            dict[word] += 1
+    return dict","def get_counts(s_list):
+    
+    newlist = {}
+    for x in s_list:
+        print(x)
+        count = 0
+        if x not in newlist:
+            newlist[x] = 1
+        else:
+            
+            count = count + 1
+            newlist[x] = count","def get_counts(s_list):
+    newlist = {}
+    for x in s_list:
+        count = 0
+        if x not in newlist:
+            newlist[x] = 1
+        else:
+            count = newlist[x] + 1
+            newlist[x] = count
+    return newlist","class myTests(unittest.TestCase):
+
+    def testOne(self):
+           self.assertEqual(get_counts(['a','b','a']), {'a':2, 'b':1}, ""get_counts('a','b','a')"")
+           self.assertEqual(get_counts([]), {}, ""get_counts([])"")
+           self.assertEqual(get_counts(['a','a','a']), {'a':3}, ""get_counts('a','a','a')"")
+           self.assertEqual(get_counts(['b','a','a']), {'b':1, 'a':2}, ""get_counts('b','a','a')"")
+           self.assertEqual(get_counts(['a','a','b']), {'a':2, 'b':1}, ""get_counts('a','a','b')"")
+           self.assertEqual(get_counts(['a','c','b']), {'a':1, 'c': 1, 'b':1}, ""get_counts('a','c','b')"")
+           self.assertEqual(get_counts(['a','c','b','c']), {'a':1, 'c': 2, 'b':1}, ""get_counts('a','c','b','c')"")
+           self.assertEqual(get_counts(['b','c','b','c']), {'b':2, 'c': 2}, ""get_counts('b','c','b','c')"")
+           self.assertEqual(get_counts(['b','c','b','b']), {'b':3, 'c': 1}, ""get_counts('b','c','b','b')"")
+           self.assertEqual(get_counts(['b','b','b','b']), {'b':4}, ""get_counts('b','b','b','b')"")",def get_counts(s_list):,,if i not in dic:,if i !=  dic:,32,11,TRUE,0.596491228,0.876033058,TRUE
+8,Pair E_2,W,nested_dict_acop,"Finish a function, ``get_order_totals()``, that takes a list of tuples and returns a nested dictionary with the same information. Each tuple includes 3 values; the first is the person's name, the second is item name, and the third is the quantity. Note that there may be more than one tuple for the same person and item - your dictionary should total all the quantities for the same person and item. For example, passing in [('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)] should result in this dictionary: {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}}.",nested_dict_acop,24,"def get_order_totals(orders):
+    order_totals = {}
+    for order in orders:
+        name = order[0]
+        item = order[1]
+        quantity = order[2]
+        if name in order_totals:
+            if item in order_totals[name]:
+                order_totals[name][item] += quantity
+            else:
+                order_totals[name][item] = quantity
+        else:
+            order_totals[name] = {item: quantity}
+    return order_totals","def get_order_totals(orders):
+    orders_dict = dict()
+    for order in orders:
+        food_dict = dict()
+        food_dict[order[1]] = 0
+        orders_dict[order[0]] = food_dict
+    for order in orders:
+        orders_dict[order[0]][order[1]]+= order[2]
+    return orders_dict","def get_order_totals(orders):
+    orders_dict = dict()
+    for order in orders:
+        food_dict = dict()
+        if order[0] not in orders_dict:
+            orders_dict[order[0]] = food_dict
+        orders_dict[order[0]][order[1]] = 0
+                
+    for order in orders:
+        orders_dict[order[0]][order[1]]+= order[2]
+    return orders_dict","class myTests(unittest.TestCase):
+
+    def testOne(self):
+                self.assertEqual(get_order_totals([('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)]), {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}})
+                self.assertEqual(get_order_totals([('person1', 'food1', 2), ('person2', 'food2', 2)]), {'person1': {'food1': 2}, 'person2': {'food2': 2}})
+                self.assertEqual(get_order_totals([('person1', 'food1', 1)]), {'person1': {'food1': 1}})
+                self.assertEqual(get_order_totals([('p1', 'f1', 2), ('p1', 'f1', 3), ('p2', 'f1', 4), ('p1', 'f2', 5), ('p2', 'f2', 2)])['p1']['f1'], 5)",def get_order_totals(orders):,,dict[i[0]][i[1]] += i[2],dict[i[0]]i[1] += i[2],82,20,TRUE,0.350515464,0.826347305,TRUE
+9,Pair E_2,W,nested_dict_acoc,"Finish a function, ``get_order_totals()``, that takes a list of tuples and returns a nested dictionary with the same information. Each tuple includes 3 values; the first is the person's name, the second is item name, and the third is the quantity. Note that there may be more than one tuple for the same person and item - your dictionary should total all the quantities for the same person and item. For example, passing in [('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)] should result in this dictionary: {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}}.",nested_dict_acoc,24,"def get_order_totals(orders):
+    order_totals = {}
+    for order in orders:
+        name = order[0]
+        item = order[1]
+        quantity = order[2]
+        if name in order_totals:
+            if item in order_totals[name]:
+                order_totals[name][item] += quantity
+            else:
+                order_totals[name][item] = quantity
+        else:
+            order_totals[name] = {item: quantity}
+    return order_totals","def get_order_totals(orders):
+    orders_dict = dict()
+    for order in orders:
+        food_dict = dict()
+        food_dict[order[1]] = 0
+        orders_dict[order[0]] = food_dict
+    for order in orders:
+        orders_dict[order[0]][order[1]]+= order[2]
+    return orders_dict","def get_order_totals(orders):
+    orders_dict = dict()
+    for order in orders:
+        food_dict = dict()
+        if order[0] not in orders_dict:
+            orders_dict[order[0]] = food_dict
+        orders_dict[order[0]][order[1]] = 0
+                
+    for order in orders:
+        orders_dict[order[0]][order[1]]+= order[2]
+    return orders_dict","class myTests(unittest.TestCase):
+
+    def testOne(self):
+                self.assertEqual(get_order_totals([('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)]), {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}})
+                self.assertEqual(get_order_totals([('person1', 'food1', 2), ('person2', 'food2', 2)]), {'person1': {'food1': 2}, 'person2': {'food2': 2}})
+                self.assertEqual(get_order_totals([('person1', 'food1', 1)]), {'person1': {'food1': 1}})
+                self.assertEqual(get_order_totals([('p1', 'f1', 2), ('p1', 'f1', 3), ('p2', 'f1', 4), ('p1', 'f2', 5), ('p2', 'f2', 2)])['p1']['f1'], 5)",def get_order_totals(orders):,,dict[i[0]][i[1]] += i[2],dict[i[0]]i[1] += i[2],82,20,TRUE,0.350515464,0.826347305,TRUE

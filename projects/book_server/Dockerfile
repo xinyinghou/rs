@@ -30,6 +30,7 @@ RUN apt update
 # copy project
 COPY ./dist/$wheel /usr/src/app/$wheel
 COPY ./Evaluation_Material_EVALUATE.csv /usr/src/app/Evaluation_Material_EVALUATE.csv
+COPY ./Evaluation_Material_STUDY.csv /usr/src/app/Evaluation_Material_STUDY.csv
 COPY ./Classroom_Evaluation_Material.csv /usr/src/app/Classroom_Evaluation_Material.csv
 # When you pip install a wheel it also installs all of the dependencies
 # which are stored in the METADATA file inside the wheel

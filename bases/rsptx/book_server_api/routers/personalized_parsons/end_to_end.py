@@ -39,7 +39,7 @@ def get_personalized_parsons_help(dict_buggy_code, df_question_bank):
 def request_fixed_code_from_openai(df_question_line, buggy_code, default_start_code, default_test_code, most_common_code, unittest_code, unittest_result = False, similarity_personalized = 0, similarity_most_common = 1, solution_generation = 0):
     personalized_most_common_solution = change_variable_names(most_common_code, map_variable_names(buggy_code, most_common_code))
     print("buggy_code", buggy_code)
-    fixed_code = get_fixed_code(build_code_prompt(df_question_line, buggy_code))
+    fixed_code = get_fixed_code(df_question_line, buggy_code, attempt_type="new", situation="", old_fixed_code="")
     print("solution_generation", solution_generation, "fixed_code", fixed_code)
     while (solution_generation <=2) & ((unittest_result != True) or (similarity_personalized < similarity_most_common)):
         #print("solution_generation", solution_generation, "unittest_result", unittest_result, "fixed_code", fixed_code)
@@ -51,12 +51,14 @@ def request_fixed_code_from_openai(df_question_line, buggy_code, default_start_c
         if (unittest_result == True) & (similarity_personalized >= similarity_most_common):
             print("solution_generation", solution_generation, "unittest_result", unittest_result, "fixed_code", cleaned_fixed_code.lstrip(), "similarity_personalized", similarity_personalized, "similarity_most_common", similarity_most_common)
             # Remove leading whitespace from the first line
+            # store this cleaned_fixed_code in the database
+            add_personalized_code(buggy_code, cleaned_fixed_code)
             return cleaned_fixed_code.lstrip()
         elif (unittest_result == True) & (similarity_personalized < similarity_most_common):
-            fixed_code = get_fixed_code_repeat(build_code_prompt(df_question_line, buggy_code), cleaned_fixed_code, "close enough")
+            fixed_code = get_fixed_code(df_question_line, buggy_code, attempt_type="repeat", situation="close enough", old_fixed_code=cleaned_fixed_code)
             solution_generation += 1
         else:
-            fixed_code = get_fixed_code_repeat(build_code_prompt(df_question_line, buggy_code), cleaned_fixed_code, "a correct answer")
+            fixed_code = get_fixed_code(df_question_line, buggy_code, attempt_type="repeat", situation="a correct answer", old_fixed_code=cleaned_fixed_code)
             solution_generation += 1
             
     if solution_generation > 2:
@@ -64,21 +66,21 @@ def request_fixed_code_from_openai(df_question_line, buggy_code, default_start_c
         print("personalized_most_common_solution", personalized_most_common_solution)
         return personalized_most_common_solution
 
-def generate_personalized_fixed_code(df_question_line, buggy_code, default_start_code, default_test_code, most_common_code, unittest_code, attempt = 0):
+def generate_personalized_fixed_code(df_question_line, buggy_code, default_start_code, default_test_code, most_common_code, unittest_code, API_attempt = 0):
     personalized_most_common_solution = change_variable_names(most_common_code, map_variable_names(buggy_code, most_common_code))
     if buggy_code_checker(buggy_code, default_start_code, default_test_code):
         # get the personalized solution
-        while True & (attempt < 2):
-            attempt += 1
-            print("attempt", attempt)
+        while True & (API_attempt < 2):
+            API_attempt += 1
+            print("API_attempt", API_attempt)
             try:
                 cleaned_fixed_code  = request_fixed_code_from_openai(df_question_line, buggy_code, default_start_code, default_test_code, most_common_code, unittest_code)
                 return cleaned_fixed_code
             except Exception as e:
                 traceback.print_exc()
                 time.sleep(0.01)
-                print(f"{attempt}-{e}-time_sleep")
-                if attempt >= 2:
+                print(f"{API_attempt}-{e}-time_sleep")
+                if API_attempt >= 2:
                     return personalized_most_common_solution
     else: # return False
         return personalized_most_common_solution
@@ -106,7 +108,8 @@ def generate_personalized_Parsons_blocks(df_question_line, buggy_code, cleaned_f
                 unittest_True += 1
                 print("unittest_True", unittest_True)
                 #def build_distractor_prompt(question_line, correct_line, regeneration_message, system_message=system_message,user_message=user_message,assistant_message=assistant_message):
-                new_distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_correct_line[2],distractor[1]), distractor_correct_line[2],distractor[1])
+                # new_distractor = get_personalized_distractor(build_distractor_prompt(df_question_line, distractor_correct_line[2],distractor[1]), distractor_correct_line[2],distractor[1])
+                new_distractor = ""
                 print("new_distractor",new_distractor,distractor_correct_line[2],distractor[1])
                 if (new_distractor == "") or (new_distractor is None):
                     distractors.pop(distractor_correct_line)
