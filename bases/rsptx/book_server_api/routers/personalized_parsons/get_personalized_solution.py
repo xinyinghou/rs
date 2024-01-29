@@ -6,7 +6,7 @@ from dotenv import dotenv_values
 import time
 import sqlite3
 import random
-from store_solution_cache import *
+from .store_solution_cache import *
 from datetime import datetime
 import sys
 

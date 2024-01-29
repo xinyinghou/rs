@@ -420,9 +420,10 @@ export class ActiveCode extends RunestoneBase {
     async parsonsBtnHandler() {
         if (this.prevHelpedCode != null && this.prevHelpedCode.trim() == this.editor.getValue().trim()) {
             // avoid regenerating for the same code
-            alert('Your code has not changed, please click "Reopen Help" button to review help');
+            alert('Your code has not changed, please click "View Help Again"');
             return;
         }
+        this.prevHelpedCode = this.editor.getValue();
         // create a loading prompt
         console.log($(this.outerDiv).find("#scaffolding-loading-prompt").length);
         if (!$(this.outerDiv).find("#scaffolding-loading-prompt").length) {
