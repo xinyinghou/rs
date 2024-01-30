@@ -40,7 +40,7 @@ def add_personalized_code(buggy_code, personalized_solution, db_path="personaliz
             print("Record with the same buggy_code already exists. Not adding.")
 
 
-def get_solution(buggy_code, db_path="personalized_solution_cache.db"):
+def get_solution_from_cache(buggy_code, db_path="personalized_solution_cache.db"):
     create_cache(db_path)
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()

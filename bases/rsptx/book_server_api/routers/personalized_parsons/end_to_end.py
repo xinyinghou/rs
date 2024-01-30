@@ -10,6 +10,7 @@ from .get_parsons_code_distractors import *
 from .personalize_parsons import *
 from .personalize_common_solution import *
 from .token_compare import *
+from .store_solution_cache import *
 
 
 # Include: Problem Name, Question Description, Cluster
@@ -33,13 +34,12 @@ def get_personalized_parsons_help(dict_buggy_code, df_question_bank):
     return cleaned_fixed_code, personalized_Parsons_block
 
 
-
-
 #generate the fixed code
 def request_fixed_code_from_openai(df_question_line, buggy_code, default_start_code, default_test_code, most_common_code, unittest_code, unittest_result = False, similarity_personalized = 0, similarity_most_common = 1, solution_generation = 0):
     personalized_most_common_solution = change_variable_names(most_common_code, map_variable_names(buggy_code, most_common_code))
     print("buggy_code", buggy_code)
-    fixed_code = get_fixed_code(df_question_line, buggy_code, attempt_type="new", situation="", old_fixed_code="")
+    fixed_code = get_fixed_code(df_question_line, buggy_code, default_test_code,  attempt_type="new", situation="", old_fixed_code="")
+    cleaned_buggy_code = clean_student_code(buggy_code, default_test_code)
     print("solution_generation", solution_generation, "fixed_code", fixed_code)
     while (solution_generation <=2) & ((unittest_result != True) or (similarity_personalized < similarity_most_common)):
         #print("solution_generation", solution_generation, "unittest_result", unittest_result, "fixed_code", fixed_code)
@@ -52,18 +52,21 @@ def request_fixed_code_from_openai(df_question_line, buggy_code, default_start_c
             print("solution_generation", solution_generation, "unittest_result", unittest_result, "fixed_code", cleaned_fixed_code.lstrip(), "similarity_personalized", similarity_personalized, "similarity_most_common", similarity_most_common)
             # Remove leading whitespace from the first line
             # store this cleaned_fixed_code in the database
-            add_personalized_code(buggy_code, cleaned_fixed_code)
+            add_personalized_code(cleaned_buggy_code, cleaned_fixed_code)
+            print("add_personalized_code-cleaned_buggy_code", cleaned_buggy_code, "cleaned_fixed_code", cleaned_fixed_code)
             return cleaned_fixed_code.lstrip()
         elif (unittest_result == True) & (similarity_personalized < similarity_most_common):
-            fixed_code = get_fixed_code(df_question_line, buggy_code, attempt_type="repeat", situation="close enough", old_fixed_code=cleaned_fixed_code)
+            fixed_code = get_fixed_code(df_question_line, buggy_code, default_test_code, attempt_type="repeat", situation="close enough", old_fixed_code=cleaned_fixed_code)
             solution_generation += 1
         else:
-            fixed_code = get_fixed_code(df_question_line, buggy_code, attempt_type="repeat", situation="a correct answer", old_fixed_code=cleaned_fixed_code)
+            fixed_code = get_fixed_code(df_question_line, buggy_code, default_test_code,  attempt_type="repeat", situation="a correct answer", old_fixed_code=cleaned_fixed_code)
             solution_generation += 1
             
     if solution_generation > 2:
         print("retuen: personalized_most_common_solution \n solution_generation", solution_generation, "unittest_result", unittest_result, "final_generated_fixed_code\n", cleaned_fixed_code, "similarity_personalized", similarity_personalized, "similarity_most_common", similarity_most_common)
         print("personalized_most_common_solution", personalized_most_common_solution)
+        add_personalized_code(cleaned_buggy_code, personalized_most_common_solution)
+        print("add_personalized_code-cleaned_buggy_code", cleaned_buggy_code, "personalized_most_common_solution", personalized_most_common_solution)
         return personalized_most_common_solution
 
 def generate_personalized_fixed_code(df_question_line, buggy_code, default_start_code, default_test_code, most_common_code, unittest_code, API_attempt = 0):

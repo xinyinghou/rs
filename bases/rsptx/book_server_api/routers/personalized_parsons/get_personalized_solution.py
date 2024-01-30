@@ -9,11 +9,13 @@ import random
 from .store_solution_cache import *
 from datetime import datetime
 import sys
+#from evaluate_fixed_code_evaluation import *
+from .evaluate_fixed_code import *
 
 #Sets the current working directory to be the same as the file.
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # request rate limit:
-request_rate_limit = 40
+request_rate_limit = 30
 #Load environment file for secrets.
 try:
     if load_dotenv('.env') is False:
@@ -21,6 +23,14 @@ try:
 except TypeError:
     print('Unable to load .env file.')
     quit() 
+
+# Global variables
+api_key_list_str = dotenv_values(".env")['LST_OPENAI_API_KEY']
+api_key_list = api_key_list_str.split(',')
+api_key_list = [api_key.strip() for api_key in api_key_list]
+
+print("api_key_list", api_key_list)
+
 
 system_message = """
 Fix the provided Python [user-code] based on the provided [task-description] and [sample-solution] and generate the [fixed-code]. 
@@ -102,7 +112,7 @@ def build_code_prompt(question_line, buggy_code, system_message=system_message,u
     return prompt_messages
 
 
-def initialize_database(api_keys, db_path):
+def initialize_database(api_keys, db_path="request_counts.db"):
     if not os.path.exists(db_path):
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
@@ -119,8 +129,10 @@ def initialize_database(api_keys, db_path):
                     INSERT INTO api_key_counts (api_key, remaining_requests, total_count) VALUES (?, ?, 0)
                 ''', (key,request_rate_limit,))
             conn.commit()
+        print("Key_Database created.")
 
-def get_current_key(db_path):
+def get_current_key(db_path="request_counts.db"):
+    initialize_database(api_key_list, db_path)
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
 
@@ -134,14 +146,10 @@ def get_current_key(db_path):
         else:
             return None  # Return None if no key is found
 
-# Global variables
-api_key_list_str = dotenv_values(".env")['LST_OPENAI_API_KEY']
-api_key_list = api_key_list_str.split(',')
-api_key_list = [api_key.strip() for api_key in api_key_list]
 
-print("api_key_list", api_key_list)
 
-def switch_api_key(api_keys, db_path):
+def switch_api_key(api_keys, db_path="request_counts.db"):
+    initialize_database(api_key_list, db_path)
     current_key = get_current_key(db_path)
 
     with sqlite3.connect(db_path) as conn:
@@ -223,11 +231,11 @@ def get_actual_fixed_code(prompt_messages, current_api_key, attempt_type, situat
     completion = raw_completion_response.parse()
     #print("response_headers", response_headers, "completion", completion)
     # x-ratelimit-remaining-requests, x-ratelimit-reset-requests
-    remaining_requests = response_headers['x-ratelimit-remaining-requests']
+    #remaining_requests = response_headers['x-ratelimit-remaining-requests']
+    remaining_requests = 30 - (40-int(response_headers['x-ratelimit-remaining-requests']))
     fixed_code = completion.choices[0].message.content
     print("remaining_requests", remaining_requests, "fixed_code", fixed_code)
     #reset_requests = response_headers['x-ratelimit-reset-requests']
-    #print("remaining_requests", remaining_requests, "reset_requests", reset_requests)
     
     return fixed_code, remaining_requests
 
@@ -249,10 +257,13 @@ def get_min_reset_time(db_path="request_counts.db"):
         return datetime.now()
     
 
-def get_fixed_code(df_question_line, buggy_code, attempt_type, situation, old_fixed_code, api_keys=api_key_list, db_path="request_counts.db"):
+def get_fixed_code(df_question_line, buggy_code, default_test_code, attempt_type, situation, old_fixed_code, api_keys=api_key_list, db_path="request_counts.db"):
     # first check if the buggy code is in the cache
-    if get_solution(buggy_code) != None:
-        return get_solution(buggy_code)
+    cleaned_buggy_code = clean_student_code(buggy_code, default_test_code)
+    print("get_fixed_code-cleaned_buggy_code", cleaned_buggy_code)
+    if get_solution_from_cache(cleaned_buggy_code) != None:
+        print("Solution found in cache.",get_solution_from_cache(cleaned_buggy_code))
+        return get_solution_from_cache(cleaned_buggy_code)
 
     prompt_messages = build_code_prompt(df_question_line, buggy_code)
     

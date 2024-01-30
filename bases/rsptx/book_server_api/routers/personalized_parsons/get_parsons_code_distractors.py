@@ -72,7 +72,7 @@ def request_distractor_from_openai(prompt_messages):
     return distractor
 
 def get_personalized_distractor(prompt_messages, correct_line, distractor, attempt = 0):
-    line_indentation = correct_line[:len(correct_line) - len(correct_line.lstrip())]
+    #line_indentation = correct_line[:len(correct_line) - len(correct_line.lstrip())]
     # CLASSROOM STUDY: REMOVE the LLM Distractor Generation
     # while ((distractor.count('\n') != 0) or (distractor == "") or (distractor == correct_line)) and (attempt < 3):
     #     attempt += 1
