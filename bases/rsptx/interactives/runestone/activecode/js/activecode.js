@@ -381,9 +381,7 @@ export class ActiveCode extends RunestoneBase {
             copyAnswerButton.classList.add('btn','btn-success', 'copy-button-hide');
             copyAnswerButton.innerText = "Copy Answer to Clipboard";
             copyAnswerButton.onclick = () => {
-                navigator.clipboard.writeText(this.scaffoldingAnswer).then(()=> {
-                    $('#copy-answer-button').text('Copied!');
-                });
+                this.copyScaffoldingSolutionToClipboard();
             }
             scaffoldingContainer.appendChild(copyAnswerButton);
 
@@ -417,11 +415,35 @@ export class ActiveCode extends RunestoneBase {
 
     }
 
+    copyScaffoldingSolutionToClipboard() {
+        var temptextarea = document.createElement('textarea');
+        temptextarea.id = 'temp-textarea';
+        var scaffoldingContainer = document.querySelector('#scaffolding-container');
+        scaffoldingContainer.appendChild(temptextarea);
+        temptextarea.value = this.scaffoldingAnswer;
+        temptextarea.select();
+        temptextarea.setSelectionRange(0, 99999);
+        try {
+            document.execCommand("copy");
+            temptextarea.remove();
+            console.log('copied.')
+        } catch (err) {
+            alert('error copying to clipboard, please copy manually');
+        }
+        // navigator.clipboard.writeText(this.scaffoldingAnswer).then(()=> {
+        //     $('#copy-answer-button').text('Copied!');
+        // });
+    }
+
     async parsonsBtnHandler() {
         if (this.prevHelpedCode != null && this.prevHelpedCode.trim() == this.editor.getValue().trim()) {
             // avoid regenerating for the same code
             alert('Your code has not changed, please click "View Help Again"');
             return;
+        }
+        let temptextarea = document.querySelector('#temp-textarea');
+        if (temptextarea) {
+            temptextarea.remove();
         }
         this.prevHelpedCode = this.editor.getValue();
         // create a loading prompt
