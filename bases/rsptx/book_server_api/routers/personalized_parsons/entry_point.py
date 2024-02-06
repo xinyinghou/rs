@@ -3,13 +3,13 @@ import pandas as pd
 import json
 
 # import necessary functions from other files
-from buggy_code_checker import *
-from get_personalized_solution import *
-from evaluate_fixed_code import *
-from generate_parsons_blocks import *
-from get_parsons_code_distractors import *
-from personalize_parsons import *
-from end_to_end import *
+from .buggy_code_checker import *
+from .get_personalized_solution import *
+from .evaluate_fixed_code import *
+from .generate_parsons_blocks import *
+from .get_parsons_code_distractors import *
+from .personalize_parsons import *
+from .end_to_end import *
 #from similarity_compare import *
 
 with open("example_buggy_code.json", "r") as json_file:

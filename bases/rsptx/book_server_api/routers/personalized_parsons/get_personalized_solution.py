@@ -6,11 +6,11 @@ from dotenv import dotenv_values
 import time
 import sqlite3
 import random
-from store_solution_cache import *
+from .store_solution_cache import *
 from datetime import datetime
 import sys
 #from evaluate_fixed_code_evaluation import *
-from evaluate_fixed_code import *
+from .evaluate_fixed_code import *
 
 #Sets the current working directory to be the same as the file.
 os.chdir(os.path.dirname(os.path.abspath(__file__)))

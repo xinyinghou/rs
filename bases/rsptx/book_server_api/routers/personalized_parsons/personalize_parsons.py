@@ -1,9 +1,9 @@
 import difflib
 import pandas as pd
 from collections import namedtuple
-from get_parsons_code_distractors import *
-from generate_parsons_blocks import *
-from token_compare import *
+from .get_parsons_code_distractors import *
+from .generate_parsons_blocks import *
+from .token_compare import *
 import random
 # compare the similarity between the student code and the fixed code
 
