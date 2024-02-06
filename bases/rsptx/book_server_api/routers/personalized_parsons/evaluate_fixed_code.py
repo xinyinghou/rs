@@ -6,7 +6,7 @@ from fuzzywuzzy import fuzz
 from types import ModuleType
 import difflib
 import signal
-from .personalize_common_solution import * 
+from personalize_common_solution import * 
 
 class NullOutput:
     def write(self, _):
@@ -121,6 +121,8 @@ def extract_code_line(code):
     else:
         fixed_code = fixed_code
 
+    print("fixed_code_in_the_end\n", fixed_code)
+    
     return fixed_code
     
 

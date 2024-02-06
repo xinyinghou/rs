@@ -1,7 +1,15 @@
 # Personalized-Parsons-Runestone
 Develop Personalized Parsons Problem as Scaffolding for Code Writing on the Runestone System
 
-To start, please run the requirements.txt
+To start, please run the `requirements.txt`
+
+### Static Files:
+* `Classroom_Evaluation_Material.csv` - Nested Dict file for the classroom study
+* `example_buggy_code.json` - Example buggy code
+* `personalized_Parsons_block.txt` - Example Parsons block format
+* `personalized_solution_cache.db` - stored 290 personalized solutions of past student buggy code
+* `request_counts.db` - API key management
+
 
 ### Input:
 * An incorrect solution to a programming problem (written by a student) - see `example_buggy_code.json`

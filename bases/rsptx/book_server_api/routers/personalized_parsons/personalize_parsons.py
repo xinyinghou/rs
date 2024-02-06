@@ -1,9 +1,9 @@
 import difflib
 import pandas as pd
 from collections import namedtuple
-from .get_parsons_code_distractors import *
-from .generate_parsons_blocks import *
-from .token_compare import *
+from get_parsons_code_distractors import *
+from generate_parsons_blocks import *
+from token_compare import *
 import random
 # compare the similarity between the student code and the fixed code
 
@@ -99,7 +99,8 @@ def find_distractor(fixed_line, removed_lines):
     # check whether there is any line achieved a high similarity than the line of comparable location
     for student_line in removed_lines:
         similarity = code_similarity_score(student_line, fixed_line)
-        if (similarity > highest_similarity) & (similarity < 0.99) & (student_line.strip() != fixed_line.strip()):
+        normalized_line_comparision = normalize_and_compare_lines(student_line, fixed_line)
+        if (similarity > highest_similarity) & (similarity < 0.99) & (normalized_line_comparision==False):
             highest_similarity = similarity
             distractor_line = student_line
 
@@ -107,6 +108,7 @@ def find_distractor(fixed_line, removed_lines):
 
 
 def generate_unique_distractor_dict(distractor_dict):
+    print("distractor_dict", distractor_dict)
     # Group values by value[1]
     value_groups = {}
     for key, value in distractor_dict.items():
@@ -167,7 +169,7 @@ def personalize_Parsons_block(df_question_line, code_comparison_pairs, buggy_cod
     distractors = {}
     distractor_candidates = []
     print("code_comparison_pairs\n", len(code_comparison_pairs), code_comparison_pairs, "total_similarity\n", total_similarity)
-    if (total_similarity < 0.30) or (total_similarity == 1.0) or (unchanged_lines == 0):
+    if (total_similarity < 0.30) or (len(unchanged_lines) == 0) or (len(fixed_lines) == 0):
         print("total_similarity < 0.30 or == 1")
         return "Full", {}, []
     else:

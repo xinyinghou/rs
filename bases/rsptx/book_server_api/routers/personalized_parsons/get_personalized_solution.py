@@ -6,11 +6,11 @@ from dotenv import dotenv_values
 import time
 import sqlite3
 import random
-from .store_solution_cache import *
+from store_solution_cache import *
 from datetime import datetime
 import sys
 #from evaluate_fixed_code_evaluation import *
-from .evaluate_fixed_code import *
+from evaluate_fixed_code import *
 
 #Sets the current working directory to be the same as the file.
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -186,12 +186,13 @@ def switch_api_key(api_keys, db_path="request_counts.db"):
             SELECT api_key, remaining_requests, total_count
             FROM api_key_counts
             WHERE remaining_requests > 0
-            ORDER BY remaining_requests DESC
+            ORDER BY remaining_requests DESC, total_count ASC
             LIMIT 1
         ''')
         result = cursor.fetchone()
         if result:
             new_key, remaining_requests, total_count = result
+            print("new_key", new_key, "remaining_requests", remaining_requests, "total_count", total_count)
             return new_key, remaining_requests, total_count
         else:
             print("All keys reached the request limit. Waiting for reset.")
@@ -267,7 +268,6 @@ def get_fixed_code(df_question_line, buggy_code, default_test_code, attempt_type
 
     prompt_messages = build_code_prompt(df_question_line, buggy_code)
     
-    print("Creating database if it does not exist.")
     initialize_database(api_keys, db_path)
     new_key, remaining_requests, total_count = switch_api_key(api_keys, db_path)
 

@@ -2,15 +2,15 @@
 import time
 import traceback
 # import necessary functions from other files
-from .buggy_code_checker import buggy_code_checker
-from .get_personalized_solution import *
-from .evaluate_fixed_code import *
-from .generate_parsons_blocks import *
-from .get_parsons_code_distractors import *
-from .personalize_parsons import *
-from .personalize_common_solution import *
-from .token_compare import *
-from .store_solution_cache import *
+from buggy_code_checker import buggy_code_checker
+from get_personalized_solution import *
+from evaluate_fixed_code import *
+from generate_parsons_blocks import *
+from get_parsons_code_distractors import *
+from personalize_parsons import *
+from personalize_common_solution import *
+from token_compare import *
+from store_solution_cache import *
 
 
 # Include: Problem Name, Question Description, Cluster

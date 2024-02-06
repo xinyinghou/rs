@@ -1,4 +1,4 @@
-{"Problem Name":"less_dict_acop",
-"CF (Code)":"def         less_dict(d, cutoff):\n    d2 = {}\n    for k in d:\n        if (d[k] < cutoff):\n            d2[k] == cutoff\n    return d2\n"
+{"Problem Name":"table_reservation_oc",
+"CF (Code)":"def table_reservation(reservation_dict, guest_num):    count = 0    for key, value in reservation_dict.items():        for item in value:            for key,value in item.values():                if value == guest_num:                    count += 1    return count"
 }
 

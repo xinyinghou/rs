@@ -1,81 +1,8 @@
 pair,type,question,w_question_description,Problem Name,Cluster,Example_student_solution,Example_buggy_code,Example_fixed_code,Unittest_Code,Default_Starting_Code,Default_Test_Code,Example_paired_distractor_correct,Example_paired_distractor_wrong,Edit_Distance_common,Edit_Distance_personalized,Edit_personalized_few,Similarity_common,Similarity_personalized,Similarity_personalized_high
-A,W,add_quantity_acoc,"Finish the function ``add_quantity(item_dict, quantities)`` below:
-            - It takes a dictionary ``item_dict`` and a list ``quantities`` as input, the lengths of ``item_dict`` and ``quantities`` are the same.
-            - ``item_dict``  contains unique item categories as keys and unique item names as values.
-            - ``quantities`` contains corresponding quantities for each unique item. 
-            - Return a nested dictionary where the outer dictionary keys are the categories, the inner dictionary keys are the item names, and the inner dictionary values are the quantities. ",add_quantity_ac,82,"def add_quantity(item_dict, quantities):
-    result = {}
-    for category, items in item_dict.items():
-        result[category] = {}
-        for item in items:
-            if quantities:
-                result[category][item] = quantities.pop(0)
-    return result        ","def add_quantity(item_dict, quantities):
-    out = {}
-    i = 0
-    for item in item_dict:
-        mini = {}
-        for product in item:
-            mini[product] = quantities[i]
-            i += 1
-        out[item] = mini
-    return out","def add_quantity(item_dict, quantities):
-    out = {}
-    i = 0
-    for item in item_dict:
-        mini = {}
-        for product in item_dict[item]:
-            mini[product] = quantities[i]
-            i += 1
-        out[item] = mini
-    return out","class myTests(unittest.TestCase):
-       def testOne(self):
-                self.assertEqual(add_quantity({""Fruits"": [""Apples"", ""Bananas""], ""Vegetables"": [""Carrots""]}, [3, 4, 6]),{""Fruits"": {""Apples"": 3, ""Bananas"": 4}, ""Vegetables"": {""Carrots"": 6}})
-                self.assertEqual(add_quantity({""Fruits"": [""Apples"", ""Bananas"", ""Lemons""], ""Vegetables"": [""Carrots""]}, [3, 4, 6, 9]),{""Fruits"": {""Apples"": 3, ""Bananas"": 4, ""Lemons"": 6}, ""Vegetables"": {""Carrots"": 9}})
-                self.assertEqual(add_quantity({""c1"": [""i1"", ""i2"", ""i3""], ""c2"": [""m1""]}, [1, 2, 3, 4]), {""c1"": {""i1"": 1, ""i2"": 2, ""i3"": 3}, ""c2"": {""m1"": 4}})
-                self.assertEqual(add_quantity({""c1"": [""i1"", ""i2"", ""i3""], ""c2"": [""m1""]}, [1, 2, 3, 4])[""c1""][""i2""], 2)
-                self.assertEqual(add_quantity({""c1"": [""i1"", ""i2"", ""i3""], ""c2"": [""m1""]}, [1, 2, 3, 4])[""c2""][""m1""], 4)        
-",,,result[category][item] = quantities.pop(0),result[category][item] = quantities.pop(1),43,3,TRUE,0.512,0.976,TRUE
-A,W,add_quantity_acop,"Finish the function ``add_quantity(item_dict, quantities)`` below:
-            - It takes a dictionary ``item_dict`` and a list ``quantities`` as input, the lengths of ``item_dict`` and ``quantities`` are the same.
-            - ``item_dict``  contains unique item categories as keys and unique item names as values.
-            - ``quantities`` contains corresponding quantities for each unique item. 
-            - Return a nested dictionary where the outer dictionary keys are the categories, the inner dictionary keys are the item names, and the inner dictionary values are the quantities. ",add_quantity_ac,82,"def add_quantity(item_dict, quantities):
-    result = {}
-    for category, items in item_dict.items():
-        result[category] = {}
-        for item in items:
-            if quantities:
-                result[category][item] = quantities.pop(0)
-    return result        ","def add_quantity(item_dict, quantities):
-    out = {}
-    i = 0
-    for item in item_dict:
-        mini = {}
-        for product in item:
-            mini[product] = quantities[i]
-            i += 1
-        out[item] = mini
-    return out","def add_quantity(item_dict, quantities):
-    out = {}
-    i = 0
-    for item in item_dict:
-        mini = {}
-        for product in item_dict[item]:
-            mini[product] = quantities[i]
-            i += 1
-        out[item] = mini
-    return out","class myTests(unittest.TestCase):
-       def testOne(self):
-                self.assertEqual(add_quantity({""Fruits"": [""Apples"", ""Bananas""], ""Vegetables"": [""Carrots""]}, [3, 4, 6]),{""Fruits"": {""Apples"": 3, ""Bananas"": 4}, ""Vegetables"": {""Carrots"": 6}})
-                self.assertEqual(add_quantity({""Fruits"": [""Apples"", ""Bananas"", ""Lemons""], ""Vegetables"": [""Carrots""]}, [3, 4, 6, 9]),{""Fruits"": {""Apples"": 3, ""Bananas"": 4, ""Lemons"": 6}, ""Vegetables"": {""Carrots"": 9}})
-                self.assertEqual(add_quantity({""c1"": [""i1"", ""i2"", ""i3""], ""c2"": [""m1""]}, [1, 2, 3, 4]), {""c1"": {""i1"": 1, ""i2"": 2, ""i3"": 3}, ""c2"": {""m1"": 4}})
-                self.assertEqual(add_quantity({""c1"": [""i1"", ""i2"", ""i3""], ""c2"": [""m1""]}, [1, 2, 3, 4])[""c1""][""i2""], 2)
-                self.assertEqual(add_quantity({""c1"": [""i1"", ""i2"", ""i3""], ""c2"": [""m1""]}, [1, 2, 3, 4])[""c2""][""m1""], 4)        
-",,,result[category][item] = quantities.pop(0),result[category][item] = quantities.pop(1),43,3,TRUE,0.512,0.976,TRUE
-B,W,nested_dict_acoc,"Write a function, ``get_order_totals()``, that takes a list of tuples and returns a nested dictionary with the same information. Each tuple includes 3 values; the first is the person's name, the second is item name, and the third is the quantity. Note that there may be more than one tuple for the same person and item - your dictionary should total all the quantities for the same person and item.
+B,W,get_order_totals_oc,"Write a function, ``get_order_totals(orders)``, that takes a list of tuples and returns a nested dictionary with the same information. Each tuple contains ``(name, item, quantity)``.
+Note that there may be more than one tuple for the same person and item - your dictionary should total all the quantities for the same person and item.
 For example, passing in [('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)] should result in this dictionary: {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}}.
-       ",mid2_win23_nested_dict_ac,21,"def get_order_totals(orders):
+       ",get_order_totals_oc,21,"def get_order_totals(orders):
     order_totals = {}
     for person, item, quantity in orders:
         if person in order_totals:
@@ -109,12 +36,11 @@ For example, passing in [('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Hold
                 self.assertEqual(get_order_totals([('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)]), {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}})
                 self.assertEqual(get_order_totals([('person1', 'food1', 2), ('person2', 'food2', 2)]), {'person1': {'food1': 2}, 'person2': {'food2': 2}})
                 self.assertEqual(get_order_totals([('person1', 'food1', 1)]), {'person1': {'food1': 1}})
-                self.assertEqual(get_order_totals([('p1', 'f1', 2), ('p1', 'f1', 3), ('p2', 'f1', 4), ('p1', 'f2', 5), ('p2', 'f2', 2)])['p1']['f1'], 5)","def get_order_totals(orders):
-            pass","# you may use the below example to test your code
-        print(get_order_totals([('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)]))",if item in order_totals[person]:,if item in order_totals:,70,60,TRUE,0.4025974025974026,0.6171428571428571,TRUE
-B,W,nested_dict_acop,"Write a function, ``get_order_totals()``, that takes a list of tuples and returns a nested dictionary with the same information. Each tuple includes 3 values; the first is the person's name, the second is item name, and the third is the quantity. Note that there may be more than one tuple for the same person and item - your dictionary should total all the quantities for the same person and item.
+                self.assertEqual(get_order_totals([('p1', 'f1', 2), ('p1', 'f1', 3), ('p2', 'f1', 4), ('p1', 'f2', 5), ('p2', 'f2', 2)])['p1']['f1'], 5)",def get_order_totals(orders):,,if item in order_totals[person]:,if item in order_totals:,70,60,TRUE,0.402597403,0.617142857,TRUE
+B,W,get_order_totals_op,"Write a function, ``get_order_totals(orders)``, that takes a list of tuples and returns a nested dictionary with the same information. Each tuple contains ``(name, item, quantity)``.
+Note that there may be more than one tuple for the same person and item - your dictionary should total all the quantities for the same person and item.
 For example, passing in [('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)] should result in this dictionary: {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}}.
-       ",mid2_win23_nested_dict_ac,21,"def get_order_totals(orders):
+       ",get_order_totals_op,21,"def get_order_totals(orders):
     order_totals = {}
     for person, item, quantity in orders:
         if person in order_totals:
@@ -148,13 +74,11 @@ For example, passing in [('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Hold
                 self.assertEqual(get_order_totals([('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)]), {'Holden': {'pizza': 2}, 'Cristina': {'taco': 2}})
                 self.assertEqual(get_order_totals([('person1', 'food1', 2), ('person2', 'food2', 2)]), {'person1': {'food1': 2}, 'person2': {'food2': 2}})
                 self.assertEqual(get_order_totals([('person1', 'food1', 1)]), {'person1': {'food1': 1}})
-                self.assertEqual(get_order_totals([('p1', 'f1', 2), ('p1', 'f1', 3), ('p2', 'f1', 4), ('p1', 'f2', 5), ('p2', 'f2', 2)])['p1']['f1'], 5)","def get_order_totals(orders):
-            pass","# you may use the below example to test your code
-        print(get_order_totals([('Holden', 'pizza', 1), ('Cristina', 'taco', 2), ('Holden', 'pizza', 1)]))",if item in order_totals[person]:,if item in order_totals:,70,60,TRUE,0.4025974025974026,0.6171428571428571,TRUE
-C,W,average_score_acoc,"Finish the function ``get_average_score(student_information)`` below:
+                self.assertEqual(get_order_totals([('p1', 'f1', 2), ('p1', 'f1', 3), ('p2', 'f1', 4), ('p1', 'f2', 5), ('p2', 'f2', 2)])['p1']['f1'], 5)",def get_order_totals(orders):,,if item in order_totals[person]:,if item in order_totals:,70,60,TRUE,0.402597403,0.617142857,TRUE
+C,W,get_average_score_oc,"Finish the function ``get_average_score(student_information)`` below:
             - It takes a dictionary ``student_information`` representing student data, where the keys are student names, and the values are dictionaries containing information about the student, including their age and a list of courses they took and the grade for each course.
             - You then need to calculate the average grade for each student.
-            - Return a dictionary that stores the students whose average grade is higher than or equal to ``80`` in a dictionary. The keys are student names and the values are their average grade.",nd_get_average_score_v2_ac,52,"def get_average_score(student_information):
+            - Return a dictionary that stores the students whose average grade is higher than or equal to ``80`` in a dictionary. The keys are student names and the values are their average grade.",get_average_score_oc,52,"def get_average_score(student_information):
     average = {}
     for name in student_information:
         total = 0
@@ -192,11 +116,11 @@ C,W,average_score_acoc,"Finish the function ``get_average_score(student_informat
                 self.assertEqual(get_average_score({""Bob"": {""age"": 22, ""courses"": {""Math"": 75, ""History"": 85}}}), {""Bob"": 80})
                 self.assertEqual(get_average_score({""Bob"": {""age"": 22, ""courses"": {""Math"": 75, ""History"": 85}}, ""Charlie"": {""age"": 21, ""courses"": {""Math"": 70}}}), {""Bob"": 80})
                 self.assertEqual(get_average_score({""Bob"": {""age"": 22, ""courses"": {""Math"": 92, ""History"": 86}}})[""Bob""], 89)
-                self.assertEqual(get_average_score({""Mike"": {""age"": 22, ""courses"": {""Math"": 60, ""History"": 60}}}), {})",,,average[name] = total/count,average[name] = total//count,54,3,TRUE,0.5526315789473685,0.974025974,TRUE
-C,W,average_score_acop,"Finish the function ``get_average_score(student_information)`` below:
+                self.assertEqual(get_average_score({""Mike"": {""age"": 22, ""courses"": {""Math"": 60, ""History"": 60}}}), {})",def get_average_score(student_information):,,average[name] = total/count,average[name] = total//count,54,3,TRUE,0.552631579,0.974025974,TRUE
+C,W,get_average_score_op,"Finish the function ``get_average_score(student_information)`` below:
             - It takes a dictionary ``student_information`` representing student data, where the keys are student names, and the values are dictionaries containing information about the student, including their age and a list of courses they took and the grade for each course.
             - You then need to calculate the average grade for each student.
-            - Return a dictionary that stores the students whose average grade is higher than or equal to ``80`` in a dictionary. The keys are student names and the values are their average grade.",nd_get_average_score_v2_ac,52,"def get_average_score(student_information):
+            - Return a dictionary that stores the students whose average grade is higher than or equal to ``80`` in a dictionary. The keys are student names and the values are their average grade.",get_average_score_op,52,"def get_average_score(student_information):
     average = {}
     for name in student_information:
         total = 0
@@ -234,13 +158,13 @@ C,W,average_score_acop,"Finish the function ``get_average_score(student_informat
                 self.assertEqual(get_average_score({""Bob"": {""age"": 22, ""courses"": {""Math"": 75, ""History"": 85}}}), {""Bob"": 80})
                 self.assertEqual(get_average_score({""Bob"": {""age"": 22, ""courses"": {""Math"": 75, ""History"": 85}}, ""Charlie"": {""age"": 21, ""courses"": {""Math"": 70}}}), {""Bob"": 80})
                 self.assertEqual(get_average_score({""Bob"": {""age"": 22, ""courses"": {""Math"": 92, ""History"": 86}}})[""Bob""], 89)
-                self.assertEqual(get_average_score({""Mike"": {""age"": 22, ""courses"": {""Math"": 60, ""History"": 60}}}), {})",,,average[name] = total/count,average[name] = total//count,54,3,TRUE,0.5526315789473685,0.974025974,TRUE
-D,W,vege_menu_acoc,"Finish the function ``get_vegetarian_menu(menu_items):`` below:
+                self.assertEqual(get_average_score({""Mike"": {""age"": 22, ""courses"": {""Math"": 60, ""History"": 60}}}), {})",def get_average_score(student_information):,,average[name] = total/count,average[name] = total//count,54,3,TRUE,0.552631579,0.974025974,TRUE
+D,W,get_vegetarian_menu_oc,"Finish the function ``get_vegetarian_menu(menu_items):`` below:
             - It takes a list of tuples ``menu_items`` as input, each tuple contains ``(name, category, price, is_vegetarian)``.
             - It returns a new nested dictionary that only contains the items from  ``menu_items`` where ``is_vegetarian`` is ``True``.
                 - The outer dictionary keys are ``category`` such as ""Soup"", ""Pizza"", ""Pasta"", ""Salad"". 
                 - The inner dictionary keys are ``name`` and values are ``price`` for each vegetarian item of that ``category``.
-",nd_get_vegetarian_menu_ac,92,"def get_vegetarian_menu(menu_items):
+",get_vegetarian_menu_oc,92,"def get_vegetarian_menu(menu_items):
     menu = {}
     for name, category, price, is_vegetarian in menu_items:
         if is_vegetarian:
@@ -266,13 +190,13 @@ D,W,vege_menu_acoc,"Finish the function ``get_vegetarian_menu(menu_items):`` bel
                 self.assertEqual(get_vegetarian_menu([(""Lentil"", ""Soup"", 15, True), (""Salmorejo"", ""Soup"", 18, True), (""Harvest"", ""Salad"", 18, False), (""Tuna Poke"", ""Salad"", 20, False)]), {""Soup"": {""Lentil"": 15, ""Salmorejo"": 18}})
                 self.assertEqual(get_vegetarian_menu([(""Margherita"", ""Pizza"", 15, True), (""Pepperoni"", ""Pizza"", 22, False), (""Olive-Walnut"", ""Pasta"", 20, True), (""Caesar"", ""Salad"", 10, True)]), {""Pizza"": {""Margherita"": 15}, ""Pasta"": {""Olive-Walnut"": 20}, ""Salad"": {""Caesar"": 10}})
                 self.assertEqual(get_vegetarian_menu([(""Margherita"", ""Pizza"", 15, False)]), {})
-                self.assertEqual(get_vegetarian_menu([(""Lentils"", ""Side"", 5, True), (""Potatoes"", ""Side"", 5, False), (""Peas"", ""Side"", 5, True)]), {""Side"": {""Lentils"": 5, ""Peas"": 5}})",,,if category not in menu:,if category not menu:,38,16,TRUE,0.5420560747663551,0.8067226890756303,TRUE
-D,W,vege_menu_acop,"Finish the function ``get_vegetarian_menu(menu_items):`` below:
+                self.assertEqual(get_vegetarian_menu([(""Lentils"", ""Side"", 5, True), (""Potatoes"", ""Side"", 5, False), (""Peas"", ""Side"", 5, True)]), {""Side"": {""Lentils"": 5, ""Peas"": 5}})",def get_vegetarian_menu(menu_items):,,if category not in menu:,if category not menu:,38,16,TRUE,0.542056075,0.806722689,TRUE
+D,W,get_vegetarian_menu_op,"Finish the function ``get_vegetarian_menu(menu_items):`` below:
             - It takes a list of tuples ``menu_items`` as input, each tuple contains ``(name, category, price, is_vegetarian)``.
             - It returns a new nested dictionary that only contains the items from  ``menu_items`` where ``is_vegetarian`` is ``True``.
                 - The outer dictionary keys are ``category`` such as ""Soup"", ""Pizza"", ""Pasta"", ""Salad"". 
                 - The inner dictionary keys are ``name`` and values are ``price`` for each vegetarian item of that ``category``.
-",nd_get_vegetarian_menu_ac,92,"def get_vegetarian_menu(menu_items):
+",get_vegetarian_menu_op,92,"def get_vegetarian_menu(menu_items):
     menu = {}
     for name, category, price, is_vegetarian in menu_items:
         if is_vegetarian:
@@ -298,12 +222,12 @@ D,W,vege_menu_acop,"Finish the function ``get_vegetarian_menu(menu_items):`` bel
                 self.assertEqual(get_vegetarian_menu([(""Lentil"", ""Soup"", 15, True), (""Salmorejo"", ""Soup"", 18, True), (""Harvest"", ""Salad"", 18, False), (""Tuna Poke"", ""Salad"", 20, False)]), {""Soup"": {""Lentil"": 15, ""Salmorejo"": 18}})
                 self.assertEqual(get_vegetarian_menu([(""Margherita"", ""Pizza"", 15, True), (""Pepperoni"", ""Pizza"", 22, False), (""Olive-Walnut"", ""Pasta"", 20, True), (""Caesar"", ""Salad"", 10, True)]), {""Pizza"": {""Margherita"": 15}, ""Pasta"": {""Olive-Walnut"": 20}, ""Salad"": {""Caesar"": 10}})
                 self.assertEqual(get_vegetarian_menu([(""Margherita"", ""Pizza"", 15, False)]), {})
-                self.assertEqual(get_vegetarian_menu([(""Lentils"", ""Side"", 5, True), (""Potatoes"", ""Side"", 5, False), (""Peas"", ""Side"", 5, True)]), {""Side"": {""Lentils"": 5, ""Peas"": 5}})",,,if category not in menu:,if category not menu:,38,16,TRUE,0.5420560747663551,0.8067226890756303,TRUE
-E,W,table_reservation_acoc,"Finish the function ``table_reservation(reservation_dict, guest_num)`` below:
+                self.assertEqual(get_vegetarian_menu([(""Lentils"", ""Side"", 5, True), (""Potatoes"", ""Side"", 5, False), (""Peas"", ""Side"", 5, True)]), {""Side"": {""Lentils"": 5, ""Peas"": 5}})",def get_vegetarian_menu(menu_items):,,if category not in menu:,if category not menu:,38,16,TRUE,0.542056075,0.806722689,TRUE
+E,W,table_reservation_oc,"Finish the function ``table_reservation(reservation_dict, guest_num)`` below:
             - It takes a nested dictionary ``reservation_dict`` representing a restaurant's current reservation situation for a day and a specific number of guests ``guest_num`` as input. 
             - ``reservation_dict`` is a nested dictionary with outer keys as time slots in a day (e.g., breakfast, lunch, dinner), and values as a list of dictionaries where the inner keys are unique researvation IDs and the values are the number of guests for that reservation. 
             - Your goal is to count and return the number of reservations in ``reservation_dict`` with the same guest number as the input ``guest_num``.
-        ",table_reservation_ac,105,"def table_reservation(reservation_dict, guest_num):
+        ",table_reservation_oc,105,"def table_reservation(reservation_dict, guest_num):
     count = 0
     for time_slot, reservations in reservation_dict.items():
         for reservation in reservations:
@@ -330,12 +254,12 @@ E,W,table_reservation_acoc,"Finish the function ``table_reservation(reservation_
                 self.assertEqual(table_reservation({""breakfast"": [{""G01"": 2}, {""G02"": 4}], ""lunch"": [{""G03"": 2}, {""G04"": 2}], ""happy_hour"": [{""G05"": 6}], ""dinner"": [{""G06"": 2}, {""G07"": 8}]}, 10), 0)
                 self.assertEqual(table_reservation({""breakfast"": [{""G01"": 1}, {""G02"": 4}]}, 1), 1)
                 self.assertEqual(table_reservation({""lunch"": [{""G01"": 1}, {""G02"": 4}], ""happy_hour"": [{""G01"": 1}, {""G02"": 4}]}, 1), 2)
-                self.assertEqual(table_reservation({""breakfast"": [{""G02"": 4}]}, 9), 0)",,,"for reservation_id, guests in reservation.items():","for reservation_id, guests in reservation.items:",8,6,TRUE,0.8909090909090909,0.9272727272727272,TRUE
-E,W,table_reservation_acop,"Finish the function ``table_reservation(reservation_dict, guest_num)`` below:
+                self.assertEqual(table_reservation({""breakfast"": [{""G02"": 4}]}, 9), 0)","def table_reservation(reservation_dict, guest_num):",,"for reservation_id, guests in reservation.items():","for reservation_id, guests in reservation.items:",8,6,TRUE,0.890909091,0.927272727,TRUE
+E,W,table_reservation_op,"Finish the function ``table_reservation(reservation_dict, guest_num)`` below:
             - It takes a nested dictionary ``reservation_dict`` representing a restaurant's current reservation situation for a day and a specific number of guests ``guest_num`` as input. 
             - ``reservation_dict`` is a nested dictionary with outer keys as time slots in a day (e.g., breakfast, lunch, dinner), and values as a list of dictionaries where the inner keys are unique researvation IDs and the values are the number of guests for that reservation. 
             - Your goal is to count and return the number of reservations in ``reservation_dict`` with the same guest number as the input ``guest_num``.
-        ",table_reservation_ac,105,"def table_reservation(reservation_dict, guest_num):
+        ",table_reservation_op,105,"def table_reservation(reservation_dict, guest_num):
     count = 0
     for time_slot, reservations in reservation_dict.items():
         for reservation in reservations:
@@ -362,4 +286,52 @@ E,W,table_reservation_acop,"Finish the function ``table_reservation(reservation_
                 self.assertEqual(table_reservation({""breakfast"": [{""G01"": 2}, {""G02"": 4}], ""lunch"": [{""G03"": 2}, {""G04"": 2}], ""happy_hour"": [{""G05"": 6}], ""dinner"": [{""G06"": 2}, {""G07"": 8}]}, 10), 0)
                 self.assertEqual(table_reservation({""breakfast"": [{""G01"": 1}, {""G02"": 4}]}, 1), 1)
                 self.assertEqual(table_reservation({""lunch"": [{""G01"": 1}, {""G02"": 4}], ""happy_hour"": [{""G01"": 1}, {""G02"": 4}]}, 1), 2)
-                self.assertEqual(table_reservation({""breakfast"": [{""G02"": 4}]}, 9), 0)",,,"for reservation_id, guests in reservation.items():","for reservation_id, guests in reservation.items:",8,6,TRUE,0.8909090909090909,0.9272727272727272,TRUE
+                self.assertEqual(table_reservation({""breakfast"": [{""G02"": 4}]}, 9), 0)","def table_reservation(reservation_dict, guest_num):",,"for reservation_id, guests in reservation.items():","for reservation_id, guests in reservation.items:",8,6,TRUE,0.890909091,0.927272727,TRUE
+F,W,str-mixed-example-oc,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-oc,,"def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","def phrase(person, thing):
+    if (type(person) == str) or (type(thing) = str):
+        person = person.capitalize()
+        thing = thing.lowercase
+        return person  + thing
+    else:
+        return ""False""","def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","class myTests(unittest.TestCase):
+        def testOne(self):
+              self.assertEqual(phrase(""sam"", ""Likes to code""), ""Sam likes to code"", 'phrase(""sam"", "" Likes to code"")')
+              self.assertEqual(phrase(""mary-anne"", ""likes to sing""), ""Mary-anne likes to sing"", 'phrase(""mary-anne"", "" likes to sing"")')
+              self.assertEqual(phrase(""ANNA"", ""likes to dance""), ""Anna likes to dance"", 'phrase(""ANNA"", "" likes to dance"")')
+              self.assertEqual(phrase(1111, ""likes programming""), False, 'phrase(1111, "" likes programming"")')","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",Pass to CodeBERT,Pass to CodeBERT,TRUE,0.896551724,0.896551724,TRUE
+F,W,str-mixed-example-op,"Finish the function, ``phrase(person, thing)``, First verify whether ``person`` and ``thing`` are strings. If not, return ``False``. If ``person`` and ``thing`` are two strings, return one string with a ``person`` of your choosing followed by a ``thing`` of what that person likes to do. Make sure that ``person`` is capitalized and ``thing`` is lowercase.For example, if the ``person`` is ``Sam`` and ``thing`` is ``Likes to code``, the returned string should be ``""Sam likes to code""``.  Make sure that ``person`` is capitalized and ``thing`` is lowercase.",str-mixed-example-op,,"def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","def phrase(person, thing):
+    if (type(person) == str) or (type(thing) = str):
+        person = person.capitalize()
+        thing = thing.lowercase
+        return person  + thing
+    else:
+        return ""False""","def phrase(person, thing):
+    if (type(person) == str) and (type(thing) == str):
+        person = person.capitalize()
+        thing = thing.lower()
+        return person + "" "" + thing
+    else:
+        return False","class myTests(unittest.TestCase):
+        def testOne(self):
+              self.assertEqual(phrase(""sam"", ""Likes to code""), ""Sam likes to code"", 'phrase(""sam"", "" Likes to code"")')
+              self.assertEqual(phrase(""mary-anne"", ""likes to sing""), ""Mary-anne likes to sing"", 'phrase(""mary-anne"", "" likes to sing"")')
+              self.assertEqual(phrase(""ANNA"", ""likes to dance""), ""Anna likes to dance"", 'phrase(""ANNA"", "" likes to dance"")')
+              self.assertEqual(phrase(1111, ""likes programming""), False, 'phrase(1111, "" likes programming"")')","def phrase(person, thing):",,"def phrase(person, thing):","def phrase(person, thing)",Pass to CodeBERT,Pass to CodeBERT,TRUE,0.896551724,0.896551724,TRUE
