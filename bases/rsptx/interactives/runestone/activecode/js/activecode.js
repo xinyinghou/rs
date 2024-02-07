@@ -324,7 +324,12 @@ export class ActiveCode extends RunestoneBase {
         return promise;
     }
 
-    async reopenHelpBtnHandler() {
+    // isNewHelp: when true, this handler was not called by pressing the button.
+    //            it was used to open a new generated help.
+    async reopenHelpBtnHandler(isNewHelp) {
+        if (isNewHelp == undefined) {
+            isNewHelp = false;
+        }
         if (window.latestParsonsHelpID == this.divid) {
             $('#scaffolding-container').removeClass('hidden');
             return;
@@ -334,14 +339,33 @@ export class ActiveCode extends RunestoneBase {
         this.scaffoldingAnswer = this.helpText.split("||split||")[0];
         let rst = this.helpText.split("||split||")[1];
 
+        act = {
+            type: 'receive_help',
+            code: this.scaffoldingAnswer,
+            reopen: !isNewHelp,
+            condition: this.openaiparsons ? 'parsons' : 'code',
+        }
+        if (this.openaiparsons) {
+            act['puzzle'] = rst;
+        }
+
+        this.logBookEvent({
+            event: "gptparsons",
+            act: JSON.stringify(act),
+            div_id: this.divid
+        });
+
         let probDescHTML = $(this.outerDiv).find(".ac_question").last().html();
+
+        let parsonsScaffoldingDivid = 'help_parsons_' + this.divid;
+        let codeScaffoldingDivid = 'help_code_' + this.divid;
 
 
         var codeCode = `<div class="runestone explainer ac_section ">
-<div data-component="activecode" id=test_code_1 data-question_label="1.1.1">
-<div id=test_code_1_question class="ac_question">` + probDescHTML +
+<div data-component="activecode" id=${codeScaffoldingDivid} data-question_label="1.1.1">
+<div id=${codeScaffoldingDivid}_question class="ac_question">` + probDescHTML +
 `</div>
-<textarea data-lang="python" id="test_code_1_editor" 
+<textarea data-lang="python" id="${codeScaffoldingDivid}_editor" 
       data-timelimit=25000 
     data-audio=''      
            data-wasm=/_static
@@ -353,7 +377,7 @@ export class ActiveCode extends RunestoneBase {
         
         var parsonsCode = `
         <div class="runestone parsons-container ">
-        <div data-component="parsons" id="test_parsons_1" class="parsons" >
+        <div data-component="parsons" id="${parsonsScaffoldingDivid}" class="parsons" >
         <div class="parsons_question parsons-text" >` + probDescHTML +
         `</div>` + rst + `</div></div>`
 
@@ -372,6 +396,16 @@ export class ActiveCode extends RunestoneBase {
             closeScaffoldingButton.classList.add('btn','btn-success');
             closeScaffoldingButton.innerText = "Close Help";
             closeScaffoldingButton.onclick = () => {
+                // log close scaffolding
+                act = {
+                    type: 'close_help',
+                    condition: this.openaiparsons ? 'parsons' : 'code',
+                }
+                this.logBookEvent({
+                    event: "gptparsons",
+                    act: JSON.stringify(act),
+                    div_id: this.divid
+                });
                 $('#scaffolding-container').addClass('hidden');
             }
             scaffoldingContainer.appendChild(closeScaffoldingButton);
@@ -426,7 +460,18 @@ export class ActiveCode extends RunestoneBase {
         try {
             document.execCommand("copy");
             temptextarea.remove();
-            console.log('copied.')
+            act = {
+                type: 'copy_help',
+                condition: this.openaiparsons ? 'parsons' : 'code',
+                code: this.scaffoldingAnswer
+            }
+            this.logBookEvent({
+                event: "gptparsons",
+                act: JSON.stringify(act),
+                div_id: this.divid
+            });
+            $('#scaffolding-container').addClass('hidden');
+            $('#copy-answer-button').text('Copied!');
         } catch (err) {
             alert('error copying to clipboard, please copy manually');
         }
@@ -465,10 +510,21 @@ export class ActiveCode extends RunestoneBase {
 
         // send code to backend to get the rst for parsons problem
         // todo: change name
+        // log student request help
+        let act = {
+            type: 'request_help',
+            code: this.editor.getValue(),
+            condition: this.openaiparsons ? 'parsons' : 'code'
+        }
+        this.logBookEvent({
+            event: "gptparsons",
+            act: JSON.stringify(act),
+            div_id: this.divid
+        });
         this.helpText = await this.getParsonsRst();
         $(this.outerDiv).find("#scaffolding-loading-prompt").removeClass('loading');
         window.latestParsonsHelpID = "";
-        this.reopenHelpBtnHandler();
+        this.reopenHelpBtnHandler(true);
         
         if (!this.helpLoaded) {
             this.helpLoaded = true;

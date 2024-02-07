@@ -281,6 +281,15 @@
 .parsons .indent4 {
     margin-left: 120px;
 }
+.parsons .indent5 {
+    margin-left: 150px;
+}
+.parsons .indent6 {
+    margin-left: 180px;
+}
+.parsons .indent7 {
+    margin-left: 210px;
+}
 .parsons .correct {
     border: 1px solid #d6e9c6;
     background: none;
