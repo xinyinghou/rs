@@ -112,53 +112,69 @@ def build_code_prompt(question_line, buggy_code, system_message=system_message,u
     return prompt_messages
 
 
-def initialize_database(api_keys, db_path="request_counts.db"):
-    if not os.path.exists(db_path):
-        with sqlite3.connect(db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                CREATE TABLE api_key_counts (
-                    api_key TEXT PRIMARY KEY,
-                    remaining_requests INTEGER,
-                    total_count INTEGER,
-                    last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            for key in api_keys:
-                cursor.execute('''
-                    INSERT INTO api_key_counts (api_key, remaining_requests, total_count) VALUES (?, ?, 0)
-                ''', (key,request_rate_limit,))
-            conn.commit()
-        print("Key_Database created.")
+# def initialize_database(api_keys, db_path="request_counts.csv"):
+#     # Create CSV file and write header if it doesn't exist
+#     if not os.path.isfile(db_path):
+#         with open(db_path, 'w', newline='') as csvfile:
+#             fieldnames = ['api_key', 'remaining_requests', 'total_count', 'last_update']
+#             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+#             writer.writeheader()
 
-def get_current_key(db_path="request_counts.db"):
-    initialize_database(api_key_list, db_path)
-    with sqlite3.connect(db_path) as conn:
-        cursor = conn.cursor()
+#         # Write data to CSV
+#         with open(db_path, 'a', newline='') as csvfile:
+#             fieldnames = ['api_key', 'remaining_requests', 'total_count', 'last_update']
+#             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-        cursor.execute('''
-            SELECT api_key FROM api_key_counts ORDER BY last_update DESC LIMIT 1
-        ''')
-        result = cursor.fetchone()
+#             for key in api_keys:
+#                 writer.writerow({
+#                     'api_key': key,
+#                     'remaining_requests': request_rate_limit,
+#                     'total_count': 0,
+#                     'last_update': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+#                 })
 
-        if result:
-            return result[0]
-        else:
-            return None  # Return None if no key is found
+#         print("CSV file created/updated.")
+
+# def get_current_key(db_path="request_counts.csv"):
+#     initialize_database(api_key_list, db_path)
+#     with open(db_path, 'r') as csvfile:
+#         reader = csv.DictReader(csvfile)
+
+#         # Sort CSV data by last_update in descending order and get the first row
+#         sorted_data = sorted(reader, key=lambda x: x['last_update'], reverse=True)
+#         if sorted_data:
+#             return sorted_data[0]['api_key']
+#         else:
+#             return None
 
 
+# def switch_api_key(api_keys):
+    # initialize_database(api_key_list, db_path)
+    # current_key = get_current_key(db_path)
 
-def switch_api_key(api_keys, db_path="request_counts.db"):
-    initialize_database(api_key_list, db_path)
-    current_key = get_current_key(db_path)
+    # Reset request counts at the beginning of each minute - can be done using OpenAI's rate limit headers
+    # with open(db_path, 'r') as csvfile:
+    #     fieldnames = ['api_key', 'remaining_requests', 'total_count', 'last_update']
+    #     reader = csv.DictReader(csvfile, fieldnames=fieldnames)
+    #     rows = list(reader)
 
-    with sqlite3.connect(db_path) as conn:
-        cursor = conn.cursor()
+    # current_time = datetime.now()
 
-        # Reset request counts at the beginning of each minute - can be done using OpenAI's rate limit headers
-        cursor.execute('''
-            UPDATE api_key_counts SET remaining_requests = ? WHERE strftime('%s', 'now') - strftime('%s', last_update) > 60
-        ''', (request_rate_limit,))
+    # for row in rows:
+    #     last_update_time = datetime.strptime(row['last_update'], '%Y-%m-%d %H:%M:%S')
+    #     time_difference = (current_time - last_update_time).total_seconds()
+
+    #     if time_difference > 60:
+    #         row['remaining_requests'] = request_rate_limit
+    #         row['last_update'] = current_time.strftime('%Y-%m-%d %H:%M:%S')
+
+    # # Write the updated data back to the CSV file
+    # with open(db_path, 'w', newline='') as csvfile:
+    #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    #     writer.writeheader()
+    #     writer.writerows(rows)
+
+    # print("Request counts reset for the beginning of each minute.")
 
         # # Check the request count for the current key
         # cursor.execute('''
@@ -182,21 +198,21 @@ def switch_api_key(api_keys, db_path="request_counts.db"):
         # ''', (40,))
         # result = cursor.fetchone()
         # if result:
-        cursor.execute('''
-            SELECT api_key, remaining_requests, total_count
-            FROM api_key_counts
-            WHERE remaining_requests > 0
-            ORDER BY remaining_requests DESC, total_count ASC
-            LIMIT 1
-        ''')
-        result = cursor.fetchone()
-        if result:
-            new_key, remaining_requests, total_count = result
-            print("new_key", new_key, "remaining_requests", remaining_requests, "total_count", total_count)
-            return new_key, remaining_requests, total_count
-        else:
-            print("All keys reached the request limit. Waiting for reset.")
-            return None, None, None  # Return None if no key is available
+        # Filter keys with remaining requests > 0
+    # filtered_keys = [row for row in rows if int(row['remaining_requests']) > 0]
+
+    # # Sort filtered keys by remaining_requests in descending order and total_count in ascending order
+    # sorted_keys = sorted(filtered_keys, key=lambda x: (int(x['remaining_requests']), int(x['total_count'])))
+
+    # if sorted_keys:
+    #     result = sorted_keys[0]
+    #     api_key = result['api_key']
+    #     remaining_requests = int(result['remaining_requests'])
+    #     total_count = int(result['total_count'])
+    #     return api_key, remaining_requests, total_count
+    # else:
+    #     print("No API key available. Please try again later.")
+    #     return None, None, None
         
 def get_actual_fixed_code(prompt_messages, current_api_key, attempt_type, situation, old_fixed_code):
     if attempt_type == "new":
@@ -240,25 +256,25 @@ def get_actual_fixed_code(prompt_messages, current_api_key, attempt_type, situat
     
     return fixed_code, remaining_requests
 
-def get_min_reset_time(db_path="request_counts.db"):
-    # Query the database to retrieve reset times for all keys
-    try:
-        with sqlite3.connect(db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute('SELECT MIN(reset_requests) FROM api_key_counts')
-                min_reset_time = cursor.fetchone()[0]
-    except:
-        min_reset_time = None
+# def get_min_reset_time(db_path):
+#     # Query the database to retrieve reset times for all keys
+#     # try:
+#     #     with sqlite3.connect(db_path) as conn:
+#     #             cursor = conn.cursor()
+#     #             cursor.execute('SELECT MIN(reset_requests) FROM api_key_counts')
+#     #             min_reset_time = cursor.fetchone()[0]
+#     # except:
+#     min_reset_time = None
 
-    if min_reset_time:
-        min_reset_time = datetime.strptime(min_reset_time, '%Y-%m-%d %H:%M:%S')
-        return min_reset_time
-    else:
-        # If no reset time found, return a default value
-        return datetime.now()
+#     if min_reset_time:
+#         min_reset_time = datetime.strptime(min_reset_time, '%Y-%m-%d %H:%M:%S')
+#         return min_reset_time
+#     else:
+#         # If no reset time found, return a default value
+#         return datetime.now()
     
 
-def get_fixed_code(df_question_line, buggy_code, default_test_code, attempt_type, situation, old_fixed_code, api_keys=api_key_list, db_path="request_counts.db"):
+def get_fixed_code(df_question_line, buggy_code, default_test_code, attempt_type, situation, old_fixed_code, api_keys=api_key_list):
     # first check if the buggy code is in the cache
     cleaned_buggy_code = clean_student_code(buggy_code, default_test_code)
     print("get_fixed_code-cleaned_buggy_code", cleaned_buggy_code)
@@ -268,38 +284,58 @@ def get_fixed_code(df_question_line, buggy_code, default_test_code, attempt_type
 
     prompt_messages = build_code_prompt(df_question_line, buggy_code)
     
-    initialize_database(api_keys, db_path)
-    new_key, remaining_requests, total_count = switch_api_key(api_keys, db_path)
+    #initialize_database(api_keys, db_path)
+    #new_key, remaining_requests, total_count = switch_api_key(api_keys, db_path)
 
-    if new_key is not None:
-        print(f"Switched to API Key: {new_key}")
-        # Make the API request using the current_api_key
-        fixed_code_response, remaining_requests = get_actual_fixed_code(prompt_messages, new_key, attempt_type, situation, old_fixed_code)
-        with sqlite3.connect(db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                UPDATE api_key_counts
-                SET remaining_requests = ?,
-                    total_count = total_count + 1,
-                    last_update = CURRENT_TIMESTAMP
-                WHERE api_key = ?
-            ''', (remaining_requests, new_key))
-            conn.commit()
+    while True:
+        try:
+            new_key = random.choice(api_keys)
+            print(f"Switched to API Key: {new_key}")
+            #Make the API request using the current_api_key
+            fixed_code_response, remaining_requests = get_actual_fixed_code(prompt_messages, new_key, attempt_type, situation, old_fixed_code)
+            print(f"Making API request with Key: {new_key}-Request Count: {remaining_requests}")
+            return fixed_code_response
+        except Exception as e:
+            print(e)
+            print("Retrying...")
+            time.sleep(0.1)
+    # if new_key is not None:
+    #     print(f"Switched to API Key: {new_key}")
+    #     # Make the API request using the current_api_key
+    #     fixed_code_response, remaining_requests = get_actual_fixed_code(prompt_messages, new_key, attempt_type, situation, old_fixed_code)
+    #     # Find the row corresponding to the API key
+    #     with open(db_path, 'r') as csvfile:
+    #         fieldnames = ['api_key', 'remaining_requests', 'total_count', 'last_update']
+    #         reader = csv.DictReader(csvfile, fieldnames=fieldnames)
+    #         rows = list(reader)
 
-        print(f"Making API request with Key: {new_key}-Request Count: {remaining_requests}")
-    else:
-        print("No API key available.")
-        # Sleep until the minimum reset time of all keys
-        # Calculate the time until the next reset
-        current_time = datetime.now()
-        min_reset_time = get_min_reset_time()
-        time_until_reset = max(2, (min_reset_time - current_time).total_seconds())
-        print(f"Sleeping for {time_until_reset} seconds.")
-        time.sleep(time_until_reset)
-        # Retry the API request after the sleep
-        get_fixed_code(df_question_line, buggy_code, attempt_type, situation, old_fixed_code, api_keys=api_key_list, db_path="request_counts.db")
+    #     for row in rows:
+    #         if row['api_key'] == new_key:
+    #             # Update the fields
+    #             row['remaining_requests'] = remaining_requests
+    #             row['total_count'] = str(int(row['total_count']) + 1)
+    #             row['last_update'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    #     # Write the updated data back to the CSV file
+    #     with open(db_path, 'w', newline='') as csvfile:
+    #         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    #         writer.writeheader()
+    #         writer.writerows(rows)
+
+    #     print(f"Making API request with Key: {new_key}-Request Count: {remaining_requests}")
+    # else:
+    #     print("No API key available.")
+    #     # Sleep until the minimum reset time of all keys
+    #     # Calculate the time until the next reset
+    #     current_time = datetime.now()
+    #     min_reset_time = get_min_reset_time()
+    #     time_until_reset = max(2, (min_reset_time - current_time).total_seconds())
+    #     print(f"Sleeping for {time_until_reset} seconds.")
+    #     time.sleep(time_until_reset)
+    #     # Retry the API request after the sleep
+    #     get_fixed_code(df_question_line, buggy_code, attempt_type, situation, old_fixed_code, api_keys=api_key_list, db_path="request_counts.csv")
         
-    return fixed_code_response
+    #return fixed_code_response
 
 
 

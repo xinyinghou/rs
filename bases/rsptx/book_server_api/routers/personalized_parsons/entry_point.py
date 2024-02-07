@@ -12,8 +12,8 @@ from .personalize_parsons import *
 from .end_to_end import *
 #from similarity_compare import *
 
-with open("example_buggy_code.json", "r") as json_file:
-    dict_buggy_code = json.load(json_file)
+# with open("example_buggy_code.json", "r") as json_file:
+#     dict_buggy_code = json.load(json_file)
 
 # Include: Problem Name, Question Description, Cluster
 # Example_student_solution, Example_buggy_code, Example_fixed_code
@@ -38,5 +38,5 @@ print("Control Condition: personalized_code_solution\n", personalized_code_solut
 print("Experimental Condition: personalized_Parsons_block\n", personalized_Parsons_block)
 
 # put personalized_Parsons_block into a txt file
-with open("personalized_Parsons_block.txt", "w") as text_file:
-    text_file.write(personalized_Parsons_block)
+# with open("personalized_Parsons_block.txt", "w") as text_file:
+#     text_file.write(personalized_Parsons_block)
