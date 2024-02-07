@@ -503,6 +503,8 @@ export class ActiveCode extends RunestoneBase {
             loadingPrompt.innerText = "Loading help... You're capable of achieving great things. We will help you get there!";
             loadingPrompt.appendChild(spinner);
             $(loadingPrompt).addClass('loading');
+            var scrolledY = window.scrollY;
+            window.scroll(0, scrolledY - loadingPrompt.clientHeight);
         } else {
             // if already exists: add loading status
             $(this.outerDiv).find("#scaffolding-loading-prompt").addClass('loading');
