@@ -440,9 +440,7 @@ export class ActiveCode extends RunestoneBase {
             $('#scaffolding-container').removeClass('hidden');
             $('#copy-answer-button').addClass('copy-button-hide');
             $('#copy-answer-button').on("click", (() => {
-                navigator.clipboard.writeText(this.scaffoldingAnswer).then(()=> {
-                    $('#copy-answer-button').text('Copied!');
-                });
+                this.copyScaffoldingSolutionToClipboard();
             }));
             $('#copy-answer-button').text('Copy Answer to Clipboard');
         }
