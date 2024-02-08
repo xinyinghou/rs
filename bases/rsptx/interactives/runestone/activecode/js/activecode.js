@@ -339,7 +339,7 @@ export class ActiveCode extends RunestoneBase {
         this.scaffoldingAnswer = this.helpText.split("||split||")[0];
         let rst = this.helpText.split("||split||")[1];
 
-        act = {
+        let act = {
             type: 'receive_help',
             code: this.scaffoldingAnswer,
             reopen: !isNewHelp,
@@ -397,7 +397,7 @@ export class ActiveCode extends RunestoneBase {
             closeScaffoldingButton.innerText = "Close Help";
             closeScaffoldingButton.onclick = () => {
                 // log close scaffolding
-                act = {
+                let act = {
                     type: 'close_help',
                     condition: this.openaiparsons ? 'parsons' : 'code',
                 }
@@ -460,7 +460,7 @@ export class ActiveCode extends RunestoneBase {
         try {
             document.execCommand("copy");
             temptextarea.remove();
-            act = {
+            let act = {
                 type: 'copy_help',
                 condition: this.openaiparsons ? 'parsons' : 'code',
                 code: this.scaffoldingAnswer
