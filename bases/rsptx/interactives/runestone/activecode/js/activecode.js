@@ -327,11 +327,23 @@ export class ActiveCode extends RunestoneBase {
     // isNewHelp: when true, this handler was not called by pressing the button.
     //            it was used to open a new generated help.
     async reopenHelpBtnHandler(isNewHelp) {
-        if (isNewHelp == undefined) {
+        if (isNewHelp !== true) {
             isNewHelp = false;
         }
         if (window.latestParsonsHelpID == this.divid) {
             $('#scaffolding-container').removeClass('hidden');
+            let reopen_act = {
+                type: 'receive_help',
+                code: this.scaffoldingAnswer,
+                reopen: true,
+                condition: this.openaiparsons ? 'parsons' : 'code',
+            }
+            this.logBookEvent({
+                event: "gptparsons",
+                act: JSON.stringify(reopen_act),
+                div_id: this.divid
+            });
+
             return;
         }
         window.latestParsonsHelpID = this.divid;
@@ -470,7 +482,6 @@ export class ActiveCode extends RunestoneBase {
                 act: JSON.stringify(act),
                 div_id: this.divid
             });
-            $('#scaffolding-container').addClass('hidden');
             $('#copy-answer-button').text('Copied!');
         } catch (err) {
             alert('error copying to clipboard, please copy manually');
