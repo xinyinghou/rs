@@ -2,7 +2,6 @@ import openai
 import re
 import time
 
-openai.api_key = "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"
 #openai.organization = "org-YEK3YQ7BAM9Ag39zqbbXyRnS"
 
 system_message = """Generate a one-line [distractor] from [correct-line] based on the provided [task-description] and [sample-solution]. 
