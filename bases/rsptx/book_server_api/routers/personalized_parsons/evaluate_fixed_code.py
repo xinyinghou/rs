@@ -6,7 +6,6 @@ from fuzzywuzzy import fuzz
 from types import ModuleType
 import difflib
 import signal
-from .personalize_common_solution import * 
 
 class NullOutput:
     def write(self, _):

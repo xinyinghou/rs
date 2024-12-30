@@ -100,7 +100,7 @@ TEMPLATE_START = """
 TEMPLATE_END = """
 </div>
 <textarea data-lang="%(language)s" id="%(divid)s_editor" %(autorun)s
-    %(hidecode)s %(include)s %(timelimit)s %(coach)s %(codelens)s %(enabledownload)s %(openaiparsons)s %(openaicode)s %(chatcodes)s %(optional)s
+    %(hidecode)s %(include)s %(timelimit)s %(coach)s %(codelens)s %(enabledownload)s %(openaiparsons)s %(commonparsons)s %(openaicode)s %(chatcodes)s %(optional)s
     data-audio='%(ctext)s' %(sourcefile)s %(datafile)s %(stdin)s %(tie)s %(dburl)s %(nopair)s
     %(cargs)s %(largs)s %(rargs)s %(iargs)s %(gradebutton)s %(caption)s %(hidehistory)s %(wasmuri)s
     %(showlastsql)s style="visibility: hidden;">
@@ -212,6 +212,7 @@ class ActiveCode(RunestoneIdDirective):
        :language: python, html, javascript, java, python2, python3
        :chatcodes: -- Enable users to talk about this code snippet with others
        :openaiparsons: -- use query from openai to generate parsons
+       :commonparsons: -- generate parsons from a common solution
        :openaicode: -- use query from openai to generate code
        :tour_1: audio tour track
        :tour_2: audio tour track
@@ -260,6 +261,7 @@ class ActiveCode(RunestoneIdDirective):
             "language": directives.unchanged,
             "chatcodes": directives.flag,
             "openaiparsons": directives.flag,
+            "commonparsons": directives.flag,
             "openaicode": directives.flag,
             "tour_1": directives.unchanged,
             "tour_2": directives.unchanged,
@@ -369,6 +371,11 @@ class ActiveCode(RunestoneIdDirective):
             self.options["openaiparsons"] = 'data-openaiparsons="true"'
         else:
             self.options["openaiparsons"] = ""
+
+        if "commonparsons" in self.options:
+            self.options["commonparsons"] = 'data-commonparsons="true"'
+        else:
+            self.options["commonparsons"] = ""
 
         if "openaicode" in self.options:
             self.options["openaicode"] = 'data-openaicode="true"'

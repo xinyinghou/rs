@@ -79,6 +79,7 @@ export class ActiveCode extends RunestoneBase {
         this.hidecode = $(orig).data("hidecode");
         this.chatcodes = $(orig).data("chatcodes");
         this.openaiparsons = $(orig).data("openaiparsons");
+        this.commonparsons = $(orig).data("commonparsons");
         this.openaicode = $(orig).data("openaicode");
         this.hidehistory = $(orig).data("hidehistory");
         this.question = $(opts.orig).find(`#${this.divid}_question`)[0];
@@ -336,7 +337,7 @@ export class ActiveCode extends RunestoneBase {
                 type: 'receive_help',
                 code: this.scaffoldingAnswer,
                 reopen: true,
-                condition: this.openaiparsons ? 'parsons' : 'code',
+                condition: this.openaiparsons ? 'personalized_parsons' : 'common_parsons',
             }
             this.logBookEvent({
                 event: "gptparsons",
@@ -348,17 +349,23 @@ export class ActiveCode extends RunestoneBase {
         }
         window.latestParsonsHelpID = this.divid;
 
+        // personalized_code_solution + "||split||" + personalized_parsons_html  + "||split||" + common_code_solution + "||split||" + common_parsons_html
+        // generate both at the same time so no need to worry about imbalanced latency
         this.scaffoldingAnswer = this.helpText.split("||split||")[0];
-        let rst = this.helpText.split("||split||")[1];
+        let personalized_rst = this.helpText.split("||split||")[1];
+        let common_rst = this.helpText.split("||split||")[3];
 
         let act = {
             type: 'receive_help',
+            // only log the personalized code solution
             code: this.scaffoldingAnswer,
             reopen: !isNewHelp,
-            condition: this.openaiparsons ? 'parsons' : 'code',
+            condition: this.openaiparsons ? 'personalized_parsons' : 'common_parsons',
         }
         if (this.openaiparsons) {
-            act['puzzle'] = rst;
+            act['puzzle'] = personalized_rst;
+        } else if (this.commonparsons) {
+            act['puzzle'] = common_rst;
         }
 
         this.logBookEvent({
@@ -370,28 +377,21 @@ export class ActiveCode extends RunestoneBase {
         let probDescHTML = $(this.outerDiv).find(".ac_question").last().html();
 
         let parsonsScaffoldingDivid = 'help_parsons_' + this.divid;
+        let commonparsonsScaffoldingDivid = 'help_common_parsons_' + this.divid;
         let codeScaffoldingDivid = 'help_code_' + this.divid;
 
 
-        var codeCode = `<div class="runestone explainer ac_section ">
-<div data-component="activecode" id=${codeScaffoldingDivid} data-question_label="1.1.1">
-<div id=${codeScaffoldingDivid}_question class="ac_question">` + probDescHTML +
-`</div>
-<textarea data-lang="python" id="${codeScaffoldingDivid}_editor" 
-      data-timelimit=25000 
-    data-audio=''      
-           data-wasm=/_static
-     style="visibility: hidden;">` + this.scaffoldingAnswer + 
-`</textarea>
-</div>
-</div>`
-
+        var commonparsonsCode = `
+        <div class="runestone parsons-container ">
+        <div data-component="parsons" id="${commonparsonsScaffoldingDivid}" class="parsons" >
+        <div class="parsons_question parsons-text" >` + probDescHTML +
+        `</div>` + common_rst + `</div></div>`
         
         var parsonsCode = `
         <div class="runestone parsons-container ">
         <div data-component="parsons" id="${parsonsScaffoldingDivid}" class="parsons" >
         <div class="parsons_question parsons-text" >` + probDescHTML +
-        `</div>` + rst + `</div></div>`
+        `</div>` + personalized_rst + `</div></div>`
 
         // var parsonsCode = `
         // <div class="runestone parsons-container ">
@@ -411,7 +411,7 @@ export class ActiveCode extends RunestoneBase {
                 // log close scaffolding
                 let act = {
                     type: 'close_help',
-                    condition: this.openaiparsons ? 'parsons' : 'code',
+                    condition: this.openaiparsons ? 'personalized_parsons' : 'common_parsons',
                 }
                 this.logBookEvent({
                     event: "gptparsons",
@@ -447,6 +447,8 @@ export class ActiveCode extends RunestoneBase {
 
         if (this.openaiparsons) {
             await renderRunestoneComponent(parsonsCode, "parsons-scaffolding");
+        } else if (this.commonparsons) {
+            await renderRunestoneComponent(commonparsonsCode, "parsons-scaffolding");
         } else if (this.openaicode) {
             // reveal copy button by default
             $('#copy-answer-button').removeClass('copy-button-hide');
@@ -472,7 +474,7 @@ export class ActiveCode extends RunestoneBase {
             temptextarea.remove();
             let act = {
                 type: 'copy_help',
-                condition: this.openaiparsons ? 'parsons' : 'code',
+                condition: this.openaiparsons ?  'personalized_parsons' : 'common_parsons',
                 code: this.scaffoldingAnswer
             }
             this.logBookEvent({
@@ -519,12 +521,10 @@ export class ActiveCode extends RunestoneBase {
         }
 
         // send code to backend to get the rst for parsons problem
-        // todo: change name
-        // log student request help
         let act = {
             type: 'request_help',
             code: this.editor.getValue(),
-            condition: this.openaiparsons ? 'parsons' : 'code'
+            condition: this.openaiparsons ? 'personalized_parsons' : 'common_parsons'
         }
         this.logBookEvent({
             event: "gptparsons",
@@ -535,7 +535,7 @@ export class ActiveCode extends RunestoneBase {
         $(this.outerDiv).find("#scaffolding-loading-prompt").removeClass('loading');
         window.latestParsonsHelpID = "";
         this.reopenHelpBtnHandler(true);
-        
+        // check whether hold the regenerating button
         if (!this.helpLoaded) {
             this.helpLoaded = true;
             $(this.outerDiv).find(".reopen-help-btn").removeClass('hide');
@@ -560,7 +560,7 @@ export class ActiveCode extends RunestoneBase {
         $(butt).attr("type", "button");
 
         // move this to a separate function "createParsonsScaffolding"
-        if (this.openaicode || this.openaiparsons) {
+        if (this.openaicode || this.openaiparsons || this.commonparsons) {
             let parsonsScaffoldingBtn = document.createElement("button");
             parsonsScaffoldingBtn.innerText = "Help";
             // if (this.openaiparsons) {

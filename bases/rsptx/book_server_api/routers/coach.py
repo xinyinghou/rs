@@ -20,7 +20,7 @@ import re
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pyflakes import checker as pyflakes_checker
-from .personalized_parsons.end_to_end import get_personalized_parsons_help
+from .personalized_parsons.end_to_end import get_parsons_help
 # from .personalized_parsons.test import test_import_personalized
 
 # Local application imports
@@ -74,25 +74,31 @@ async def parsons_scaffolding(request: Request):
     student_code = req.split("|||sep|||")[0]
     problem_name = req.split("|||sep|||")[1]
     df_question_bank = pd.read_csv("./Classroom_Evaluation_Material.csv").fillna('')
-    print("start_to: get_personalized_parsons_help")
-    def personalized_help(student_code, problem_name):
+    print("start_to: get_parsons_help")
+    def get_help(student_code, problem_name):
         input_dict = {
             "Problem Name":problem_name,
             "CF (Code)":student_code
         }
-        return get_personalized_parsons_help(input_dict, df_question_bank)
+        return get_parsons_help(input_dict, df_question_bank)
 
-    personalized_code_solution, personalized_Parsons_block = personalized_help(student_code, problem_name)
+    personalized_code_solution, personalized_Parsons_block = get_parsons_help(student_code, problem_name, personalization=True)
 
-    personalized_code_solution = re.sub(r'<(?=\S)', '< ', personalized_code_solution)
+    common_code_solution, common_Parsons_block = get_parsons_help(student_code, problem_name, personalization=False)
+    
+    common_Parsons_block = re.sub(r'<(?=\S)', '< ', common_Parsons_block)
     personalized_Parsons_block = re.sub(r'<(?=\S)', '< ', personalized_Parsons_block)
-    adaptive_text = '' if ('settled' in personalized_Parsons_block) else ' data-adaptive="true" '
+    adaptive_text = ' data-adaptive="true" '
 
-    parsons_html = """
-        <pre  class="parsonsblocks" data-question_label="1"    data-noindent="true"  data-numbered="left"  %s  style="visibility: hidden;">
+    personalized_parsons_html = """
+        <pre  class="parsonsblocks" data-question_label="1"   data-numbered="left"  %s  style="visibility: hidden;">
         """ % adaptive_text + personalized_Parsons_block + """
         </pre>
 """
+    common_parsons_html = """
+        <pre  class="parsonsblocks" data-question_label="1"   data-numbered="left"  %s  style="visibility: hidden;">
+        """ % adaptive_text + common_Parsons_block + """
+        </pre>
+"""
 
-
-    return personalized_code_solution + "||split||" + parsons_html 
+    return personalized_code_solution + "||split||" + personalized_parsons_html  + "||split||" + common_code_solution + "||split||" + common_parsons_html

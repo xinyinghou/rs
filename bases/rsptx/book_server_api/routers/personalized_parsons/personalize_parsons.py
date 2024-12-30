@@ -1,9 +1,11 @@
 import difflib
 import pandas as pd
 from collections import namedtuple
-from .get_parsons_code_distractors import *
 from .generate_parsons_blocks import *
 from .token_compare import *
+
+# from generate_parsons_blocks import *
+# from token_compare import *
 import random
 # compare the similarity between the student code and the fixed code
 
@@ -159,8 +161,6 @@ def get_distractor_candidates(distractor_candidate_depot, candidate_num):
         distractor_candidates = sorted(distractor_candidate_depot, key=lambda x: x[1], reverse=True)[:candidate_num]
     
     return distractor_candidates
-
-
 
 
 # Decide which type of Parsons problem we will generate and generate the corresponding distractors
