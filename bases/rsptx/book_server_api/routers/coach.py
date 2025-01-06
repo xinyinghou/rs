@@ -14,6 +14,7 @@ import ast
 # import json
 import pandas as pd
 import re
+import os
 
 # Third-party imports
 # -------------------
@@ -69,22 +70,33 @@ async def parsons_scaffolding(request: Request):
     Takes in student code, generate a personalized Parsons problems with openAI,
     then converts the generated problem to .rst, and returns the .rst string.
     """
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Adjust path to navigate directly to personalized_parsons from routers
+    csv_dir = os.path.join(script_dir, "personalized_parsons")
+
+    # Build the full path to the CSV file
+    csv_path = os.path.join(csv_dir, "Classroom_Evaluation_Material.csv")
+
+    df_question_bank = pd.read_csv(csv_path).fillna('')
+
     req_bytes = await request.body()
     req = req_bytes.decode("utf-8")
     student_code = req.split("|||sep|||")[0]
     problem_name = req.split("|||sep|||")[1]
-    df_question_bank = pd.read_csv("./Classroom_Evaluation_Material.csv").fillna('')
+    # df_question_bank = pd.read_csv("./Classroom_Evaluation_Material.csv").fillna('')
     print("start_to: get_parsons_help")
-    def get_help(student_code, problem_name):
+    def parsons_help(student_code, problem_name, personalization):
         input_dict = {
             "Problem Name":problem_name,
             "CF (Code)":student_code
         }
-        return get_parsons_help(input_dict, df_question_bank)
+        return get_parsons_help(input_dict, df_question_bank, personalization)
 
-    personalized_code_solution, personalized_Parsons_block = get_parsons_help(student_code, problem_name, personalization=True)
+    personalized_code_solution, personalized_Parsons_block = parsons_help(student_code, problem_name, personalization=True)
 
-    common_code_solution, common_Parsons_block = get_parsons_help(student_code, problem_name, personalization=False)
+    common_code_solution, common_Parsons_block = parsons_help(student_code, problem_name, personalization=False)
     
     common_Parsons_block = re.sub(r'<(?=\S)', '< ', common_Parsons_block)
     personalized_Parsons_block = re.sub(r'<(?=\S)', '< ', personalized_Parsons_block)

@@ -65,6 +65,7 @@ export class ActiveCode extends RunestoneBase {
         super(opts);
         var suffStart;
         var orig = $(opts.orig).find("textarea")[0];
+        console.log("start to work")
         this.containerDiv = opts.orig;
         this.useRunestoneServices = opts.useRunestoneServices;
         this.python3 = true;
@@ -380,6 +381,18 @@ export class ActiveCode extends RunestoneBase {
         let commonparsonsScaffoldingDivid = 'help_common_parsons_' + this.divid;
         let codeScaffoldingDivid = 'help_code_' + this.divid;
 
+        var codeCode = `<div class="runestone explainer ac_section ">
+        <div data-component="activecode" id=${codeScaffoldingDivid} data-question_label="1.1.1">
+        <div id=${codeScaffoldingDivid}_question class="ac_question">` + probDescHTML +
+        `</div>
+        <textarea data-lang="python" id="${codeScaffoldingDivid}_editor" 
+            data-timelimit=25000 
+            data-audio=''      
+                data-wasm=/_static
+            style="visibility: hidden;">` + this.scaffoldingAnswer + 
+        `</textarea>
+        </div>
+        </div>`
 
         var commonparsonsCode = `
         <div class="runestone parsons-container ">
@@ -545,6 +558,9 @@ export class ActiveCode extends RunestoneBase {
     }
 
     createControls() {
+        console.log("openaiparsons:", this.openaiparsons);
+        console.log("commonparsons:", this.commonparsons);
+        console.log("openaicode", this.openaicode)
         console.log('create controls');
         var ctrlDiv = document.createElement("div");
         var butt;
